@@ -1,44 +1,38 @@
 # Mẫu Báo Cáo Review
 
-Dùng để **trình bày lại** kết quả review/audit đã có sẵn (không phải để tự review) — cho cả 3 loại artifact mà agent [`reviewer-agent`](../../../agents/reviewer-agent.md) review: code/diff, kế hoạch triển khai (plan), test case. Copy các khối dưới đây và điền vào.
+Dùng để trình bày lại finding review/audit đã có sẵn từ code/diff, plan hoặc test case. Báo cáo dạng text; không dùng pipe-table cho review finding.
 
-## Mức độ nghiêm trọng
+## Finding
 
-- **CRITICAL** 🚨 `[!]` — lỗi logic nặng, lỗ hổng bảo mật, crash, silent catch, vi phạm SOLID nghiêm trọng.
-- **WARNING** ⚠️ `[?]` — code smell, vấn đề hiệu năng (N+1, thuật toán độ phức tạp cao), thiếu edge case, magic number.
-- **SUGGESTION** 💡 `[*]` — gợi ý refactor, đặt tên rõ hơn, tối ưu nhỏ.
-- **GOOD** ✅ `[#]` — giải pháp tốt, đáng giữ nguyên, nên nhân rộng.
-
-## Bảng tóm tắt
-
-```markdown
-| # | Vị trí | Vấn đề | Mức độ | Big O | Đề xuất xử lý |
-|---|---|---|---|---|---|
-| 1 | `path/to/file.ext:line` | [mô tả vấn đề] | [🚨/⚠️/💡/✅] | [O(n) hiện tại → O(?) sau sửa, nếu liên quan] | [hướng xử lý cụ thể] |
+```text
+File: path/to/file.ext:line
+Type: Issue | Suggestion | Good
+Severity: CRITICAL | WARNING | SUGGESTION | GOOD
+Big O:
+  Time Before: O(...)
+  Time After: O(...)
+  Space Before: O(...)
+  Space After: O(...)
+  Input: n = [...], m = [...]
+  Query/API/I/O: [... hoặc N/A]
+Chi tiết: [mô tả hiện trạng, điều kiện gây ra và bằng chứng]
+Đề xuất: [cách xử lý cụ thể và trade-off]
+Kiểm chứng: [benchmark, test, query log, profiler hoặc Chưa đo]
 ```
 
-**Vị trí**: `file:dòng` khi review code; `REQ-xxx`/`TASK-xxx` khi review plan; `TC-xxx` khi review test case. Cột **Big O** chỉ điền khi review code và vấn đề liên quan hiệu năng — review plan/test case để trống.
+## Quy ước
 
-## So sánh chi tiết (cho mỗi CRITICAL/WARNING)
+- `Type: Issue` dùng cho vấn đề cần xử lý; `Suggestion` dùng cho gợi ý không bắt buộc; `Good` dùng cho điểm đáng giữ hoặc nhân rộng.
+- `Severity` dùng đúng `CRITICAL`, `WARNING`, `SUGGESTION` hoặc `GOOD`.
+- Với review code có xử lý phụ thuộc dữ liệu, Big O phải ghi Before/After, `n`/`m`, space và preprocessing nếu có. Không có căn cứ hoặc không liên quan runtime thì ghi `N/A — không áp dụng`.
+- Không khẳng định cải thiện hiệu năng nếu chưa benchmark/profile/query log.
+- Với plan dùng `REQ-xxx`/`TASK-xxx` tại `File`; với test case dùng `TC-xxx`.
 
-```markdown
-#### 📂 File: `path/to/file.ext`
+## Thống kê cuối
 
-🔴 Code hiện tại (dòng X-Y):
-```[lang]
-// code có vấn đề
-```
-
-🟢 Code đề xuất:
-```[lang]
-// code đã sửa
-```
-
-**Giải thích**: [lý do thay đổi + lợi ích, bao gồm Big O nếu liên quan hiệu năng]
-```
-
-## Thống kê cuối (bắt buộc)
-
-```markdown
-`[X]` issue cần sửa (CRITICAL + WARNING) | `[Y]` điểm sáng (GOOD) | `[Z]` gợi ý (SUGGESTION)
+```text
+Issue cần sửa: [X]
+Suggestion: [Y]
+Good: [Z]
+Chưa kiểm chứng: [N]
 ```

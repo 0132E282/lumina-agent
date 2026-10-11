@@ -7,6 +7,8 @@ description: "Áp dụng khi nhiệm vụ liên quan: 📚 Đồng bộ tài li�
 
 **Nhóm quy tắc kết hợp**: Documentation as Code + Definition of Done (bao gồm docs)
 
+Khi đọc hoặc sửa file trong `docs/`, agent phải đọc `docs/documentation-index.json` trước, tìm entry theo `title`, `url`, `description` và áp dụng thêm rule [`documentation-reading-and-toc`](./documentation-reading-and-toc.md). Mỗi lần viết/sửa docs phải cập nhật index cùng lượt. Registry chỉ quản lý file trong `docs/`.
+
 ## Cách áp dụng
 
 - Sau khi hoàn thành một plan ([`planner-agent`](../agents/planner-agent.md)) **và** `coding-agent` đã triển khai xong (tạo/sửa/xóa file, đổi API, đổi cấu trúc, đổi tên agent/skill/command), luôn kiểm tra `README.md`/`CLAUDE.md`/`docs/` có đoạn nào nhắc tới phần vừa đổi không — có thì **cập nhật ngay trong cùng lượt**, không để lại "làm sau".

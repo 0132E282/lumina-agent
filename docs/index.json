@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "purpose": "Mục lục tài liệu trong docs/ để mọi agent tra cứu trước khi đọc hoặc viết docs.",
+  "read_first": true,
+  "entries": [
+    {
+      "title": "Documentation index",
+      "url": "docs/documentation-index.json",
+      "description": "Mục lục nguồn chuẩn của các tài liệu nằm trong docs/; mỗi entry có title, URL tương đối và description.",
+      "source_of_truth": true
+    }
+  ],
+  "update_policy": {
+    "before_read_or_write": "Mỗi agent phải đọc index và tìm tài liệu theo title, url hoặc description trước khi đọc/viết docs.",
+    "after_write": "Mỗi lần tạo hoặc sửa file trong docs/ phải cập nhật entry title, url và description trong cùng lượt.",
+    "after_structure_change": "Cập nhật hoặc xóa entry khi đổi tên hoặc xóa file trong docs/.",
+    "avoid_duplication": "Ưu tiên sửa source_of_truth hiện có; chỉ tạo file mới khi chưa có entry phù hợp."
+  }
+}

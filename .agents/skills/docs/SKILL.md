@@ -10,6 +10,8 @@ metadata:
 
 Hai chế độ cho tài liệu dự án (README.md, CLAUDE.md, docs/) — không phải đặc tả kiến trúc hệ thống (xem [`system-design-agent`](../../agents/system-design-agent.md), skill này không tự thiết kế HLD/LLD). Khi cần sơ đồ, dùng [`system-diagrams`](../system-diagrams/SKILL.md). Mọi kết luận "đúng/sai" hoặc nội dung viết mới phải có bằng chứng (đọc file, Glob, Grep), theo [`rules/search-priority`](../../rules/search-priority.md) — không bịa lệnh/convention chưa xác minh.
 
+Khi đọc hoặc sửa file trong `docs/`, agent phải đọc `docs/documentation-index.json` trước để tìm entry theo `title`, `url`, `description`, rồi áp dụng thêm rule [`documentation-reading-and-toc`](../../rules/documentation-reading-and-toc.md). Mỗi lần viết/sửa docs phải cập nhật index cùng lượt. Registry không quản lý README, AGENTS, CLAUDE, rule hoặc skill.
+
 ## Hai chế độ đọc tài liệu
 
 ### AI-readable — mặc định

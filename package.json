@@ -1,0 +1,22 @@
+{
+  "name": "lumina-agent",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Private Lumina agent configuration installer",
+  "type": "module",
+  "bin": {
+    "lumina-agent": "bin/lumina-agent.mjs"
+  },
+  "files": ["bin/"],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "check": "node --check bin/lumina-agent.mjs",
+    "test": "node --test tests/lumina-agent.test.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/0132E282/lumina-agent.git"
+  }
+}

@@ -6,6 +6,17 @@ A reusable **`.claude/` configuration** that turns Claude Code into a structured
 
 ---
 
+## Table of Contents
+
+- [Structure](#-structure)
+- [End-to-end workflow](#-end-to-end-workflow)
+- [Core rules](#-core-rules-clauderules)
+- [Using this in another project](#-using-this-in-another-project)
+- [GitHub Actions](#-github-actions)
+- [Contributing](#-contributing)
+- [Antigravity](#antigravity)
+- [Configuration maintenance](#configuration-maintenance)
+
 ## 🗂 Structure
 
 | Folder | What it holds |
@@ -96,14 +107,32 @@ KISS+YAGNI · Clean Code · SRP/Separation of Concerns · DRY · SOLID · Fail-F
 
 ## 🚀 Using this in another project
 
-This repository uses npm tooling for Git pre-commit formatting. Run `npm ci` to install Husky, lint-staged and Prettier and activate the hook. Each commit formats supported staged files; unknown formats are skipped. No typecheck or test step is configured because this configuration repository has no corresponding scripts. Copying `.claude/` alone does not install this repository's Git hooks.
+This is a **private GitHub repository**. Only accounts granted read access can install it. Requirements: Node.js 20+, npm/npx, Git, and a [GitHub SSH key](https://docs.github.com/en/authentication/connecting-to-github-with-ssh) authorized for `0132E282/lumina-agent`. Configure your SSH key, known host and organization SSO authorization, if applicable, before running the command. No token belongs in the command, project settings or logs. The package is marked `private: true`; it is not published to public npm.
 
-For Codex, copy `AGENTS.md`, `.agents/`, `.codex/`, `.claude/` and `CLAUDE.md` together so relative references and skill symlinks remain valid. Start a new session to discover them. Invoke `$workflow-implement` or another `workflow-*` skill, or ask for a custom agent by name. Claude hook settings are not activated by this adapter; formatting and validation remain explicit workflow steps.
+**Availability:** these commands become usable from GitHub after the CLI changes have been pushed to the private repository. Local tests do not establish that the remote version already contains the CLI.
 
-1. Copy `.claude/` and `.agents/` together into the target project; keep their relative paths so shared skill/rule links resolve.
-2. Merge [`.claude/hooks/settings.snippet.json`](./.claude/hooks/settings.snippet.json) into the target's `.claude/settings.json` (see [`hook/README.md`](./.claude/hooks/README.md)).
-3. Make sure `jq` is installed (required by most hooks) — missing tools degrade gracefully, hooks just skip.
-4. Start with `/lumina:analyze "<your requirement>"` or jump straight to `/lumina:plan` if the requirement is already clear.
+From your target project directory, install **skills, rules, agents, commands and Claude hook configuration together**:
+
+```bash
+npx --yes --package='git+ssh://git@github.com/0132E282/lumina-agent.git' lumina-agent init
+```
+
+Preview changes, or choose another project directory:
+
+```bash
+npx --yes --package='git+ssh://git@github.com/0132E282/lumina-agent.git' lumina-agent init --dry-run
+npx --yes --package='git+ssh://git@github.com/0132E282/lumina-agent.git' lumina-agent init --target /absolute/path/to/project
+```
+
+The CLI clones the private repository's current default branch through SSH on **every init**, including dry runs and runs using npm's cached CLI. Authentication or network failure stops installation. Clone timeout is 120 seconds; the temporary clone is cleaned up after success or failure. npm distributes only the executable, not the configuration payload (npm packaging does not preserve symlinks). See [npm exec](https://docs.npmjs.com/cli/v11/commands/npm-exec/) and [package bin/private fields](https://docs.npmjs.com/cli/v11/configuring-npm/package-json/).
+
+The installer preserves relative symlinks and executable file modes on macOS/Linux. It includes shared `.agents/rules/` and `.agents/skills/`, Claude agents/commands/hooks/settings, Codex adapters and their shared links, plus `CONTRACT.md`. It appends a small integration block to `AGENTS.md` and `CLAUDE.md`, preserving existing project instructions rather than copying this repository's maintenance guide. Existing Claude settings are preserved and hook commands are merged without adding duplicate matching commands. It excludes repository history, storage/logs, project docs, `.DS_Store`, credential/key files and environment files. It does not install hook dependencies, run hooks or alter your project's package manifest/Git hooks.
+
+All content/link/settings conflicts are checked before writing. Different existing files, a different `CONTRACT.md`, an edited integration block or malformed settings stop the install; there is no overwrite/force option. Repeating the same install is idempotent. Dry runs do not write to the target. Use actual directory paths: target roots/ancestors and payload parent directories cannot be symlinks. Keep the target directory unchanged while installation runs; unexpected filesystem failures or process interruption during writes can leave a partial install.
+
+Removing repository access prevents future authenticated installs, but cannot revoke configuration someone already downloaded or copied. The CLI is an installer, not DRM; it cannot prevent an authorized collaborator from sharing received files. Keep the repository private and manage collaborators in GitHub.
+
+Start a new agent session after installation. Claude: `/lumina:analyze`; Codex: `$workflow-implement` or another `workflow-*` skill; Antigravity: `/workflow-implement`. Claude hook settings do not activate Claude hooks in Codex or Antigravity. Some Claude hooks need tools such as `jq` or `rtk`; consult [the hook guide](./.claude/hooks/README.md) and install only the dependencies you need.
 
 ## ✅ GitHub Actions
 
@@ -113,16 +142,19 @@ It checks:
 
 - Shared rules and skills structure and links.
 - Codex agent adapters and their role sources.
+- CLI syntax, installer tests and offline npm packaging/bin resolution.
 - Whitespace errors in the commit changes.
 
 Run the equivalent checks locally:
 
 ```bash
 python3 scripts/check-agent-config.py
+npm run check
+npm test
 git diff --check HEAD^ HEAD
 ```
 
-When enabling branch protection on GitHub, require the `Validate agent configuration` status check before merging. This repository has no package manifest or runtime test suite, so CI does not install dependencies or deploy.
+When enabling branch protection on GitHub, require the `Validate agent configuration` status check before merging. The CLI uses Node built-ins and `node --test`, with no package dependencies or build step. CI does not install dependencies, clone the private remote through SSH or deploy. No formatter is bundled; syntax/tests and whitespace checks are explicit.
 
 ---
 

@@ -10,7 +10,7 @@ description: "Áp dụng khi nhiệm vụ liên quan: 📊 Báo cáo bắt buộ
 ## Cách áp dụng
 
 - Hoàn thành một task có thay đổi/kết quả cụ thể → **bắt buộc xuất báo cáo bằng skill [`report`](../skills/report/SKILL.md)**, đúng loại tương ứng (change/plan/review/security/dependency/test) — không tự trình bày theo format tự do khác, không bỏ qua report rồi chỉ báo "xong".
-- **Mặc định báo cáo ngắn gọn**: dùng đúng khung của template skill report (bảng tóm tắt, số liệu) — không tự mở rộng thêm mục "Chi tiết thay đổi" (code cũ/mới, giải thích từng dòng) khi người dùng chưa yêu cầu.
+- **Mặc định báo cáo ngắn gọn**: dùng đúng khung của template skill report. Review report dùng format text `File/Type/Severity/Big O/Chi tiết`; change report và các loại khác giữ template tương ứng — không tự mở rộng thêm mục "Chi tiết thay đổi" khi người dùng chưa yêu cầu.
 - Chỉ viết phần chi tiết khi người dùng yêu cầu rõ ("chi tiết hơn", "xem code cụ thể", "giải thích kỹ phần nào") — không suy đoán người dùng muốn chi tiết.
 - Áp dụng kể cả khi phiên chính tự `Edit`/`Write` trực tiếp mà không giao qua subagent — không chỉ riêng `coding-agent`/`planner-agent`.
 - **Không áp dụng** khi task chỉ là trả lời câu hỏi/tra cứu thông tin, không có thay đổi/kết quả cần báo cáo.

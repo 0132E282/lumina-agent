@@ -32,5 +32,16 @@ jobs:
       - name: Validate shared rules, skills and adapters
         run: python scripts/check-agent-config.py
 
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Check CLI syntax
+        run: npm run check
+
+      - name: Test installer and npm package
+        run: npm test
+
       - name: Check whitespace errors
         run: git diff --check HEAD^ HEAD

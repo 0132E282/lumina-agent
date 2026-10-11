@@ -22,7 +22,7 @@ Skill này **chỉ format và xuất báo cáo** — không tự đi tìm lỗi,
 
 Tất cả bắt buộc theo [quality-assurance.md](../../rules/quality-assurance.md) — báo cáo là bước cuối, không được bỏ qua.
 
-**Mọi bảng trong report PHẢI viết đúng cú pháp Markdown pipe-table** (`| cột | cột |` kèm dòng `|---|---|` ngay dưới header) — tuyệt đối không viết lại thành danh sách `Nhãn: giá trị` nối tiếp nhau kèm dòng kẻ `────` phân cách, dù nội dung tương đương. Copy nguyên khối trong file template (`assets/*.md`), chỉ thay giá trị trong ô, không đổi cấu trúc bảng.
+Các report dùng đúng template tương ứng. Riêng **Review Report** bắt buộc dùng format text trong `assets/review-report-template.md`, không dùng pipe-table; các template khác giữ cấu trúc riêng đã định nghĩa.
 
 ## 1. Báo cáo thay đổi (Change Report)
 
@@ -34,12 +34,12 @@ Copy khung `assets/plan-summary-report-template.md`, điền ngay sau khi `plann
 
 ## 3. Báo cáo kết quả review (Review Report)
 
-Trình bày lại kết quả review **đã có** (do agent `reviewer-agent`, `coding-agent` tự review, hoặc con người cung cấp) — không tự review. Dùng chung cho cả 3 loại artifact `reviewer-agent` review (code/plan/test case). Copy khung `assets/review-report-template.md`, gồm:
+Trình bày lại kết quả review **đã có** (do agent `reviewer-agent`, `coding-agent` tự review, hoặc con người cung cấp) — không tự review. Dùng chung cho cả 3 loại artifact `reviewer-agent` review (code/plan/test case). Copy khung text `assets/review-report-template.md`, gồm:
 
 - **4 mức nghiêm trọng** (bắt buộc dùng đúng khi phân loại lại finding): CRITICAL 🚨 (lỗi logic nặng/bảo mật/crash), WARNING ⚠️ (code smell/hiệu năng/thiếu edge case), SUGGESTION 💡 (gợi ý refactor nhỏ), GOOD ✅ (giải pháp tốt, nên nhân rộng).
-- **Bảng tóm tắt**: `# | Vị trí | Vấn đề | Mức độ | Big O | Đề xuất xử lý` — Vị trí là `file:dòng` (code), `REQ-xxx`/`TASK-xxx` (plan), hoặc `TC-xxx` (test case); Big O chỉ điền khi review code và vấn đề liên quan hiệu năng. Đề xuất xử lý luôn cụ thể, áp dụng được ngay.
-- **So sánh chi tiết** (cho mỗi CRITICAL/WARNING): hiện tại vs đề xuất, kèm giải thích lý do + lợi ích.
-- **Thống kê cuối**: `[X]` issue cần sửa (CRITICAL + WARNING) | `[Y]` điểm sáng (GOOD) | `[Z]` gợi ý (SUGGESTION).
+- Mỗi finding ghi dạng text: `File`, `Type`, `Severity`, `Big O`, `Chi tiết`, `Đề xuất`, `Kiểm chứng`.
+- Với review code có xử lý phụ thuộc dữ liệu, Big O bắt buộc ghi Time/Space Before/After, `n`/`m`, query/API/I/O và preprocessing nếu có; không liên quan runtime thì ghi `N/A — không áp dụng`.
+- **Thống kê cuối**: số `Issue`, `Suggestion`, `Good` và finding chưa kiểm chứng.
 
 ## 4. Báo cáo chuyên biệt (security, dependency, test)
 
