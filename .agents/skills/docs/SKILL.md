@@ -3,14 +3,14 @@ name: docs
 description: Viết hoặc đồng bộ tài liệu dự án (README.md, CLAUDE.md, docs/) — (1) ĐỒNG BỘ khi đã có tài liệu, đối chiếu với trạng thái THỰC TẾ của codebase, phát hiện phần lỗi thời/sai và sửa lại; (2) VIẾT MỚI khi project/module chưa có gì để đối chiếu — quét stack/lệnh/convention thật rồi viết gọn, giống `/init` nhưng tối ưu hơn (không liệt kê dư). Mặc định viết theo chế độ AI-readable để agent đọc và truy vết; chỉ dùng human-readable khi người dùng yêu cầu tài liệu cho người đọc. Khi tài liệu cần sơ đồ cấu trúc, ERD hoặc user/system flow, kết hợp skill `system-diagrams`; không dùng `docs` để tự thiết kế HLD/LLD mới.
 license: MIT
 metadata:
-  version: "1.3"
+  version: '1.3'
 ---
 
 # 🔄 Docs
 
 Hai chế độ cho tài liệu dự án (README.md, CLAUDE.md, docs/) — không phải đặc tả kiến trúc hệ thống (xem [`system-design-agent`](../../agents/system-design-agent.md), skill này không tự thiết kế HLD/LLD). Khi cần sơ đồ, dùng [`system-diagrams`](../system-diagrams/SKILL.md). Mọi kết luận "đúng/sai" hoặc nội dung viết mới phải có bằng chứng (đọc file, Glob, Grep), theo [`rules/search-priority`](../../rules/search-priority.md) — không bịa lệnh/convention chưa xác minh.
 
-Khi đọc hoặc sửa file trong `docs/`, agent phải đọc `docs/documentation-index.json` trước để tìm entry theo `title`, `url`, `description`, rồi áp dụng thêm rule [`documentation-reading-and-toc`](../../rules/documentation-reading-and-toc.md). Mỗi lần viết/sửa docs phải cập nhật index cùng lượt. Registry không quản lý README, AGENTS, CLAUDE, rule hoặc skill.
+Khi đọc hoặc sửa file trong `docs/`, agent phải đọc `index.json` trước để tìm entry theo `title`, `url`, `description`, rồi áp dụng thêm rule [`documentation-reading-and-toc`](../../rules/documentation-reading-and-toc.md). Mỗi lần viết/sửa docs phải cập nhật index cùng lượt. Registry không quản lý README, AGENTS, CLAUDE, rule hoặc skill.
 
 ## Hai chế độ đọc tài liệu
 
@@ -49,7 +49,7 @@ Phạm vi mặc định: `README.md`, `CLAUDE.md` (nếu có), `docs/**/*.md` (n
 2. Đối chiếu từng claim với thực tế: đường dẫn → `Glob`; tên agent/skill/command → danh sách thật trong `.claude/agents|skills|commands/` (đọc frontmatter, không suy diễn); mô tả hành vi → đọc đúng file nguồn để so khớp.
 3. Phân loại: **sai rõ ràng** (file không còn tồn tại, tên đổi, số liệu sai) → sửa ngay theo thực tế vừa đọc; **không chắc** (mơ hồ, không kiểm chứng trực tiếp được) → không tự xóa, đưa vào "cần hỏi thêm" (giống cách [`workspace-auditor-agent`](../../agents/workspace-auditor-agent.md) xử lý phần không chắc).
 4. Sửa trực tiếp phần đã xác nhận sai, giữ văn phong/cấu trúc tài liệu — không viết lại toàn bộ file, không tự thêm tính năng/mục mới ngoài việc sửa đúng-sai ([`rules/simplicity`](../../rules/simplicity.md)).
-5. Báo cáo theo `change-report-template.md` của skill [`report`](../report/SKILL.md): mỗi chỗ sửa ghi *trước → sau* + bằng chứng, cộng danh sách "cần hỏi thêm" nếu có.
+5. Báo cáo theo `change-report-template.md` của skill [`report`](../report/SKILL.md): mỗi chỗ sửa ghi _trước → sau_ + bằng chứng, cộng danh sách "cần hỏi thêm" nếu có.
 
 ## Chế độ 2 — Viết mới (chưa có gì để đối chiếu)
 

@@ -1,13 +1,13 @@
 ---
 trigger: model_decision
-description: "Áp dụng khi nhiệm vụ liên quan: 📚 Đồng bộ tài liệu — Docs-as-Code Sync"
+description: 'Áp dụng khi nhiệm vụ liên quan: 📚 Đồng bộ tài liệu — Docs-as-Code Sync'
 ---
 
 # 📚 Đồng bộ tài liệu — Docs-as-Code Sync
 
 **Nhóm quy tắc kết hợp**: Documentation as Code + Definition of Done (bao gồm docs)
 
-Khi đọc hoặc sửa file trong `docs/`, agent phải đọc `docs/documentation-index.json` trước, tìm entry theo `title`, `url`, `description` và áp dụng thêm rule [`documentation-reading-and-toc`](./documentation-reading-and-toc.md). Mỗi lần viết/sửa docs phải cập nhật index cùng lượt. Registry chỉ quản lý file trong `docs/`.
+Khi đọc hoặc sửa file trong `docs/`, agent phải đọc `index.json` trước, tìm entry theo `title`, `url`, `description` và áp dụng thêm rule [`documentation-reading-and-toc`](./documentation-reading-and-toc.md). Mỗi lần viết/sửa docs phải cập nhật index cùng lượt. Registry chỉ quản lý file trong `docs/`.
 
 ## Cách áp dụng
 
@@ -19,22 +19,22 @@ Khi đọc hoặc sửa file trong `docs/`, agent phải đọc `docs/documentat
 ```javascript
 // ❌ Code xong, báo hoàn thành — quên README vẫn nhắc API cũ
 function finishTask() {
-  implementFeature();
-  runTests();
-  reportDone(); // docs vẫn nói "endpoint /v1/old" dù đã đổi sang /v2/new
+  implementFeature()
+  runTests()
+  reportDone() // docs vẫn nói "endpoint /v1/old" dù đã đổi sang /v2/new
 }
 
 // ✅ Definition of Done gồm cả docs bị ảnh hưởng
 function finishTask() {
-  implementFeature();
-  runTests();
-  syncAffectedDocs(); // cập nhật đúng đoạn README/CLAUDE.md/docs nhắc tới phần vừa đổi
-  reportDone();
+  implementFeature()
+  runTests()
+  syncAffectedDocs() // cập nhật đúng đoạn README/CLAUDE.md/docs nhắc tới phần vừa đổi
+  reportDone()
 }
 ```
 
 ## Khi áp dụng
 
 - Ngay sau khi `coding-agent` hoàn thành một task từ `docs/implementation-plan.json` mà task đó đổi API/cấu trúc/convention đang được nhắc trong docs.
-- Trước khi báo "hoàn thành task" với người dùng — tự hỏi: *"README/CLAUDE.md/docs có đoạn nào giờ sai không?"*
+- Trước khi báo "hoàn thành task" với người dùng — tự hỏi: _"README/CLAUDE.md/docs có đoạn nào giờ sai không?"_
 - **Không áp dụng** cho thay đổi nội bộ không ảnh hưởng gì tới nội dung đã viết trong docs (ví dụ đổi tên biến cục bộ, refactor không đổi hành vi/giao diện công khai).

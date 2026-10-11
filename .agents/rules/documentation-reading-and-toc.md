@@ -1,17 +1,17 @@
 ---
 trigger: model_decision
-description: "Áp dụng khi đọc, viết hoặc cập nhật tài liệu Markdown; đọc file đích trước khi sửa và duy trì mục lục khi tài liệu có nhiều heading"
+description: 'Áp dụng khi đọc, viết hoặc cập nhật tài liệu Markdown; đọc file đích trước khi sửa và duy trì mục lục khi tài liệu có nhiều heading'
 ---
 
 # Đọc tài liệu và duy trì mục lục
 
 ## Tra cứu registry trước
 
-- Mỗi agent phải đọc `docs/documentation-index.json` trước khi đọc hoặc viết docs, rồi tìm tài liệu phù hợp theo `title`, `url` hoặc `description`.
+- Mỗi agent phải đọc `index.json` trước khi đọc hoặc viết docs, rồi tìm tài liệu phù hợp theo `title`, `url` hoặc `description`.
 - Registry này chỉ quản lý file nằm trong `docs/`; không thêm README, AGENTS, CLAUDE, rule hoặc skill vào đây.
 - Mỗi entry bắt buộc có `title`, `url` và `description`; dùng `url` tương đối từ gốc repo.
 - Ưu tiên sửa tài liệu có `source_of_truth: true`; không tạo tài liệu mới nếu registry đã có entry phù hợp.
-- Mỗi lần tạo hoặc sửa file trong `docs/`, cập nhật entry `title`, `url` và `description` trong `docs/documentation-index.json` cùng lượt; khi đổi tên hoặc xóa thì sửa/xóa entry tương ứng.
+- Mỗi lần tạo hoặc sửa file trong `docs/`, cập nhật entry `title`, `url` và `description` trong `index.json` cùng lượt; khi đổi tên hoặc xóa thì sửa/xóa entry tương ứng.
 
 ## Đọc trước khi sửa
 

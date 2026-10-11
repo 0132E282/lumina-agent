@@ -5,7 +5,7 @@
   "entries": [
     {
       "title": "Documentation index",
-      "url": "docs/documentation-index.json",
+      "url": "index.json",
       "description": "Mục lục nguồn chuẩn của các tài liệu nằm trong docs/; mỗi entry có title, URL tương đối và description.",
       "source_of_truth": true
     }
