@@ -4,15 +4,23 @@
   "read_first": true,
   "entries": [
     {
+      "id": "documentation-index",
       "title": "Documentation index",
       "url": "index.json",
-      "description": "Mục lục nguồn chuẩn của các tài liệu nằm trong docs/; mỗi entry có title, URL tương đối và description.",
+      "description": "Mục lục nguồn chuẩn của tài liệu trong docs/. Mỗi mục có ID ổn định, tiêu đề, URL tương đối, mô tả và tags để AI tìm kiếm theo chủ đề.",
+      "tags": ["documentation", "index", "table-of-contents", "search"],
       "source_of_truth": true
     }
   ],
   "update_policy": {
-    "before_read_or_write": "Mỗi agent phải đọc index và tìm tài liệu theo title, url hoặc description trước khi đọc/viết docs.",
-    "after_write": "Mỗi lần tạo hoặc sửa file trong docs/ phải cập nhật entry title, url và description trong cùng lượt.",
+    "entry_schema": {
+      "required_fields": ["id", "title", "url", "description", "tags"],
+      "id": "ID duy nhất, ổn định, dạng kebab-case; giữ nguyên khi chỉ đổi tiêu đề hoặc mô tả.",
+      "url": "Đường dẫn tương đối từ docs/.",
+      "tags": "Mảng từ khóa ngắn, chữ thường, ưu tiên kebab-case; chọn theo chủ đề, loại tài liệu và công nghệ liên quan."
+    },
+    "before_read_or_write": "Mỗi agent phải đọc index và tìm tài liệu theo id, title, url, description hoặc tags trước khi đọc/viết docs.",
+    "after_write": "Mỗi lần tạo hoặc sửa file trong docs/ phải cập nhật id, title, url, description và tags trong cùng lượt; giữ id ổn định nếu entry đã tồn tại.",
     "after_structure_change": "Cập nhật hoặc xóa entry khi đổi tên hoặc xóa file trong docs/.",
     "avoid_duplication": "Ưu tiên sửa source_of_truth hiện có; chỉ tạo file mới khi chưa có entry phù hợp."
   }

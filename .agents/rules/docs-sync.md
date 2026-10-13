@@ -7,7 +7,7 @@ description: 'Áp dụng khi nhiệm vụ liên quan: 📚 Đồng bộ tài li�
 
 **Nhóm quy tắc kết hợp**: Documentation as Code + Definition of Done (bao gồm docs)
 
-Khi đọc hoặc sửa file trong `docs/`, agent phải đọc `index.json` trước, tìm entry theo `title`, `url`, `description` và áp dụng thêm rule [`documentation-reading-and-toc`](./documentation-reading-and-toc.md). Mỗi lần viết/sửa docs phải cập nhật index cùng lượt. Registry chỉ quản lý file trong `docs/`.
+Khi đọc hoặc sửa file trong `docs/`, agent phải đọc `index.json` trước, tìm entry theo `id`, `title`, `url`, `description` hoặc `tags` và áp dụng thêm rule [`documentation-reading-and-toc`](./documentation-reading-and-toc.md). Mỗi lần viết/sửa docs phải cập nhật index cùng lượt. Registry chỉ quản lý file trong `docs/`.
 
 ## Cách áp dụng
 

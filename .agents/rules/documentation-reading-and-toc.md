@@ -7,11 +7,14 @@ description: 'Áp dụng khi đọc, viết hoặc cập nhật tài liệu Mark
 
 ## Tra cứu registry trước
 
-- Mỗi agent phải đọc `index.json` trước khi đọc hoặc viết docs, rồi tìm tài liệu phù hợp theo `title`, `url` hoặc `description`.
+- Mỗi agent phải đọc `index.json` trước khi đọc hoặc viết docs, rồi tìm tài liệu phù hợp theo `id`, `title`, `url`, `description` hoặc `tags`.
 - Registry này chỉ quản lý file nằm trong `docs/`; không thêm README, AGENTS, CLAUDE, rule hoặc skill vào đây.
-- Mỗi entry bắt buộc có `title`, `url` và `description`; dùng `url` tương đối từ gốc repo.
+- Mỗi entry bắt buộc có `id`, `title`, `url`, `description` và `tags`.
+- `id` phải duy nhất, ổn định, dạng kebab-case; giữ nguyên khi chỉ đổi title hoặc description.
+- `url` tương đối từ thư mục `docs/`.
+- `tags` là mảng từ khóa ngắn, chữ thường, ưu tiên kebab-case; mô tả chủ đề, loại tài liệu và công nghệ liên quan để AI tìm kiếm.
 - Ưu tiên sửa tài liệu có `source_of_truth: true`; không tạo tài liệu mới nếu registry đã có entry phù hợp.
-- Mỗi lần tạo hoặc sửa file trong `docs/`, cập nhật entry `title`, `url` và `description` trong `index.json` cùng lượt; khi đổi tên hoặc xóa thì sửa/xóa entry tương ứng.
+- Mỗi lần tạo hoặc sửa file trong `docs/`, cập nhật entry `id`, `title`, `url`, `description` và `tags` trong `index.json` cùng lượt; giữ `id` ổn định, khi đổi tên hoặc xóa thì cập nhật/xóa entry tương ứng.
 
 ## Đọc trước khi sửa
 
