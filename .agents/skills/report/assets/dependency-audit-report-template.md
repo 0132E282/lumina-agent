@@ -3,6 +3,7 @@
 Dùng sau khi skill [`dependency-audit`](../../dependency-audit/SKILL.md) chạy audit read-only. Copy khối dưới và điền — chỉ liệt kê lệnh để người dùng tự chạy, không tự upgrade.
 
 ```markdown
+
 ## 📦 Báo cáo dependency audit
 
 **Ecosystem**: [npm/yarn/pnpm/composer/pip/cargo/go] — **Tool đã chạy**: `[npm audit / composer audit / pip-audit ...]`

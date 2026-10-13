@@ -27,8 +27,3 @@ app.post("/orders", authorize("order:create"), validate(orderSchema), async (req
   res.json(await orderService.createOrder(req.user, req.body));
 });
 ```
-
-## Khi áp dụng
-
-- Khi thêm endpoint/route mới: luôn tách handler khỏi business logic.
-- Khi một hàm vượt quá ~1 màn hình hoặc làm nhiều việc khác nhau → tách ngay.

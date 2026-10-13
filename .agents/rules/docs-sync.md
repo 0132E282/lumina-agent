@@ -15,6 +15,7 @@ Sau khi hoàn tất coding cho tất cả task của một implementation plan, 
 
 - Sau khi hoàn thành một plan ([`planner-agent`](../agents/planner-agent.md)) **và** `coding-agent` đã triển khai xong (tạo/sửa/xóa file, đổi API, đổi cấu trúc, đổi tên agent/skill/command), luôn kiểm tra `README.md`/`CLAUDE.md`/`docs/` có đoạn nào nhắc tới phần vừa đổi không — có thì **cập nhật ngay trong cùng lượt**, không để lại "làm sau".
 - **"Hoàn thành" (DONE)** của một task không chỉ là code chạy đúng + test pass ([`rules/quality-assurance`](./quality-assurance.md)) — còn phải gồm: docs liên quan (nếu có nhắc tới phần vừa đổi) đã phản ánh đúng thay đổi.
+- Khi task thay đổi API và repository đã có Postman collection/tài liệu Postman phù hợp, cập nhật request, ví dụ và metadata liên quan ngay trong Postman. Nếu collection/request tương ứng đã tồn tại, sửa nó; không tạo collection, request hoặc file trùng chỉ vì đang làm lại tài liệu. Chỉ tạo mới khi chưa có mục phù hợp và task yêu cầu bổ sung.
 - Dùng skill [`docs`](../skills/docs/SKILL.md) để rà nhanh khi phạm vi ảnh hưởng tới docs lớn hoặc không chắc hết những đâu đang nhắc tới phần vừa đổi (đổi tên agent/skill/command, xóa/thêm module) — không tự nhớ thủ công từng chỗ rồi bỏ sót.
 - Chỉ cập nhật đúng phần thực sự bị ảnh hưởng — không viết lại toàn bộ docs hay mở rộng phạm vi khi không cần ([`rules/simplicity`](./simplicity.md)).
 

@@ -27,8 +27,3 @@ description: "Áp dụng khi nhiệm vụ liên quan: ❓ Câu hỏi mở — B�
 | 2 | Segment tạo từ Sapo customer_group nên là static hay dynamic? | Static |
 | 3 | Mapping Sapo id ↔ Segment: tái dùng `SapoCdpMappingStore` hay cần bảng riêng? | Tái dùng mapping store |
 ```
-
-## Khi áp dụng
-
-- Agent nào hỏi lại người dùng ≥2 câu hỏi mở/blocker/giả định cần xác nhận trước khi tiếp tục (`requirement-analysis-agent`, `planner-agent`, `system-design-agent`, `reviewer-agent`, hoặc phiên chính) và không dùng tool hỏi có UI riêng.
-- **Không áp dụng** khi chỉ có 1 câu hỏi, hoặc khi runtime có tool hỏi riêng (đã có UI chọn đáp án, không cần bảng Markdown thay thế).

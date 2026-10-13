@@ -37,7 +37,7 @@ Chỉ chọn skill phong cách/ảnh thiết kế khi cần thiết kế mới h
 | Phong cách công nghiệp, dashboard nhiều dữ liệu | [industrial-brutalist-ui](../skills/industrial-brutalist-ui/SKILL.md) |
 | Cải thiện giao diện hiện có | [redesign-existing-projects](../skills/redesign-existing-projects/SKILL.md) |
 | Website, landing page, portfolio | [design-taste-frontend](../skills/design-taste-frontend/SKILL.md) |
-| Website cao cấp hoặc motion nổi bật | [high-end-visual-design](../skills/high-end-visual-design/SKILL.md), [gpt-taste](../skills/gpt-taste/SKILL.md) |
+| Website cao cấp hoặc motion nổi bật | [gpt-taste](../skills/gpt-taste/SKILL.md) |
 | Giữ hành vi thiết kế phiên bản cũ | [design-taste-frontend-v1](../skills/design-taste-frontend-v1/SKILL.md) |
 | Nhận diện thương hiệu | [brandkit](../skills/brandkit/SKILL.md) |
 | Ảnh mockup website/mobile | [imagegen-frontend-web](../skills/imagegen-frontend-web/SKILL.md), [imagegen-frontend-mobile](../skills/imagegen-frontend-mobile/SKILL.md) |

@@ -28,10 +28,3 @@ Title: Thêm field Y
 Description: Bổ sung field Y để đáp ứng yêu cầu dữ liệu.
 --------------------------------------------------------------------------------
 ```
-
-## Khi áp dụng
-
-- Ngay sau khi `Edit`/`Write` hoàn tất một task code — dù phiên chính tự làm hay giao `coding-agent`.
-- Ngay sau khi `planner-agent` viết xong plan ([`rules/plan-format`](./plan-format.md)).
-- Ngay sau khi `reviewer-agent`/`qa-tester-agent`/`workspace-auditor-agent` hoàn tất việc được giao.
-- Trước khi báo "hoàn thành task" với người dùng — tự hỏi: *"đã xuất report bằng skill `report` chưa, hay đang tự diễn giải?"*

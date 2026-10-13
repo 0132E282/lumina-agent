@@ -22,7 +22,7 @@ Skill này **chỉ format và xuất báo cáo** — không tự đi tìm lỗi,
 
 Tất cả bắt buộc theo [quality-assurance.md](../../rules/quality-assurance.md) — báo cáo là bước cuối, không được bỏ qua.
 
-Các report dùng đúng template tương ứng. Riêng **Review Report** bắt buộc dùng format text trong `assets/review-report-template.md`, không dùng pipe-table; các template khác giữ cấu trúc riêng đã định nghĩa.
+Các report dùng đúng template tương ứng. Chỉ báo cáo dạng text dùng `-------------` trước từng phần và mỗi finding, kèm tiêu đề để nhận biết nội dung thuộc phần nào. Báo cáo dạng bảng không cần dòng phân cách này. Riêng **Review Report** dùng format text trong `assets/review-report-template.md`, không dùng pipe-table.
 
 ## 1. Báo cáo thay đổi (Change Report)
 

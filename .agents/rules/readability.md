@@ -13,7 +13,7 @@ description: "Áp dụng khi nhiệm vụ liên quan: 📖 Dễ đọc — Clean
 - **Hàm làm một việc**: tên cần chữ "và" (`validateAndSave`) để mô tả → tách nhỏ hơn.
 - **Format thống nhất** với codebase hiện có — không áp đặt style cá nhân.
 - **Early return** để tránh lồng `if/else` sâu.
-- Comment giải thích **"tại sao"**, không giải thích **"cái gì"** (code đã tự nói).
+- Quy tắc viết comment nằm trong [`comments.md`](./comments.md).
 
 ```javascript
 // ❌ function p(u) { if (u) { if (u.a) return u.n; } }
@@ -23,8 +23,3 @@ function getUserDisplayName(user) {
   return user.name;
 }
 ```
-
-## Khi áp dụng
-
-- Mọi lần đặt tên biến/hàm/class/hằng số, hoặc viết/sửa comment.
-- Trước khi commit: đọc lại code như người lần đầu thấy nó.

@@ -31,9 +31,3 @@ async function findConfig(question) {
   return { answer: "Không tìm thấy thông tin xác nhận được", source: null };
 }
 ```
-
-## Khi áp dụng
-
-- Mọi agent/skill làm nhiệm vụ nghiên cứu, tra cứu, hoặc trả lời câu hỏi dựa trên tài liệu (`researcher-agent`, `requirement-analysis-agent`, hoặc bất kỳ bước nào cần tra thông tin trước khi thiết kế/lập plan).
-- Trước khi gọi WebSearch/WebFetch: tự hỏi *"đã tìm trong CLAUDE.md/docs/code hiện có chưa?"*
-- Trước khi đưa một kết luận vào báo cáo: tự hỏi *"câu này có nguồn trích dẫn được, hay mình đang suy đoán?"*

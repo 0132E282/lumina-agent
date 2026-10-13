@@ -32,8 +32,3 @@ export interface ProductCategory {
 export type CreateProductInput = Omit<Product, "id">;
 export type UpdateProductInput = Partial<CreateProductInput>;
 ```
-
-## Khi áp dụng
-
-- Khi viết, sửa hoặc review TypeScript, kể cả test và dữ liệu API.
-- Khi bổ sung type: kiểm tra khả năng tái sử dụng và file domain hiện có trước khi tạo type/file mới.

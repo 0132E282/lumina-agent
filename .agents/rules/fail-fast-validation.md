@@ -30,8 +30,3 @@ async function transferMoney(fromId, toId, amount) {
   await credit(toId, amount);
 }
 ```
-
-## Khi áp dụng
-
-- Đầu mỗi function xử lý nghiệp vụ quan trọng (thanh toán, tạo đơn, xóa dữ liệu).
-- Trước mọi thao tác ghi dữ liệu (write/update/delete).

@@ -3,6 +3,7 @@
 Dùng để tóm tắt kết quả **đã thiết kế/thực thi** bởi agent [`qa-tester-agent`](../../../agents/qa-tester-agent.md) thành bản ngắn dễ copy vào PR/commit — không thay thế ma trận bao phủ, mẫu test case chi tiết hay bug report đầy đủ mà `qa-tester-agent` đã tạo riêng.
 
 ```markdown
+
 ## ✅ Báo cáo test
 
 **Phạm vi**: [feature/luồng được test]

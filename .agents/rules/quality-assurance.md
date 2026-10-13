@@ -29,8 +29,3 @@ description: "Áp dụng khi nhiệm vụ liên quan: ✅ Chất lượng — Te
 - [ ] Test hiện có vẫn pass (không phá vỡ tính năng cũ)?
 - [ ] Đã tự review lại diff trước khi báo cáo xong?
 - [ ] Đã rà phạm vi component/page, vòng lặp render/state/effect và N+1 xuyên stack; đã đếm query/request hoặc ghi rõ chỉ kiểm tra tĩnh?
-
-## Khi áp dụng
-
-- Trước khi báo "hoàn thành task" — bước bắt buộc cuối cùng, không bỏ qua kể cả khi gấp.
-- Ngay sau khi fix một bug — thêm test khóa lại hành vi đúng.

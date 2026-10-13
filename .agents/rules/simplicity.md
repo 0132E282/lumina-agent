@@ -24,8 +24,3 @@ function calculateDiscount(order) {
   return order.total * (order.type === "VIP" ? 0.2 : 0.1);
 }
 ```
-
-## Khi áp dụng
-
-- Trước khi thêm abstraction: *"Đang giải quyết vấn đề đã tồn tại, hay vấn đề tưởng tượng?"*
-- Khi tự review trước khi báo cáo: loại bỏ phần không phục vụ trực tiếp yêu cầu đã giao.

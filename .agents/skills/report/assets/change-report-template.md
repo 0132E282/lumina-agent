@@ -3,6 +3,7 @@
 Dùng ngay sau khi Edit/Write hoàn tất một task code. Copy khối dưới đây và điền vào — **đây là bản mặc định, dừng lại ở "Tóm tắt"**. Không tự thêm mục code cũ/mới hay giải thích quyết định kỹ thuật, kể cả khi thay đổi có vẻ đáng kể.
 
 ```markdown
+
 ## 📝 Báo cáo thay đổi
 
 Tổng số file đã tạo/sửa/xóa: [N] file ([tóm tắt ngắn, ví dụ: 2 tạo mới, 3 sửa, 1 xóa])
@@ -46,6 +47,7 @@ Tổng số file đã tạo/sửa/xóa: [N] file ([tóm tắt ngắn, ví dụ: 
 Thêm mục này **sau** khối trên, không thay cho nó:
 
 ```markdown
+
 ### Chi tiết thay đổi
 
 #### 1. [Tên file]

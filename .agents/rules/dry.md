@@ -23,9 +23,3 @@ function validatePostalFormat(address) { ... }
 function validateShippingAddress(a) { validatePostalFormat(a); }
 function validateBillingAddress(a) { validatePostalFormat(a); validateTaxId(a.taxId); }
 ```
-
-## Khi áp dụng
-
-- Copy-paste lần 2–3: dừng lại hỏi *"cùng ý nghĩa nghiệp vụ, hay chỉ tình cờ giống cú pháp?"*
-- Trước khi tạo shared helper/util: xác nhận mọi nơi gọi nó thực sự nên đổi cùng nhau trong tương lai.
-- Trước khi thêm field/config/resource mới (log channel, biến env, cột DB...): `grep`/đọc config hiện có, báo nếu đã tồn tại cái tương tự thay vì tạo thêm rồi sửa lại sau.

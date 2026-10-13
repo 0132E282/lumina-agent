@@ -25,8 +25,3 @@ await db.transaction(async (trx) => {
   await trx("accounts").where({ id: toId }).increment("balance", amount);
 });
 ```
-
-## Khi áp dụng
-
-- Mọi endpoint/handler thay đổi dữ liệu người dùng: kiểm tra *user có quyền thực hiện hành động này trên resource này không*.
-- Mọi nhóm thao tác ghi liên quan nhiều bảng/record phải thành công cùng lúc.

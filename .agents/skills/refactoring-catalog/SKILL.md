@@ -1,6 +1,6 @@
 ---
 name: refactoring-catalog
-description: Tra cứu danh mục kỹ thuật refactor (theo Fowler/Refactoring.Guru) ứng với từng code smell cụ thể — Extract Method/Function, Extract Variable, Decompose Conditional, Replace Conditional with Polymorphism, Replace Magic Number with Symbolic Constant, Introduce Parameter Object, Extract Class, Replace Temp with Query — kèm khi nào nên và không nên áp dụng. Dùng khi thấy code smell cụ thể (hàm quá dài, điều kiện lồng sâu, trùng lặp, quá nhiều tham số) cần refactor nhưng chưa chắc kỹ thuật nào phù hợp. KHÔNG dùng để refactor tràn lan ngoài phạm vi đang sửa (xem rules/boy-scout-rule) hoặc khi vấn đề cần một design pattern mới cho cấu trúc mở rộng (dùng design-patterns).
+description: Tra cứu danh mục kỹ thuật refactor (theo Fowler/Refactoring.Guru) ứng với từng code smell cụ thể — Extract Method/Function, Extract Variable, Decompose Conditional, Replace Conditional with Polymorphism, Replace Magic Number with Symbolic Constant, Introduce Parameter Object, Extract Class, Replace Temp with Query — kèm khi nào nên và không nên áp dụng. Dùng khi thấy code smell cụ thể (hàm quá dài, điều kiện lồng sâu, trùng lặp, quá nhiều tham số) cần refactor nhưng chưa chắc kỹ thuật nào phù hợp. KHÔNG dùng để refactor tràn lan ngoài phạm vi đang sửa (xem rules/simplicity) hoặc khi vấn đề cần một design pattern mới cho cấu trúc mở rộng (dùng design-patterns).
 license: MIT
 metadata:
   version: "1.1"
@@ -16,7 +16,7 @@ Khác [`design-patterns`](../design-patterns/SKILL.md) (tạo cấu trúc mới 
 - Phải có test bao phủ trước khi refactor ([`rules/quality-assurance`](../../rules/quality-assurance.md)); thiếu test → viết test chốt hành vi hiện tại trước (dùng [`testing-strategy`](../testing-strategy/SKILL.md)).
 - Từng bước nhỏ, chạy lại test sau mỗi bước — không dồn nhiều kỹ thuật vào một lần sửa lớn.
 - Rule of Three ([`rules/dry`](../../rules/dry.md)): smell lặp 2 lần có thể chấp nhận, lần 3 mới refactor.
-- Giữ phạm vi ([`rules/boy-scout-rule`](../../rules/boy-scout-rule.md)): chỉ refactor trong function/block đang sửa.
+- Giữ phạm vi ([`rules/simplicity`](../../rules/simplicity.md)): chỉ refactor phần cần thiết cho task đã giao.
 
 ## Code smell → kỹ thuật refactor
 
@@ -35,4 +35,4 @@ Khác [`design-patterns`](../design-patterns/SKILL.md) (tạo cấu trúc mới 
 ## Khi áp dụng
 
 - Thấy code smell cụ thể ở bảng trên — tra để chọn đúng kỹ thuật, xác nhận đã có test bao phủ trước khi refactor.
-- Không dùng để refactor lan ra ngoài phạm vi task ([`rules/boy-scout-rule`](../../rules/boy-scout-rule.md)), hoặc khi vấn đề cần pattern kiến trúc mới (→ [`design-patterns`](../design-patterns/SKILL.md)).
+- Không dùng để refactor lan ra ngoài phạm vi task ([`rules/simplicity`](../../rules/simplicity.md)), hoặc khi vấn đề cần pattern kiến trúc mới (→ [`design-patterns`](../design-patterns/SKILL.md)).

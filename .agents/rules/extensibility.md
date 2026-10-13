@@ -26,8 +26,3 @@ class Bird {
 new Bird(new FlyBehavior());
 new Bird(new SwimBehavior());
 ```
-
-## Khi áp dụng
-
-- Khi thêm một biến thể mới của tính năng có sẵn (payment method, notification channel, storage backend).
-- Khi thấy mình sửa code cũ đang chạy tốt chỉ để thêm 1 trường hợp mới — dấu hiệu vi phạm OCP, nên mở rộng bằng abstraction thay vì sửa trực tiếp.

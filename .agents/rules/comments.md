@@ -44,7 +44,7 @@ public function verifyIPN(array $data): array
 - Mỗi dòng comment ≤ 180 ký tự; tối đa 1–3 dòng. Cần dài hơn ⇒ đưa vào docs thay vì nhồi vào comment.
 - **Sắp viết tới dòng comment thứ 4 cho cùng một đoạn → dừng lại ngay**, không viết tiếp rồi tự nhủ "giải thích cho đủ". Chọn 1 trong 2: (a) chỉ giữ đúng 1-3 dòng cốt lõi nhất — invariant/hệ quả nếu làm sai, bỏ phần diễn giải "vì sao đi đến kết luận này"; (b) nếu logic phức tạp tới mức cần nhiều đoạn lý luận, đó là dấu hiệu nên tách hàm riêng tên rõ nghĩa (xem [readability.md](./readability.md)) hoặc ghi vào docs, không nhồi hết vào comment.
 - Nhiều ràng buộc cần cảnh báo trong cùng một đoạn code → mỗi ràng buộc 1 dòng `!` riêng, không gộp thành một đoạn văn dài nhiều câu.
-- Sửa code có comment cũ, **cập nhật hoặc xoá** cho đúng với code mới — không để comment nói dối (xem [boy-scout-rule.md](./boy-scout-rule.md)).
+- Khi sửa code, cập nhật hoặc xoá comment liên quan nếu nó không còn đúng.
 
 ```php
 // ❌ Một đoạn văn 4+ dòng vừa giải thích lý do vừa liệt kê hệ quả — vượt giới hạn, khó đọc lướt
@@ -55,9 +55,3 @@ public function verifyIPN(array $data): array
 // ✅ Rút còn đúng invariant + hệ quả nếu làm sai, dùng nhãn !
 // ! Không gate theo cờ C — field A luôn hợp lệ dù không thuộc nhóm B, nếu không bản ghi standalone sẽ bị tạo trùng mỗi lần sync.
 ```
-
-## Khi áp dụng
-
-- Định viết comment: tự hỏi *"xoá comment này đi, code còn tự giải thích được không?"* — nếu còn, không viết.
-- Thấy comment giải thích "cái gì" thay vì "tại sao": xoá hoặc đổi tên biến/hàm cho rõ hơn thay vì giữ comment.
-- Sửa đoạn code có comment liên quan: cập nhật cùng lúc, không để nó lỗi thời.

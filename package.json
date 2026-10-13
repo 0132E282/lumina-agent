@@ -7,16 +7,23 @@
   "bin": {
     "lumina-agent": "bin/lumina-agent.mjs"
   },
-  "files": ["bin/"],
+  "files": [
+    "bin/"
+  ],
   "engines": {
     "node": ">=20"
   },
   "scripts": {
     "check": "node --check bin/lumina-agent.mjs",
+    "design:lint": "designmd lint",
+    "design:spec": "designmd spec",
     "test": "node --test tests/lumina-agent.test.mjs"
   },
   "repository": {
     "type": "git",
     "url": "git+ssh://git@github.com/0132E282/lumina-agent.git"
+  },
+  "devDependencies": {
+    "@google/design.md": "^0.4.0"
   }
 }

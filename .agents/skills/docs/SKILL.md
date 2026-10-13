@@ -8,23 +8,16 @@ metadata:
 
 # 🔄 Docs
 
-Hai chế độ cho tài liệu dự án (README.md, CLAUDE.md, docs/) — không phải đặc tả kiến trúc hệ thống (xem [`system-design-agent`](../../agents/system-design-agent.md), skill này không tự thiết kế HLD/LLD). Khi cần sơ đồ, dùng [`system-diagrams`](../system-diagrams/SKILL.md). Mọi kết luận "đúng/sai" hoặc nội dung viết mới phải có bằng chứng (đọc file, Glob, Grep), theo [`rules/search-priority`](../../rules/search-priority.md) — không bịa lệnh/convention chưa xác minh.
-
-Khi đọc hoặc sửa trong `docs/`, mở `index.json` phù hợp trước, tìm theo `title`, `description`, `tags`, rồi đọc file chi tiết qua `path`. Mỗi entry index chỉ có `title`, `description`, `tags`, `path`; không nhúng `content`, `id`, `url` hay ngày tạo. Mỗi tài liệu Markdown chi tiết phải có `title`, `description`, `tags`, `content` (metadata trong frontmatter, phần thân là content); plan/review JSON lưu metadata và nội dung đầy đủ trong file riêng. Description ở menu giúp AI quyết định có nên tham khảo file chi tiết. Theo rule [`documentation-reading-and-toc`](../../rules/documentation-reading-and-toc.md): `docs/index.json` dành cho Markdown; plan JSON nằm trong `docs/plans/` và có menu `docs/plans/index.json`; testcase cùng kết quả thực thi được lưu trong `docs/testcases/index.json`; review code/system design dạng JSON nằm trong `docs/reviews/` và được liệt kê ở `docs/reviews/index.json`. Cập nhật nguồn và index/record tương ứng cùng lượt. Không đưa README, AGENTS, CLAUDE, rule hoặc skill vào catalog docs.
+Viết mới hoặc đồng bộ README, hướng dẫn project và `docs/`; đối chiếu mọi nội dung với nguồn thật ([`search-priority`](../../rules/search-priority.md)). Tuân thủ schema và luồng catalog trong [`docs-sync`](../../rules/docs-sync.md) và [`documentation-reading-and-toc`](../../rules/documentation-reading-and-toc.md). Không thiết kế HLD/LLD; bàn giao cho [`system-design-agent`](../../agents/system-design-agent.md). Khi cần sơ đồ hiện trạng, dùng [`system-diagrams`](../system-diagrams/SKILL.md).
 
 ## Hai chế độ đọc tài liệu
 
 ### AI-readable — mặc định
 
-- Viết ngắn, có cấu trúc ổn định, heading rõ; chỉ giữ thông tin cần cho quyết định hoặc bước tiếp theo.
-- Ưu tiên facts, path/file/dòng, contract, input/output, dependency, điều kiện và kết quả kiểm chứng.
+- Viết ngắn, có heading ổn định; ưu tiên facts, path, contract, dependency và kết quả kiểm chứng.
 - Dùng sơ đồ Mermaid khi có quan hệ/flow phức tạp; không lặp lại toàn bộ sơ đồ bằng prose.
-- Gắn nhãn rõ `Đã xác minh`, `Giả định`, `Chưa kiểm tra`, `Không áp dụng`.
-- Không thêm lời dẫn marketing, ví dụ trang trí hoặc diễn giải dài không giúp agent ra quyết định.
-- Chỉ đọc và ghi phần liên quan task; không dump toàn repo, log dài, file đã biết không ảnh hưởng hoặc lịch sử không cần thiết.
-- Tóm tắt một lần ở nguồn chuẩn, nơi khác chỉ link tới nguồn đó; không sao chép cùng một contract/flow vào nhiều tài liệu.
-- Dùng progressive disclosure: lớp đầu là mục tiêu, trạng thái, rủi ro và đường dẫn; chi tiết schema/query/implementation chỉ mở khi task cần.
-- Ưu tiên bullet ngắn và bảng nhỏ; mỗi mục trả lời một câu hỏi, bỏ mục không áp dụng thay vì để placeholder dài.
+- Phân biệt dữ kiện, giả định và phần chưa kiểm chứng. Bỏ lời dẫn/trang trí và mục không áp dụng.
+- Chỉ đọc/ghi phần liên quan; ghi thông tin ở nguồn chuẩn một lần rồi liên kết. Mở chi tiết theo nhu cầu.
 
 ### Human-readable — chỉ khi được yêu cầu
 
@@ -51,6 +44,8 @@ Phạm vi mặc định: `README.md`, `CLAUDE.md` (nếu có), `docs/**/*.md` (n
 4. Sửa trực tiếp phần đã xác nhận sai, giữ văn phong/cấu trúc tài liệu — không viết lại toàn bộ file, không tự thêm tính năng/mục mới ngoài việc sửa đúng-sai ([`rules/simplicity`](../../rules/simplicity.md)).
 5. Báo cáo theo `change-report-template.md` của skill [`report`](../report/SKILL.md): mỗi chỗ sửa ghi _trước → sau_ + bằng chứng, cộng danh sách "cần hỏi thêm" nếu có.
 
+Khi task đổi API và repository có Postman collection/tài liệu Postman liên quan, cập nhật request và ví dụ hiện hữu ở đó cùng lượt. Tìm và chỉnh collection/request phù hợp trước; không tạo collection, request hoặc file mới trùng nội dung khi đang làm lại tài liệu. Chỉ thêm mục mới nếu chưa có mục tương ứng và task yêu cầu.
+
 ## Chế độ 2 — Viết mới (chưa có gì để đối chiếu)
 
 Dùng khi project/module/feature chưa có CLAUDE.md/README, cần viết lần đầu — tương tự lệnh `/init` có sẵn nhưng **gọn và tối ưu hơn**: chỉ ghi điều thực sự cần để làm việc hiệu quả trong repo, không liệt kê toàn bộ cấu trúc file hay lặp lại thông tin Glob/Grep tự tra được.
@@ -64,18 +59,3 @@ Dùng khi project/module/feature chưa có CLAUDE.md/README, cần viết lần 
    - **Lệnh thường dùng** (dev/build/test/lint) — chỉ lệnh đã xác minh chạy được.
    - **Convention quan trọng cần biết trước khi sửa code** — quy ước/rule bắt buộc nếu có, pattern lặp lại thật đang dùng.
 5. Không tự thiết kế kiến trúc hệ thống (HLD/LLD) — phần đó thuộc agent [`system-design-agent`](../../agents/system-design-agent.md). Nếu chỉ cần minh họa cấu trúc/flow đã có trong codebase, dùng [`system-diagrams`](../system-diagrams/SKILL.md).
-
-## Khi áp dụng
-
-- **Đồng bộ**: ngay sau khi xóa/đổi tên/thêm agent-skill-command, đổi cấu trúc thư mục lớn, hoặc khi nghi ngờ docs lỗi thời.
-- **Viết mới**: project/module/feature chưa có CLAUDE.md/README, cần viết lần đầu một cách gọn gàng.
-- Không dùng cho đặc tả kiến trúc hệ thống (HLD/LLD); sơ đồ mô tả hệ thống hiện có thì kết hợp skill `system-diagrams`.
-
-## Kho tài liệu có cấu trúc
-
-- Đọc `docs/index.json` trước khi làm việc với tài liệu Markdown; entry chỉ gồm `title`, `description`, `tags`, `path`. `path` tính từ gốc repo. File Markdown chi tiết có `title`, `description`, `tags` trong YAML frontmatter và nội dung trong phần thân.
-- Plan là file JSON chi tiết dưới `docs/plans/`; menu `docs/plans/index.json` dùng đúng bốn trường `title`, `description`, `tags`, `path`, trong đó description hướng dẫn khi nào nên tham khảo. Tên file là `<title-slug>-<yyyyMMdd>.json`. Mỗi task nêu `filesToChange` với path repo-relative và mô tả thay đổi cụ thể.
-- `docs/testcases/index.json` chứa testcase và kết quả chạy; đọc trước, giữ ID ổn định, ghi `createdAt` cho suite/case mới và chỉ cập nhật Pass/Fail sau khi thực thi có bằng chứng.
-- Sau khi hoàn tất coding cho toàn bộ task của một implementation plan, tạo testcase cấp repo trong `docs/repo/<title-slug>-<yyyyMMdd>.md`, dựa trên code/luồng thực tế của repository. Đây là tài liệu thiết kế testcase, không tự chạy testcase; ghi trạng thái `Not Run`. Cập nhật cả mục lục con `docs/repo/index.json` và entry tương ứng trong `docs/index.json`; mỗi entry chỉ có title/description/tags/path. Tài liệu này không thay thế kho testcase/kết quả theo feature ở `docs/testcases/index.json`.
-- Review code và system design lưu thành JSON chi tiết trong `docs/reviews/`; tên file `<title-slug>-<yyyyMMdd>.json`. Menu `docs/reviews/index.json` dùng đúng bốn trường `title`, `description`, `tags`, `path`, description hướng dẫn khi nào nên tham khảo. Báo cáo review không sửa artifact được review.
-- Nếu repository đã có schema khác, giữ schema hiện hữu trừ khi người dùng yêu cầu migration; không xóa field/file chỉ để khớp mẫu này.

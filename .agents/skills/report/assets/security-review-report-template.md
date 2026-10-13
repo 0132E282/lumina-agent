@@ -3,9 +3,14 @@
 Dùng để trình bày lại kết quả đã review theo skill [`review-web-security`](../../review-web-security/SKILL.md) (mục "Định dạng báo cáo") — không tự review, không bịa thêm trường ngoài mẫu này.
 
 ```markdown
+
+-------------
+
 ## 🔐 Báo cáo security review
 
 **Tổng quan**: [X] lỗi đã xác nhận, mức cao nhất [Critical/High/Medium/Low], phạm vi đã review: [...]
+
+-------------
 
 ### Finding #1 — [Tiêu đề]
 - **Severity / Confidence**: [Critical/High/Medium/Low] / [Xác nhận | Cần xác minh]
@@ -19,6 +24,8 @@ Dùng để trình bày lại kết quả đã review theo skill [`review-web-se
 - **Cách sửa**: [patch cụ thể hoặc hướng xử lý]
 - **Kiểm thử hồi quy**: [case hợp lệ vẫn pass / case vượt quyền bị chặn / side effect cần tránh]
 - **CWE/OWASP**: [mapping nếu xác minh được — bỏ qua nếu không chắc, không dùng mapping thay bằng chứng]
+
+-------------
 
 ### Kết luận
 - Đã kiểm thử: [...] | Chưa truy cập/chưa kiểm thử: [...] | Nghi vấn cần thêm dữ kiện: [...]

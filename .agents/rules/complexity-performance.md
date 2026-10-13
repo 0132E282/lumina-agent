@@ -1,61 +1,14 @@
 ---
 trigger: model_decision
-description: "Kiểm soát độ phức tạp thuật toán, vòng lặp, tài nguyên và đánh giá hiệu năng khi code hoặc review"
+description: "Kiểm soát độ phức tạp thuật toán, query/API, bộ nhớ và tài nguyên khi code hoặc review"
 ---
 
-# Quy tắc kiểm soát độ phức tạp và hiệu năng
+# Độ phức tạp và hiệu năng
 
-## 1. Độ phức tạp thuật toán
+- Với xử lý phụ thuộc dữ liệu, xác định `n`/`m`, time/space complexity, allocation và chi phí khởi tạo đáng kể. Phân tích vòng lặp theo kích thước từng tập; không suy `O(n²)` chỉ từ cú pháp lồng nhau.
+- Kiểm tra query/API fan-out, N+1, dữ liệu tải vào RAM và retry không giới hạn. Với database, xét số query, filter/join/sort, cột đọc, index, pagination và record quét/trả về; dùng query log, profiler hoặc plan khi có thể.
+- Xem số nhánh, độ dài hàm, tham số và độ sâu lồng nhau là tín hiệu review, không phải ngưỡng tự động từ chối hoặc lý do refactor ngoài phạm vi.
+- Chọn giới hạn tài nguyên từ yêu cầu hoặc phép đo. Retry phải có timeout, số lần thử và điều kiện dừng.
+- Không kết luận nhanh hơn nếu chưa đo. Khi review, ghi vị trí, điều kiện gây tải, tác động, bằng chứng và trade-off.
 
-- Phân tích độ phức tạp thời gian và bộ nhớ của đoạn xử lý chính.
-- Xác định rõ `n`, `m` đại diện cho dữ liệu nào.
-- Ưu tiên `O(n)` hoặc `O(n log n)` khi xử lý danh sách.
-- Với `O(n²)` trở lên: giải thích lý do, giới hạn đầu vào và đề xuất tối ưu.
-- Không kết luận hiệu năng chỉ dựa vào Big O; cần xét database, network, I/O và bộ nhớ.
-
-## 2. Vòng lặp
-
-- Khi có vòng lặp lồng nhau, xác định số lần thực thi tối đa.
-- Không mặc định hai vòng lặp lồng nhau luôn là `O(n²)`; duyệt `n` phần tử, mỗi phần tử duyệt `m` mục là `O(n × m)`.
-- Tránh truy vấn database hoặc gọi API cho từng phần tử; ưu tiên eager loading, batch query hoặc batch request.
-- Khi review query database, ghi số query, N+1, điều kiện `WHERE`/`JOIN`/`ORDER BY`, cột đọc, index, số record quét/trả về và pagination; dùng `EXPLAIN` hoặc query log khi có thể.
-- Nếu tìm kiếm lặp lại trong danh sách, cân nhắc `Map`, `Set` hoặc bảng tra cứu.
-- Không tải toàn bộ dữ liệu lớn vào RAM; cân nhắc phân trang, chunk, cursor hoặc streaming.
-- Mọi vòng lặp retry phải có giới hạn số lần và điều kiện dừng.
-
-## 3. Độ dài và trách nhiệm của hàm
-
-- Mỗi hàm nên xử lý một trách nhiệm rõ ràng.
-- Mục tiêu tham khảo: khoảng 20–40 dòng logic mỗi hàm.
-- Hàm trên 50 dòng cần được xem xét khả năng tách nhỏ.
-- Không tách hàm máy móc chỉ để đạt giới hạn số dòng.
-- Ưu tiên tối đa 3–4 tham số; nếu nhiều hơn, cân nhắc một object/DTO.
-- Ưu tiên độ sâu lồng điều kiện/vòng lặp không quá 3 cấp; cân nhắc guard clause và early return.
-
-## 4. Độ phức tạp luồng điều khiển
-
-- Mục tiêu cyclomatic complexity: không quá 10 mỗi hàm.
-- Nếu vượt 10, xem xét đơn giản hóa các nhánh hoặc tách trách nhiệm.
-- Phân biệt cyclomatic complexity với Big O: một chỉ số đo số đường đi trong code, một chỉ số đo mức tăng chi phí xử lý.
-- Các ngưỡng là tín hiệu cần review, không phải lý do tự động từ chối code.
-
-## 5. Giới hạn dữ liệu và tài nguyên
-
-- Xác định giới hạn cho page size, batch size, file upload và số phần tử đầu vào.
-- Chọn giới hạn dựa trên yêu cầu thực tế và kết quả đo.
-- Với xử lý lớn, cân nhắc queue/job thay vì chạy trong HTTP request.
-- Đánh giá timeout, số lần retry và bộ nhớ tối đa.
-- Không tự đặt ngưỡng tùy ý khi chưa có yêu cầu hoặc bằng chứng.
-
-## 6. Báo cáo khi review
-
-Với mỗi vấn đề, trình bày:
-
-- Vị trí: file và hàm.
-- Hiện trạng: Big O, số query hoặc mức lồng nhau.
-- Điều kiện gây chậm: kích thước dữ liệu, số lần thực thi.
-- Ảnh hưởng: thời gian, bộ nhớ hoặc tải database.
-- Đề xuất: cách tối ưu và đánh đổi.
-- Cách kiểm chứng: benchmark, query log hoặc profiler.
-
-Không khẳng định mức cải thiện hiệu năng nếu chưa đo.
+> Quy trình và định dạng báo cáo chi tiết: [`complexity-performance`](../skills/complexity-performance/SKILL.md). Nếu có database, kết hợp [`database`](../skills/database/SKILL.md).

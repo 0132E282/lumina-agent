@@ -30,7 +30,7 @@ A reusable **`.claude/` configuration** that turns Claude Code into a structured
 | [`.claude/agents/`](./.claude/agents) | Subagents — each with its own tools, model, and single responsibility |
 | [`.claude/commands/lumina/`](./.claude/commands/lumina) | Slash commands, namespaced `/lumina:...` — the entry points a user actually types |
 | [`.claude/skills/`](./.claude/skills) | Link to the shared `.agents/skills/` directory |
-| [`.claude/rules/`](./.claude/rules) | Link to the 19 shared rules in `.agents/rules/` |
+| [`.claude/rules/`](./.claude/rules) | Link to the shared rules in `.agents/rules/` |
 | [`.claude/hooks/`](./.claude/hooks) | Automated hooks (audit log, commit-msg guard, secret scan, auto-format, auto-lint...) |
 
 ### Agents
@@ -99,9 +99,9 @@ Each stage **stops and asks for confirmation** before moving to the next — not
 
 Every agent is bound by some or all of the rule files in `.claude/rules/` (one file per group, e.g. `simplicity.md`, `data-safety.md`):
 
-KISS+YAGNI · Clean Code · SRP/Separation of Concerns · DRY · SOLID · Fail-Fast Validation · Data Safety (authz/transactions) · Quality Assurance (test/lint/review) · Complexity/Performance · Setup Rule/Template Changes · Boy Scout Rule · Commit Discipline · PR Conflict Safety · Comment Discipline · Database Read-Only by Default · Local-First Search + No Fabrication · Documentation as Code Sync · Type Safety · Backend Contract/Content/Security · Frontend Design Fidelity/Accessibility · Plan Output Format (JSON, `planner-agent` only) · Open Questions Table · Mandatory Report · Response Style.
+KISS+YAGNI · Clean Code · SRP/Separation of Concerns · DRY · SOLID · Fail-Fast Validation · Data Safety (authz/transactions) · Quality Assurance (test/lint/review) · Complexity/Performance · Setup Rule/Template Changes · Commit Discipline · PR Conflict Safety · Comment Discipline · Database Read-Only by Default · Local-First Search + No Fabrication · Documentation as Code Sync · Documentation Reading + TOC · Type Safety · Backend Contract/Content/Security · Frontend Design Fidelity/Accessibility · Black-Box Feature Testing · Plan Output Format (JSON, `planner-agent` only) · Open Questions Table · Mandatory Report · Response Style.
 
-`coding-agent` reads the 18 core rule files as its system prompt; other agents link to the specific rule files relevant to their task.
+`coding-agent` reads every rule file in the shared directory before coding; other agents apply the rule files relevant to their task.
 
 ---
 
@@ -154,7 +154,18 @@ npm test
 git diff --check HEAD^ HEAD
 ```
 
-When enabling branch protection on GitHub, require the `Validate agent configuration` status check before merging. The CLI uses Node built-ins and `node --test`, with no package dependencies or build step. CI does not install dependencies, clone the private remote through SSH or deploy. No formatter is bundled; syntax/tests and whitespace checks are explicit.
+### DESIGN.md tooling
+
+This repository includes Google's [`@google/design.md`](https://github.com/google-labs-code/design.md) CLI as a development dependency. Use it to validate a UI project's `DESIGN.md` or inspect the current format specification:
+
+```bash
+npm run design:lint -- path/to/DESIGN.md
+npm run design:spec
+```
+
+The format and CLI are currently alpha and may change. This agent-configuration repository does not define product UI design tokens; lint the actual `DESIGN.md` from a UI project.
+
+When enabling branch protection on GitHub, require the `Validate agent configuration` status check before merging. The installer CLI uses Node built-ins and `node --test`; the optional DESIGN.md tooling is a development dependency and is not used by installer runtime code. CI does not install dependencies, clone the private remote through SSH, lint a design file or deploy. No formatter is bundled; syntax/tests and whitespace checks are explicit.
 
 ---
 

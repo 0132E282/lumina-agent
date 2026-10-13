@@ -22,8 +22,3 @@ khả năng một... (3 đoạn giải thích không ai hỏi)
 <!-- ✅ Ngắn gọn, đúng trọng tâm -->
 Đó là giao diện Codex CLI, không phải Claude Code — mình không chỉnh được.
 ```
-
-## Khi áp dụng
-
-- Mọi câu trả lời trong phiên làm việc, trừ khi người dùng yêu cầu rõ "chi tiết hơn"/"giải thích kỹ".
-- Trước khi gửi câu trả lời: tự hỏi *"câu nào ở đây không phục vụ trực tiếp câu hỏi đã hỏi?"* — bỏ đi.

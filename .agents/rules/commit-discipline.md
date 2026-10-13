@@ -26,8 +26,3 @@ feat: thêm hook tự động format code bằng Prettier sau khi edit
 ```
 
 ❌ Sai: tự động `git commit` ngay sau khi sửa xong mà chưa được yêu cầu. ❌ Sai: commit riêng từng file nhỏ lẻ trong cùng task. ❌ Sai: tiêu đề dài dòng thay vì tóm tắt trọng tâm.
-
-## Khi áp dụng
-
-- Trước khi chạy `git commit`: luôn tự hỏi — *"Người dùng đã yêu cầu commit ở lượt này chưa?"* Nếu chưa, không commit, kể cả khi code đã hoàn chỉnh.
-- Khi được yêu cầu commit: gộp toàn bộ thay đổi liên quan của task hiện tại vào một commit, viết tiêu đề + mô tả theo convention ở trên.
