@@ -9,7 +9,7 @@ description: "Áp dụng khi nhiệm vụ liên quan: 📋 Viết plan — JSON 
 
 ## Cách áp dụng
 
-- Kế hoạch triển khai luôn ghi ra `docs/implementation-plan.json` — **JSON hợp lệ**, không dùng Markdown tự do hay bảng Markdown rời rạc.
+- Kế hoạch triển khai ghi thành file **JSON hợp lệ** trong `docs/plans/` (mặc định `docs/plans/<title-slug>-<yyyyMMdd>.json`); file chi tiết có `title`, `description`, `tags`, `content`, `createdAt` theo `YYYY-MM-DD`. `content` chứa kế hoạch có cấu trúc theo schema bên dưới. Cập nhật `docs/plans/index.json` cùng lượt với entry chỉ gồm `title`, `description`, `tags`, `path`; description hướng dẫn AI khi nào nên tham khảo plan. Không dùng Markdown tự do hay bảng Markdown rời rạc làm plan.
 - `tasks` là một **mảng object đồng nhất field** (dạng bảng): mọi task dùng đúng bộ field theo bảng dưới. Field không có dữ liệu để `null`/`[]`, không xóa key — giữ mọi task cùng cấu trúc để so sánh/truy vết được như một bảng thật.
 
 | Field | Kiểu | Nội dung |
@@ -25,6 +25,7 @@ description: "Áp dụng khi nhiệm vụ liên quan: 📋 Viết plan — JSON 
 | `outOfScope` | string | Ngoài phạm vi task |
 | `dependencies` | string[] | `TASK-xxx` phụ thuộc, hoặc `[]` |
 | `approach` | string | Hướng triển khai |
+| `filesToChange` | object[] | Danh sách file repo-relative cần sửa; mỗi object có `path` và `changes` mô tả chính xác thay đổi dự kiến |
 | `test` | string | Dữ liệu, thao tác, kết quả mong đợi |
 | `doneWhen` | string | Điều kiện hoàn thành đo được |
 
@@ -53,6 +54,10 @@ description: "Áp dụng khi nhiệm vụ liên quan: 📋 Viết plan — JSON 
       "outOfScope": "Thanh toán",
       "dependencies": [],
       "approach": "1. Validate input 2. Tạo transaction 3. Trả response",
+      "filesToChange": [
+        {"path": "src/orders/order.controller.ts", "changes": "Thêm POST /orders và gọi OrderService sau khi xác thực request."},
+        {"path": "src/orders/order.service.ts", "changes": "Tạo đơn trong transaction và trả entity đã lưu."}
+      ],
       "test": "POST /orders với payload hợp lệ/không hợp lệ",
       "doneWhen": "AC-001 pass, có test, không lỗi linter"
     }
@@ -62,6 +67,6 @@ description: "Áp dụng khi nhiệm vụ liên quan: 📋 Viết plan — JSON 
 
 ## Khi áp dụng
 
-- Agent `planner-agent` (hoặc agent khác được giao viết kế hoạch triển khai) xuất file plan — luôn `docs/implementation-plan.json`, không phải `.md`.
+- Agent `planner-agent` (hoặc agent khác được giao viết kế hoạch triển khai) đọc `docs/plans/index.json`, xuất plan JSON mới trong `docs/plans/`, rồi thêm/cập nhật mục lục. Mỗi task nêu file path cần sửa và thay đổi cụ thể; chỉ ghi path đã xác minh từ repository, điểm chưa xác định chuyển thành câu hỏi mở.
 - `reviewer-agent` review plan, hoặc `coding-agent`/`/lumina:implement` đọc plan để biết task nào `TODO` — đọc đúng theo field JSON đã định nghĩa, không suy đoán cấu trúc tự do.
 - **Không áp dụng** cho báo cáo thay đổi/review report của skill [`report`](../skills/report/SKILL.md) (vẫn Markdown) hay tài liệu `docs/system-design.md`/`docs/requirement-analysis.md` (không phải "plan", giữ Markdown).

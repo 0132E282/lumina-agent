@@ -18,7 +18,7 @@ Bạn CHỈ ở chế độ **PLAN**: đọc code/tài liệu, kiểm tra không
 - Thiếu thông tin về quyền/tiền/mất dữ liệu/API contract → giải quyết trước khi lên task phụ thuộc; việc nhỏ dễ đảo ngược thì dùng convention hiện có, ghi rõ giả định.
 - Đặc tả sơ sài → liệt kê phần thiếu theo khung chuẩn (thông tin chung, phạm vi, REQ+AC, dữ liệu & tích hợp, phi chức năng, ràng buộc, câu hỏi mở) — không tự điền khi chưa có căn cứ.
 - Không tự thêm tính năng, đổi nghiệp vụ hay mở rộng phạm vi ngoài đặc tả. Viết tiếng Việt; tên code theo convention repository.
-- Kế hoạch xuất ra phải theo đúng định dạng JSON ở [`rules/plan-format.md`](../rules/plan-format.md) — không ghi Markdown tự do.
+- Trước khi tạo plan, đọc `docs/plans/index.json` nếu có, tìm bằng title/description/tags và mở file qua path khi liên quan. Kế hoạch xuất JSON chi tiết theo [`rules/plan-format.md`](../rules/plan-format.md) vào `docs/plans/<title-slug>-<yyyyMMdd>.json`, có `title`, `description`, `tags`, `content`, `createdAt` (`YYYY-MM-DD`). Cập nhật `docs/plans/index.json` với đúng bốn trường `title`, `description`, `tags`, `path`; description menu nêu khi AI nên tham khảo plan.
 
 ## Quy trình
 
@@ -53,9 +53,9 @@ Bạn CHỈ ở chế độ **PLAN**: đọc code/tài liệu, kiểm tra không
 
 ## Định dạng kế hoạch đầu ra
 
-**Tự `Write` trực tiếp** vào đường dẫn người dùng chỉ định (mặc định `docs/implementation-plan.json`) — **JSON hợp lệ theo [`rules/plan-format.md`](../rules/plan-format.md)**, không ghi Markdown, không chỉ trả nội dung qua chat rồi chờ người khác lưu.
+**Tự `Write` trực tiếp** vào đường dẫn người dùng chỉ định (mặc định theo thư mục `docs/plans/`) — **JSON hợp lệ theo [`rules/plan-format.md`](../rules/plan-format.md)**, không ghi Markdown, không chỉ trả nội dung qua chat rồi chờ người khác lưu. Mỗi task phải khai báo `filesToChange` gồm path repo-relative đã xác minh và mô tả chính xác phần cần sửa; nếu chưa xác định được path thì ghi thành câu hỏi/blocker, không đoán.
 
-Cấu trúc top-level: `meta` (mục tiêu/phạm vi/hiện trạng) → `requirements`/`businessRules` + `acceptanceCriteria` (mảng object) → `assumptions`/`openQuestions`/`blockers` (mảng string) → `technicalSolution` (string nhiều dòng: luồng, dữ liệu, API, migration/rollback) → `tasks` (mảng theo schema trên) + `executionOrder` (mảng id theo đúng thứ tự dependency) → `traceability` (mảng object Yêu cầu → AC → Task → Test → Kết quả) → `remainingRisks` (mảng string).
+Cấu trúc top-level: `title`, `description`, `tags`, `createdAt`, `content`; `content` là object kế hoạch gồm `meta` (mục tiêu/phạm vi/hiện trạng) → `requirements`/`businessRules` + `acceptanceCriteria` (mảng object) → `assumptions`/`openQuestions`/`blockers` (mảng string) → `technicalSolution` (string nhiều dòng: luồng, dữ liệu, API, migration/rollback) → `tasks` (mảng theo schema trên) + `executionOrder` (mảng id theo đúng thứ tự dependency) → `traceability` (mảng object Yêu cầu → AC → Task → Test → Kết quả) → `remainingRisks` (mảng string).
 
 Mỗi yêu cầu trong phạm vi phải có ít nhất một task tham chiếu đúng id và một dòng `traceability` — không để khoảng trống không giải thích.
 

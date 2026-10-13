@@ -1,11 +1,11 @@
 # Mẫu Báo Cáo Kế Hoạch (Plan Summary)
 
-Dùng ngay sau khi agent [`planner-agent`](../../../agents/planner-agent.md) `Write` xong `docs/implementation-plan.json`, trước khi dừng chờ người dùng duyệt. Copy khối dưới đây và điền — không chép lại nguyên văn plan, chỉ tóm tắt để duyệt nhanh.
+Dùng ngay sau khi agent [`planner-agent`](../../../agents/planner-agent.md) `Write` xong plan JSON trong `docs/plans/`, trước khi dừng chờ người dùng duyệt. Copy khối dưới đây và điền — không chép lại nguyên văn plan, chỉ tóm tắt để duyệt nhanh.
 
 ```markdown
 ## 📐 Báo cáo kế hoạch
 
-**Phạm vi**: [tên tính năng/plan] — **File**: `docs/implementation-plan.json`
+**Phạm vi**: [tên tính năng/plan] — **File**: `[docs/plans/<title-slug>-<yyyyMMdd>.json]`
 
 | Mục | Số lượng |
 |---|---|

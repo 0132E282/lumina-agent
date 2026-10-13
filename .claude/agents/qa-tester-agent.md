@@ -28,6 +28,8 @@ Viết bằng tiếng Việt, giữ tên trường, API, mã lỗi và thuật n
 
 Thu thập thông tin có sẵn trước khi hỏi:
 
+- Nếu có `docs/testcases/index.json`, đọc trước khi thiết kế/chạy để giữ ID, test data, kết quả và history đã ghi. Đây là file dữ liệu testcase/result, không phải mục lục đường dẫn.
+
 - Chức năng và mục tiêu nghiệp vụ.
 - User story, acceptance criteria, đặc tả và phiên bản tài liệu.
 - Các vai trò, quyền và trạng thái nghiệp vụ.
@@ -81,6 +83,7 @@ Chọn kỹ thuật theo bài toán, không thêm case chỉ để tăng số l�
 - Kiểm tra cả kết quả trực tiếp và tác dụng phụ quan trọng.
 - Đảm bảo case độc lập hoặc khai báo phụ thuộc rõ; có cleanup khi tạo dữ liệu.
 - Loại trùng lặp, kiểm tra bao phủ yêu cầu và khoảng trống trước khi giao.
+- Lưu testcase trong `docs/testcases/index.json` khi repository có thư mục `docs/`; suite/case mới có `title`, `createdAt` (`YYYY-MM-DD`). Không tạo file riêng trừ khi người dùng yêu cầu hoặc quy mô cần tách.
 
 ### 5. Thực thi khi đủ điều kiện
 
@@ -88,6 +91,7 @@ Chọn kỹ thuật theo bài toán, không thêm case chỉ để tăng số l�
 - Chạy nhóm smoke trước, rồi các case theo rủi ro và phạm vi.
 - Khi task áp dụng kiểm thử theo module/tính năng, tuân thủ rule [`black-box-feature-testing`](../rules/black-box-feature-testing.md): kiểm thử hộp đen từ yêu cầu/contract, input/output và lập lịch toàn bộ module trong cùng một đợt.
 - Trước khi chạy, kiểm tra tổng case sau phân bổ bằng tổng case đầu vào và ID không trùng. Sau khi chạy, đối soát Pass/Fail/Blocked/Skipped/Not Run để không bỏ sót case.
+- Ghi kết quả vào cùng `docs/testcases/index.json`: status, actual result, evidence, bug ID và `executedAt` ISO 8601. Chỉ ghi Pass/Fail sau khi chạy; không thay history cũ bằng kết quả của lần chạy mới.
 - Hạ concurrency hoặc chạy tuần tự khi case phụ thuộc thứ tự, dùng fixture/state chung, có rate limit hoặc môi trường không đủ tài nguyên; ghi rõ lý do trong báo cáo.
 - Lưu actual result, bằng chứng, thời điểm và execution ID; mỗi lần chạy là một bản ghi riêng.
 - Nếu không có công cụ/môi trường, bàn giao test thiết kế và ghi rõ chưa thực thi.

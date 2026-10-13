@@ -10,7 +10,7 @@ metadata:
 
 Hai chế độ cho tài liệu dự án (README.md, CLAUDE.md, docs/) — không phải đặc tả kiến trúc hệ thống (xem [`system-design-agent`](../../agents/system-design-agent.md), skill này không tự thiết kế HLD/LLD). Khi cần sơ đồ, dùng [`system-diagrams`](../system-diagrams/SKILL.md). Mọi kết luận "đúng/sai" hoặc nội dung viết mới phải có bằng chứng (đọc file, Glob, Grep), theo [`rules/search-priority`](../../rules/search-priority.md) — không bịa lệnh/convention chưa xác minh.
 
-Khi đọc hoặc sửa file trong `docs/`, agent phải đọc `index.json` trước để tìm entry theo `id`, `title`, `url`, `description` hoặc `tags`, rồi áp dụng thêm rule [`documentation-reading-and-toc`](../../rules/documentation-reading-and-toc.md). Mỗi entry cần `id`, `title`, `url`, `description` và `tags`; cập nhật index cùng lượt khi viết/sửa docs. Registry không quản lý README, AGENTS, CLAUDE, rule hoặc skill.
+Khi đọc hoặc sửa trong `docs/`, mở `index.json` phù hợp trước, tìm theo `title`, `description`, `tags`, rồi đọc file chi tiết qua `path`. Mỗi entry index chỉ có `title`, `description`, `tags`, `path`; không nhúng `content`, `id`, `url` hay ngày tạo. Mỗi tài liệu Markdown chi tiết phải có `title`, `description`, `tags`, `content` (metadata trong frontmatter, phần thân là content); plan/review JSON lưu metadata và nội dung đầy đủ trong file riêng. Description ở menu giúp AI quyết định có nên tham khảo file chi tiết. Theo rule [`documentation-reading-and-toc`](../../rules/documentation-reading-and-toc.md): `docs/index.json` dành cho Markdown; plan JSON nằm trong `docs/plans/` và có menu `docs/plans/index.json`; testcase cùng kết quả thực thi được lưu trong `docs/testcases/index.json`; review code/system design dạng JSON nằm trong `docs/reviews/` và được liệt kê ở `docs/reviews/index.json`. Cập nhật nguồn và index/record tương ứng cùng lượt. Không đưa README, AGENTS, CLAUDE, rule hoặc skill vào catalog docs.
 
 ## Hai chế độ đọc tài liệu
 
@@ -70,3 +70,11 @@ Dùng khi project/module/feature chưa có CLAUDE.md/README, cần viết lần 
 - **Đồng bộ**: ngay sau khi xóa/đổi tên/thêm agent-skill-command, đổi cấu trúc thư mục lớn, hoặc khi nghi ngờ docs lỗi thời.
 - **Viết mới**: project/module/feature chưa có CLAUDE.md/README, cần viết lần đầu một cách gọn gàng.
 - Không dùng cho đặc tả kiến trúc hệ thống (HLD/LLD); sơ đồ mô tả hệ thống hiện có thì kết hợp skill `system-diagrams`.
+
+## Kho tài liệu có cấu trúc
+
+- Đọc `docs/index.json` trước khi làm việc với tài liệu Markdown; entry chỉ gồm `title`, `description`, `tags`, `path`. `path` tính từ gốc repo. File Markdown chi tiết có `title`, `description`, `tags` trong YAML frontmatter và nội dung trong phần thân.
+- Plan là file JSON chi tiết dưới `docs/plans/`; menu `docs/plans/index.json` dùng đúng bốn trường `title`, `description`, `tags`, `path`, trong đó description hướng dẫn khi nào nên tham khảo. Tên file là `<title-slug>-<yyyyMMdd>.json`. Mỗi task nêu `filesToChange` với path repo-relative và mô tả thay đổi cụ thể.
+- `docs/testcases/index.json` chứa testcase và kết quả chạy; đọc trước, giữ ID ổn định, ghi `createdAt` cho suite/case mới và chỉ cập nhật Pass/Fail sau khi thực thi có bằng chứng.
+- Review code và system design lưu thành JSON chi tiết trong `docs/reviews/`; tên file `<title-slug>-<yyyyMMdd>.json`. Menu `docs/reviews/index.json` dùng đúng bốn trường `title`, `description`, `tags`, `path`, description hướng dẫn khi nào nên tham khảo. Báo cáo review không sửa artifact được review.
+- Nếu repository đã có schema khác, giữ schema hiện hữu trừ khi người dùng yêu cầu migration; không xóa field/file chỉ để khớp mẫu này.

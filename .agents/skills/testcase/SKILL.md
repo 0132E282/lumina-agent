@@ -80,6 +80,15 @@ Khi test theo module/tính năng, áp dụng rule [`black-box-feature-testing`](
 
 Ghi rõ giả định đang dùng. Điểm thiếu ảnh hưởng trực tiếp tới expected result → hỏi lại trước khi đánh dấu case Ready; không hỏi được ngay thì đánh dấu Draft/TBD, không tự điền nghiệp vụ để hoàn thiện case ([`rules/fail-fast-validation`](../../rules/fail-fast-validation.md), [`rules/search-priority`](../../rules/search-priority.md): không bịa quy tắc/ngưỡng/thông báo lỗi chưa xác nhận).
 
+## 10. Lưu testcase và kết quả
+
+- Trước khi tạo hoặc cập nhật bộ testcase, đọc `docs/testcases/index.json` nếu file này tồn tại; đây là dữ liệu testcase và kết quả, không phải mục lục file.
+- Lưu case, ma trận truy vết và trạng thái thực thi tại `docs/testcases/index.json`, giữ ID ổn định. Bổ sung case vào bộ có sẵn thay vì tạo bản trùng.
+- Suite và case mới có `title` và `createdAt` theo `YYYY-MM-DD`; mỗi lần chạy có `executedAt` theo ISO 8601. Mỗi case có vùng kết quả chạy gồm `status`, `actualResult`, `evidence` và `bugId` khi có. Case mới là `Not Run`; chỉ ghi `Pass`/`Fail` sau khi chạy và lưu bằng chứng. Giữ lịch sử lần chạy nếu schema hiện tại có lịch sử.
+- Sau khi cập nhật testcase hoặc kết quả, parse JSON và đối soát số case, ID duy nhất, traceability và trạng thái.
+
+Nếu test case được review độc lập, review report thuộc `docs/reviews/` theo workflow-review; testcase và trạng thái chạy vẫn ở `docs/testcases/index.json`.
+
 ## Khi áp dụng
 
 - Cần viết nhanh một vài test case cho tính năng/API/bug cụ thể ngay trong phiên hiện tại.

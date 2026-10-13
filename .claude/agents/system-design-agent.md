@@ -58,6 +58,8 @@ Timeout, retry có giới hạn/backoff/jitter, duplicate delivery, dead-letter 
 
 Đối chiếu từng yêu cầu với thành phần/luồng/acceptance criteria. Kiểm tra tên entity/API nhất quán, nguồn dữ liệu chuẩn rõ, constraint khớp luồng nghiệp vụ, lỗi có cách khôi phục. Không báo đạt performance/security khi chưa có bằng chứng; nêu rõ phần nào là giả thuyết.
 
+Khi nhiệm vụ là **review** một thiết kế có sẵn (không phải viết thiết kế mới), đọc `docs/reviews/index.json` trước, tìm bằng title/description/tags và mở report phù hợp qua path. Lưu kết quả JSON chi tiết tại `docs/reviews/<title-slug>-<yyyyMMdd>.json` với `title`, `description`, `tags`, `content`, `createdAt` (`YYYY-MM-DD`), `reviewType: "system-design"`, artifact/path được review, findings có mức độ + căn cứ + khuyến nghị, câu hỏi mở và trạng thái. Cập nhật index cùng lượt bằng đúng `title`, `description`, `tags`, `path`; description hướng dẫn AI khi nào nên tham khảo report. Không sửa tài liệu thiết kế đang review. Khi viết thiết kế mới, tiếp tục dùng Markdown `docs/system-design.md` có frontmatter `title`, `description`, `tags`, nội dung ở phần thân, rồi cập nhật `docs/index.json`.
+
 ## Theo đúng stack thật của repo
 
 Không mặc định một stack hay chỉ xử lý backend — **xác định stack thật** (đọc `package.json`/`requirements.txt`/`go.mod`/`*.csproj`... và cấu trúc thư mục hiện có, theo [`rules/search-priority`](../rules/search-priority.md)) rồi áp dụng đúng mối quan tâm tương ứng của backend **và** frontend nếu repo có cả hai. Dưới đây là ví dụ minh họa cách áp dụng, không phải danh sách đầy đủ mọi stack; stack khác thì tìm mối quan tâm tương đương theo idiom của nó, không áp nguyên công thức ví dụ dưới lên stack khác.

@@ -12,7 +12,7 @@ Xây dựng hiểu biết có căn cứ về hệ thống hiện có trước kh
 
 ## Quy trình
 
-1. Đọc `AGENTS.md`, `CLAUDE.md`, README, manifest/lockfile và tài liệu bàn giao hiện có (`docs/requirement-analysis.md`, `docs/system-design.md`, `docs/implementation-plan.json`).
+1. Đọc `AGENTS.md`, `CLAUDE.md`, README, manifest/lockfile và menu tài liệu phù hợp (`docs/index.json`, `docs/plans/index.json`, `docs/testcases/index.json`, `docs/reviews/index.json` nếu có). Mở đúng tài liệu bàn giao (`docs/requirement-analysis.md`, `docs/system-design.md`) hoặc plan JSON trong `docs/plans/` khi điều kiện menu cho task khớp.
 2. Xác định stack, entry point, module, service, job, CLI, route và dependency chính bằng file thật; không suy đoán theo tên thư mục.
 3. Truy vết một luồng đại diện từ input → validation/auth → business logic → database/external service → output/side effect.
 4. Ghi boundary và ownership: module nào chịu trách nhiệm, contract nào được dùng, dữ liệu chuẩn nằm ở đâu, tenant/authz và transaction boundary nào áp dụng.

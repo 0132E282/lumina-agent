@@ -13,7 +13,7 @@ Skill này **chỉ format và xuất báo cáo** — không tự đi tìm lỗi,
 | Loại báo cáo | Input là gì | Dùng khi | Template |
 |---|---|---|---|
 | **Báo cáo thay đổi/commit** | Danh sách file + diff vừa Edit/Write | Vừa sửa code xong, hoặc trước khi soạn commit message | [`assets/change-report-template.md`](./assets/change-report-template.md) |
-| **Báo cáo kế hoạch (Plan Summary)** | `docs/implementation-plan.json` vừa `Write` xong | Agent `planner-agent` vừa xong một plan, trước khi dừng chờ duyệt | [`assets/plan-summary-report-template.md`](./assets/plan-summary-report-template.md) |
+| **Báo cáo kế hoạch (Plan Summary)** | Plan JSON vừa ghi trong `docs/plans/` | Agent `planner-agent` vừa xong một plan, trước khi dừng chờ duyệt | [`assets/plan-summary-report-template.md`](./assets/plan-summary-report-template.md) |
 | **Báo cáo kết quả review** | Finding đã có sẵn — code, plan (`planner-agent`/`system-design-agent`) hoặc test case (`qa-tester-agent`) | Sau khi agent `reviewer-agent` (hoặc coding-agent tự review) đã xong, cần trình bày lại | [`assets/review-report-template.md`](./assets/review-report-template.md) |
 | **Báo cáo security review** | Finding đã có sẵn từ skill `review-web-security` | Sau khi security review xong — format riêng vì có field confidence/exploit condition/CWE mà bảng review thường không cần | [`assets/security-review-report-template.md`](./assets/security-review-report-template.md) |
 | **Báo cáo dependency audit** | Kết quả audit đã có sẵn từ skill `dependency-audit` | Sau khi audit dependency xong, cần trình bày danh sách lỗ hổng + lệnh đề xuất | [`assets/dependency-audit-report-template.md`](./assets/dependency-audit-report-template.md) |
@@ -30,7 +30,7 @@ Copy khung `assets/change-report-template.md`, điền bảng tóm tắt `Trạn
 
 ## 2. Báo cáo kế hoạch (Plan Summary)
 
-Copy khung `assets/plan-summary-report-template.md`, điền ngay sau khi `planner-agent` `Write` xong `docs/implementation-plan.json`: số REQ/task/câu hỏi mở/rủi ro, bảng câu hỏi mở cần chốt (nếu ≥2 câu — theo [rules/open-questions-table](../../rules/open-questions-table.md)), rủi ro chính, bước tiếp theo. Không chép lại nguyên văn plan — chỉ tóm tắt để người dùng duyệt nhanh.
+Copy khung `assets/plan-summary-report-template.md`, điền ngay sau khi `planner-agent` `Write` xong plan JSON trong `docs/plans/`: số REQ/task/câu hỏi mở/rủi ro, bảng câu hỏi mở cần chốt (nếu ≥2 câu — theo [rules/open-questions-table](../../rules/open-questions-table.md)), rủi ro chính, bước tiếp theo. Không chép lại nguyên văn plan — chỉ tóm tắt để người dùng duyệt nhanh.
 
 ## 3. Báo cáo kết quả review (Review Report)
 
@@ -56,6 +56,6 @@ Copy khung `assets/bug-feedback-report-template.md`, điền đúng 3 dòng dạ
 ## Khi áp dụng
 
 - Báo cáo thay đổi/commit: ngay sau khi hoàn thành một task Edit/Write, trước khi báo "xong" hoặc trước khi soạn commit message (xem [git-workflow](../git-workflow/SKILL.md)).
-- Báo cáo kế hoạch: ngay sau khi `planner-agent` `Write` xong `docs/implementation-plan.json`, trước khi dừng chờ người dùng duyệt.
+- Báo cáo kế hoạch: ngay sau khi `planner-agent` `Write` xong plan JSON trong `docs/plans/`, trước khi dừng chờ người dùng duyệt.
 - Báo cáo review/security/dependency/test: ngay sau khi việc tương ứng đã hoàn tất (ở nơi khác) và cần trình bày lại kết quả — không dùng skill này để tự thực hiện review/audit/test.
 - Báo cáo Bug/Feedback: ngay khi phát hiện một vấn đề ngoài phạm vi task chính đang làm, cần ghi lại nhanh để không quên.

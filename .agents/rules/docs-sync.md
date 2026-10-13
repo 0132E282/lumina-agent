@@ -7,7 +7,7 @@ description: 'Áp dụng khi nhiệm vụ liên quan: 📚 Đồng bộ tài li�
 
 **Nhóm quy tắc kết hợp**: Documentation as Code + Definition of Done (bao gồm docs)
 
-Khi đọc hoặc sửa file trong `docs/`, agent phải đọc `index.json` trước, tìm entry theo `id`, `title`, `url`, `description` hoặc `tags` và áp dụng thêm rule [`documentation-reading-and-toc`](./documentation-reading-and-toc.md). Mỗi lần viết/sửa docs phải cập nhật index cùng lượt. Registry chỉ quản lý file trong `docs/`.
+Khi đọc hoặc sửa file trong `docs/`, agent phải đọc `index.json` phù hợp trước, tìm bằng `title`, `description`, `tags`, rồi mở file chi tiết qua `path`. Mỗi entry trong index menu/catalog chỉ có `title`, `description`, `tags`, `path`; nội dung nằm trong file chi tiết (`.md` cho tài liệu, `.json` cho plan/review). File Markdown chi tiết có title, description, tags và content; description của menu plan/review hướng dẫn AI khi nào nên tham khảo file. Ngoại lệ: `docs/testcases/index.json` là dữ liệu testcase và kết quả chạy theo schema testcase chuyên biệt, không phải menu. Cập nhật index/record tương ứng cùng lượt, không nhúng nội dung tài liệu vào menu.
 
 ## Cách áp dụng
 
@@ -35,6 +35,6 @@ function finishTask() {
 
 ## Khi áp dụng
 
-- Ngay sau khi `coding-agent` hoàn thành một task từ `docs/implementation-plan.json` mà task đó đổi API/cấu trúc/convention đang được nhắc trong docs.
+- Ngay sau khi `coding-agent` hoàn thành một task trong `docs/plans/*.json` mà task đó đổi API/cấu trúc/convention đang được nhắc trong docs.
 - Trước khi báo "hoàn thành task" với người dùng — tự hỏi: _"README/CLAUDE.md/docs có đoạn nào giờ sai không?"_
 - **Không áp dụng** cho thay đổi nội bộ không ảnh hưởng gì tới nội dung đã viết trong docs (ví dụ đổi tên biến cục bộ, refactor không đổi hành vi/giao diện công khai).

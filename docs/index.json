@@ -4,24 +4,23 @@
   "read_first": true,
   "entries": [
     {
-      "id": "documentation-index",
       "title": "Documentation index",
-      "url": "index.json",
-      "description": "Mục lục nguồn chuẩn của tài liệu trong docs/. Mỗi mục có ID ổn định, tiêu đề, URL tương đối, mô tả và tags để AI tìm kiếm theo chủ đề.",
-      "tags": ["documentation", "index", "table-of-contents", "search"],
-      "source_of_truth": true
+      "path": "docs/index.json",
+      "description": "Mục lục tài liệu Markdown trong docs/. Tìm tài liệu theo tiêu đề, mô tả và tags; mở file chi tiết qua path khi nội dung phù hợp với yêu cầu.",
+      "tags": ["documentation", "index", "table-of-contents", "search"]
     }
   ],
   "update_policy": {
     "entry_schema": {
-      "required_fields": ["id", "title", "url", "description", "tags"],
-      "id": "ID duy nhất, ổn định, dạng kebab-case; giữ nguyên khi chỉ đổi tiêu đề hoặc mô tả.",
-      "url": "Đường dẫn tương đối từ docs/.",
-      "tags": "Mảng từ khóa ngắn, chữ thường, ưu tiên kebab-case; chọn theo chủ đề, loại tài liệu và công nghệ liên quan."
+      "required_fields": ["title", "description", "tags", "path"],
+      "path": "Đường dẫn file tương đối từ gốc repository; dùng để mở file nguồn.",
+      "tags": "Mảng từ khóa ngắn, chữ thường, ưu tiên kebab-case; chọn theo chủ đề, loại tài liệu và công nghệ liên quan.",
+      "description": "Mô tả ngắn giúp AI quyết định có nên mở file chi tiết hay không.",
+      "detail_file": "File Markdown chi tiết có title, description, tags trong frontmatter và nội dung đầy đủ ở phần thân."
     },
-    "before_read_or_write": "Mỗi agent phải đọc index và tìm tài liệu theo id, title, url, description hoặc tags trước khi đọc/viết docs.",
-    "after_write": "Mỗi lần tạo hoặc sửa file trong docs/ phải cập nhật id, title, url, description và tags trong cùng lượt; giữ id ổn định nếu entry đã tồn tại.",
+    "before_read_or_write": "Mỗi agent phải đọc index và tìm tài liệu theo title, description hoặc tags; mở path để đọc file chi tiết trước khi sửa.",
+    "after_write": "Mỗi lần tạo hoặc sửa tài liệu Markdown trong docs/ phải cập nhật title, description, tags và path trong cùng lượt.",
     "after_structure_change": "Cập nhật hoặc xóa entry khi đổi tên hoặc xóa file trong docs/.",
-    "avoid_duplication": "Ưu tiên sửa source_of_truth hiện có; chỉ tạo file mới khi chưa có entry phù hợp."
+    "avoid_duplication": "Ưu tiên sửa file chi tiết hiện có; chỉ tạo file mới khi chưa có entry phù hợp."
   }
 }

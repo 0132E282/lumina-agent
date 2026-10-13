@@ -28,3 +28,4 @@ description: "Áp dụng khi kiểm thử theo tính năng/module bằng kỹ th
 - Ghi rõ tổng module/tính năng và tổng test case đầu vào.
 - Đối soát số case đã phân bổ, thực thi, Pass, Fail, Blocked, Skipped và Not Run; tổng số phải giải thích được, không tự đánh dấu Pass khi chưa chạy.
 - Ghi lý do hạ concurrency, chạy tuần tự hoặc chưa chạy nếu có.
+- Nếu có `docs/testcases/index.json`, đọc trước và ghi testcase/kết quả thực thi vào chính file đó; giữ ID và trạng thái các lần chạy trước, chỉ cập nhật kết quả có bằng chứng.

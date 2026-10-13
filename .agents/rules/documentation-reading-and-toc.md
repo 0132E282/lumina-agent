@@ -7,14 +7,18 @@ description: 'Áp dụng khi đọc, viết hoặc cập nhật tài liệu Mark
 
 ## Tra cứu registry trước
 
-- Mỗi agent phải đọc `index.json` trước khi đọc hoặc viết docs, rồi tìm tài liệu phù hợp theo `id`, `title`, `url`, `description` hoặc `tags`.
-- Registry này chỉ quản lý file nằm trong `docs/`; không thêm README, AGENTS, CLAUDE, rule hoặc skill vào đây.
-- Mỗi entry bắt buộc có `id`, `title`, `url`, `description` và `tags`.
-- `id` phải duy nhất, ổn định, dạng kebab-case; giữ nguyên khi chỉ đổi title hoặc description.
-- `url` tương đối từ thư mục `docs/`.
-- `tags` là mảng từ khóa ngắn, chữ thường, ưu tiên kebab-case; mô tả chủ đề, loại tài liệu và công nghệ liên quan để AI tìm kiếm.
-- Ưu tiên sửa tài liệu có `source_of_truth: true`; không tạo tài liệu mới nếu registry đã có entry phù hợp.
-- Mỗi lần tạo hoặc sửa file trong `docs/`, cập nhật entry `id`, `title`, `url`, `description` và `tags` trong `index.json` cùng lượt; giữ `id` ổn định, khi đổi tên hoặc xóa thì cập nhật/xóa entry tương ứng.
+- Mỗi agent phải đọc `index.json` phù hợp trước khi đọc hoặc viết tài liệu; dùng `title`, `description`, `tags` để tìm tài liệu và mở file chi tiết qua `path` khi phù hợp.
+- Mỗi entry menu/catalog chỉ gồm `title`, `description`, `tags`, `path`. `path` tương đối từ gốc repository. Không thêm `id`, `url`, `content` hoặc ngày tạo vào entry.
+- File Markdown chi tiết phải có đủ `title`, `description`, `tags`, `content` (metadata title/description/tags trong frontmatter, phần thân Markdown là content). Plan/review JSON cũng giữ metadata và nội dung đầy đủ trong file chi tiết theo schema riêng.
+- `docs/index.json` chỉ catalog tài liệu Markdown. Không đưa plan/testcase/review JSON vào catalog này.
+- `docs/plans/index.json` là menu tài liệu theo schema chung `title`, `description`, `tags`, `path`; description nêu khi nào AI nên tham khảo plan. Metadata và nội dung plan đầy đủ nằm trong file JSON chi tiết.
+- `docs/testcases/index.json` là nguồn dữ liệu testcase và kết quả thực thi, không phải menu file. Đọc trước khi thêm/sửa case; giữ ID ổn định, ghi `createdAt` cho suite/case mới và chỉ cập nhật trạng thái/kết quả/evidence sau lần chạy thật.
+- `docs/reviews/index.json` là menu tài liệu theo schema chung `title`, `description`, `tags`, `path`; description nêu loại review và khi nào AI nên tham khảo. Findings và nội dung review nằm trong file JSON chi tiết.
+- Tên file JSON plan/review dùng `<title-slug>-<yyyyMMdd>.json`; file có `title` và `createdAt` (`YYYY-MM-DD`). Không suy ra ngày tạo cho artifact cũ nếu không có nguồn xác minh.
+- Các catalog chỉ quản lý nội dung trong `docs/`; không thêm README, AGENTS, CLAUDE, rule hoặc skill vào đó.
+- Trong mọi `index.json` dạng menu, `tags` là mảng từ khóa ngắn, chữ thường, ưu tiên kebab-case; description giúp AI quyết định có nên mở file chi tiết hay không. `docs/index.json` entry chỉ có `title`, `description`, `tags`, `path`; `content` nằm trong file `.md` được trỏ tới.
+- Ưu tiên cập nhật file chi tiết hiện có nếu đã có entry phù hợp; tránh tạo tài liệu trùng.
+- Khi tạo/sửa Markdown, cập nhật `docs/index.json`; khi tạo/sửa plan, cập nhật `docs/plans/index.json`; khi tạo/sửa testcase hoặc kết quả chạy, cập nhật `docs/testcases/index.json`; khi tạo/sửa review, cập nhật `docs/reviews/index.json` cùng lượt.
 
 ## Đọc trước khi sửa
 
