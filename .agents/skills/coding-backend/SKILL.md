@@ -15,14 +15,16 @@ Bảo đảm nội dung, URL và dữ liệu SEO nhất quán, website hoạt đ
 - Tuân thủ [backend](../../rules/backend.md), [type-safety](../../rules/type-safety.md) và [database-read-only](../../rules/database-read-only.md) khi áp dụng.
 
 - Đọc hướng dẫn project, đặc tả, schema, route, API contract và cấu hình liên quan trước khi code. Tái sử dụng model, validation, service, serializer, job và cache hiện có; giữ tương thích contract ngoài phạm vi thay đổi.
+- **Ranh giới sửa đổi bắt buộc**: chỉ thay đổi module/endpoint/hành vi nằm trong yêu cầu hoặc task đã duyệt. Không chỉnh luồng đang hoạt động ngoài phạm vi để tiện triển khai, dọn dẹp hoặc cải thiện thêm. Nếu cần tác động module/contract khác, dừng phần đó, báo file và tác động dự kiến, xin người dùng đồng ý; tiếp tục phần độc lập đã được giao.
 - Tách HTTP/validation/phân quyền/nghiệp vụ theo cấu trúc project. Không tin quyền hiển thị từ frontend; kiểm tra quyền ở backend trên từng tài nguyên và tenant.
 
 ## Quy trình
 
-1. **Khảo sát**: xác định entity, vòng đời nội dung, actor/quyền, URL công khai, metadata, contract frontend/SSR và tiêu chí nghiệm thu. Kiểm tra phiên bản stack, schema/index, timezone, job/cache/storage và lệnh kiểm tra thật.
-2. **Triển khai**: xử lý nhóm liên quan bên dưới, chọn thay đổi nhỏ nhất đáp ứng đặc tả. Thay đổi schema/API phải nêu cách giữ tương thích; đổi URL phải có mapping redirect và cập nhật nguồn metadata/sitemap/link liên quan.
-3. **Kiểm chứng**: test hành vi, quyền truy cập, trạng thái nội dung, URL/status và cache; chạy lint/type check/build phù hợp. Fix bug viết regression test fail vì lỗi trước khi sửa theo [quality-assurance](../../rules/quality-assurance.md).
-4. **Bàn giao**: tự review diff và đồng bộ tài liệu bị ảnh hưởng. Báo hành vi/file đã đổi, lệnh và kết quả thật, migration/script cần chạy và giới hạn kiểm chứng; phân biệt code đã viết với thay đổi đã áp dụng vào database/deployment.
+1. **Khoanh phạm vi**: xác định module, endpoint, file và hành vi được yêu cầu; ghi nhận các luồng hiện có phải giữ nguyên. Xin chấp thuận trước nếu phương án cần đổi hành vi ngoài phạm vi.
+2. **Khảo sát**: xác định entity, vòng đời nội dung, actor/quyền, URL công khai, metadata, contract frontend/SSR và tiêu chí nghiệm thu. Kiểm tra phiên bản stack, schema/index, timezone, job/cache/storage và lệnh kiểm tra thật.
+3. **Triển khai**: xử lý nhóm liên quan bên dưới, chọn thay đổi nhỏ nhất đáp ứng đặc tả. Thay đổi schema/API phải nêu cách giữ tương thích; đổi URL phải có mapping redirect và cập nhật nguồn metadata/sitemap/link liên quan nếu những phần này nằm trong phạm vi được duyệt.
+4. **Kiểm chứng**: test hành vi, quyền truy cập, trạng thái nội dung, URL/status và cache; chạy lint/type check/build phù hợp. Với đường data access bị ảnh hưởng, đếm query cho một request/job bằng công cụ sẵn có và kiểm tra số query có tăng theo số record hay không; rà lazy loading quan hệ và truy vấn trong vòng lặp trên Laravel, EF/SQL hoặc ORM/framework khác. Nếu không có query log/profiler, kiểm tra tĩnh và ghi rõ chưa đo được query count thực tế. Fix bug viết regression test fail vì lỗi trước khi sửa theo [quality-assurance](../../rules/quality-assurance.md). Rà diff để xác nhận luồng ngoài yêu cầu không đổi; xin chấp thuận trước mọi thay đổi mở rộng.
+5. **Bàn giao**: tự review diff và đồng bộ tài liệu bị ảnh hưởng. Báo hành vi/file đã đổi, lệnh và kết quả thật, migration/script cần chạy và giới hạn kiểm chứng; phân biệt code đã viết với thay đổi đã áp dụng vào database/deployment.
 
 ## Yêu cầu triển khai
 

@@ -17,7 +17,7 @@ metadata:
 3. Tính time/space complexity cho đường đi chính, worst case và khởi tạo/preprocessing nếu có.
 4. Với vòng lặp lồng nhau, xác định kích thước từng tập; dùng `O(n × m)` khi chúng độc lập, không mặc định `O(n²)`.
 5. Tìm N+1 query/API call, tải toàn bộ dữ liệu vào RAM, retry vô hạn và thiếu giới hạn page/batch/upload/input.
-6. Với query database, xác định số query mỗi request/job, N+1, join/eager loading, điều kiện `WHERE`, `JOIN`, `ORDER BY`, pagination, cột được đọc, index và lượng record quét/trả về. Dùng `EXPLAIN`/query plan hoặc query log khi có thể.
+6. Với query database, đếm số query mỗi request/job trên tập dữ liệu nhiều record; kiểm tra số query có tăng theo số record không, lazy loading/N+1, join/eager loading, điều kiện `WHERE`, `JOIN`, `ORDER BY`, pagination, cột được đọc, index và lượng record quét/trả về. Áp dụng xuyên framework/ORM (Laravel/Eloquent, EF Core, SQL trực tiếp và stack khác). Dùng query log/profiler/test instrumentation và `EXPLAIN`/query plan khi có thể; nếu không có công cụ thì ghi rõ phần chưa đo.
 7. Đánh giá cyclomatic complexity, độ dài hàm, số tham số và độ sâu lồng nhau như tín hiệu review.
 8. Đề xuất tối ưu phù hợp: `Map`/`Set`, eager loading, batch, pagination, chunk, cursor, streaming, queue/job, cache hoặc index; nêu trade-off.
 9. Kiểm chứng bằng test, benchmark, query log, `EXPLAIN` hoặc profiler; ghi rõ phần chưa đo.

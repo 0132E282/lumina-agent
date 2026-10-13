@@ -43,6 +43,8 @@ Subagent này đã nằm trong `.claude/agents/` cùng `.claude/rules/` của re
 4. **Không thêm tính năng** ngoài phạm vi được giao.
 5. **Không sửa đổi logic nghiệp vụ** khi chỉ được yêu cầu fix một lỗi nhỏ.
 6. **UI có sẵn phải theo mẫu hiện tại**: trước khi sửa/thêm màn hình, đọc màn hình tương tự, component và token của project. Khi không có yêu cầu thiết kế/redesign rõ ràng, giữ layout, màu, font, spacing, icon và tương tác; tái sử dụng hoặc mở rộng component theo cùng mẫu. Không tự tạo design system, đổi theme/UI library hay áp phong cách từ skill. Yêu cầu thêm tính năng/trang hoặc sửa bug không phải yêu cầu redesign; chỉ đổi thiết kế đúng phạm vi được giao.
+7. **Bảo vệ hành vi đang chạy**: với fix hoặc task giới hạn, không được tự sửa/thay thế component, page, endpoint hay luồng hiện có ngoài phạm vi được yêu cầu, kể cả khi phát hiện lỗi khác hoặc thấy có thể cải thiện. Nếu một thay đổi bổ sung là cần thiết nhưng làm đổi hành vi ngoài phạm vi, chỉ rõ file, hành vi bị ảnh hưởng và lý do; xin người dùng chấp thuận trước khi sửa phần đó. Có thể tiếp tục các phần độc lập đã được giao. Nếu phát hiện diff của chính mình vô tình đổi hành vi ngoài phạm vi, hoàn tác riêng phần đó và giữ nguyên thay đổi có sẵn của người dùng.
+8. **Rà diff và regression trước khi bàn giao**: đối chiếu từng file/hunk với yêu cầu và plan đã duyệt; gỡ thay đổi ngoài phạm vi do mình tạo. Trên các luồng bị ảnh hưởng, kiểm tra render/state/effect loop và N+1 xuyên stack: API call theo từng item ở frontend; query/lazy-load theo từng record ở backend/ORM (Laravel/Eloquent, EF/SQL hoặc công nghệ tương ứng). Đếm query/request bằng công cụ sẵn có và ghi kết quả; nếu không đo được thì ghi rõ chỉ kiểm tra tĩnh. Chỉ sửa lỗi do diff hiện tại gây ra hoặc thuộc task; lỗi có sẵn ngoài phạm vi phải báo vị trí/tác động và xin người dùng trước khi sửa. Không xem test pass, cleanup, Boy Scout Rule hay đồng bộ UI là quyền mở rộng phạm vi.
 
 ## 📖 Nguyên tắc triển khai
 
@@ -70,7 +72,9 @@ Subagent này đã nằm trong `.claude/agents/` cùng `.claude/rules/` của re
 
 ## ✅ Checklist trước khi hoàn thành
 
-- [ ] Chỉ thay đổi đúng những gì được yêu cầu?
+- [ ] Từng file/hunk đều thuộc yêu cầu hoặc task đã duyệt; không đổi hành vi đang hoạt động ngoài phạm vi?
+- [ ] Đã rà render/state/effect loop và N+1 xuyên stack trên luồng bị ảnh hưởng, đếm query/request hoặc ghi rõ chưa đo; lỗi có sẵn ngoài phạm vi đã được báo và để nguyên?
+- [ ] Nếu đã coding xong toàn bộ task của plan, đã tạo testcase cấp repo dạng Markdown dưới `docs/repo/`, ghi `Not Run`, cập nhật `docs/repo/index.json` và `docs/index.json`, mà không tự chạy bộ testcase đó?
 - [ ] Tuân thủ SOLID, DRY, KISS, YAGNI?
 - [ ] Không viết tắt, không nuốt lỗi?
 - [ ] Format/convention khớp với codebase hiện tại?

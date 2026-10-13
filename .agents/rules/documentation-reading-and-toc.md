@@ -12,13 +12,14 @@ description: 'Áp dụng khi đọc, viết hoặc cập nhật tài liệu Mark
 - File Markdown chi tiết phải có đủ `title`, `description`, `tags`, `content` (metadata title/description/tags trong frontmatter, phần thân Markdown là content). Plan/review JSON cũng giữ metadata và nội dung đầy đủ trong file chi tiết theo schema riêng.
 - `docs/index.json` chỉ catalog tài liệu Markdown. Không đưa plan/testcase/review JSON vào catalog này.
 - `docs/plans/index.json` là menu tài liệu theo schema chung `title`, `description`, `tags`, `path`; description nêu khi nào AI nên tham khảo plan. Metadata và nội dung plan đầy đủ nằm trong file JSON chi tiết.
+- `docs/repo/index.json` là mục lục con cho testcase cấp repo trong `docs/repo/`; mỗi entry chỉ gồm `title`, `description`, `tags`, `path`. Description hướng dẫn AI chọn testcase phù hợp, nội dung đầy đủ nằm trong file Markdown. Nếu chưa có menu, tạo JSON array rỗng trước khi thêm entry.
 - `docs/testcases/index.json` là nguồn dữ liệu testcase và kết quả thực thi, không phải menu file. Đọc trước khi thêm/sửa case; giữ ID ổn định, ghi `createdAt` cho suite/case mới và chỉ cập nhật trạng thái/kết quả/evidence sau lần chạy thật.
 - `docs/reviews/index.json` là menu tài liệu theo schema chung `title`, `description`, `tags`, `path`; description nêu loại review và khi nào AI nên tham khảo. Findings và nội dung review nằm trong file JSON chi tiết.
 - Tên file JSON plan/review dùng `<title-slug>-<yyyyMMdd>.json`; file có `title` và `createdAt` (`YYYY-MM-DD`). Không suy ra ngày tạo cho artifact cũ nếu không có nguồn xác minh.
 - Các catalog chỉ quản lý nội dung trong `docs/`; không thêm README, AGENTS, CLAUDE, rule hoặc skill vào đó.
 - Trong mọi `index.json` dạng menu, `tags` là mảng từ khóa ngắn, chữ thường, ưu tiên kebab-case; description giúp AI quyết định có nên mở file chi tiết hay không. `docs/index.json` entry chỉ có `title`, `description`, `tags`, `path`; `content` nằm trong file `.md` được trỏ tới.
 - Ưu tiên cập nhật file chi tiết hiện có nếu đã có entry phù hợp; tránh tạo tài liệu trùng.
-- Khi tạo/sửa Markdown, cập nhật `docs/index.json`; khi tạo/sửa plan, cập nhật `docs/plans/index.json`; khi tạo/sửa testcase hoặc kết quả chạy, cập nhật `docs/testcases/index.json`; khi tạo/sửa review, cập nhật `docs/reviews/index.json` cùng lượt.
+- Khi tạo/sửa Markdown, cập nhật `docs/index.json`; khi tạo/sửa plan, cập nhật `docs/plans/index.json`; khi tạo testcase cấp repo, cập nhật `docs/repo/index.json` và `docs/index.json`; khi tạo/sửa testcase hoặc kết quả chạy theo feature, cập nhật `docs/testcases/index.json`; khi tạo/sửa review, cập nhật `docs/reviews/index.json` cùng lượt.
 
 ## Đọc trước khi sửa
 

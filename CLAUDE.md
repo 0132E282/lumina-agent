@@ -28,6 +28,9 @@ Hoàn thành bất kỳ task nào (kể cả khi phiên chính tự `Edit`/`Writ
 
 - Đọc rule/tài liệu liên quan, khảo sát đúng phần bị ảnh hưởng; đủ bằng chứng cho một thay đổi nhỏ, đúng phạm vi thì triển khai luôn — không tiếp tục dò thêm phương án hay edge case giả định.
 - Dùng pattern/component có sẵn; không tách file, thêm abstraction, hay refactor phần không liên quan chỉ để "cho gọn" hoặc nhất quán hình thức.
+- Trước khi coding, khoanh rõ file/hành vi được giao. Chỉ sửa đúng phạm vi; giữ nguyên component/page/module và luồng đang hoạt động ngoài yêu cầu. Nếu cần đổi phần ngoài phạm vi, dừng phần đó, nêu file/tác động và xin người dùng chấp thuận trước; lỗi có sẵn ngoài phạm vi không được tự tiện sửa.
+- Trước khi hoàn thành task code, rà từng file/hunk và đường chạy bị ảnh hưởng để bắt thay đổi component/page ngoài phạm vi, render/state/effect loop và N+1 xuyên stack. Kiểm tra API call theo item ở frontend, query/lazy-load theo record ở backend/ORM (Laravel/Eloquent, EF/SQL hoặc tương ứng); đếm query/request bằng công cụ sẵn có hoặc ghi rõ chỉ kiểm tra tĩnh. Chỉ sửa lỗi do thay đổi hiện tại gây ra hoặc được giao; lỗi ngoài phạm vi phải báo và xin chấp thuận.
+- Khi coding xong toàn bộ task của một plan, tạo testcase cấp repo dạng Markdown tại `docs/repo/<title-slug>-<yyyyMMdd>.md`, dựa trên code thực tế; ghi `Not Run`, không tự chạy bộ testcase này. Cập nhật `docs/repo/index.json` và `docs/index.json`; mỗi entry menu chỉ có title, description, tags, path. Test/check trực tiếp theo task vẫn theo rule QA.
 - Task rõ ràng, nhỏ → giao thẳng `coding-agent`; chỉ dùng plan/subagent/review độc lập khi độ phức tạp, rủi ro, hoặc khối lượng việc tách biệt thật sự cần.
 - Giữ nguyên quyết định người dùng đã chốt và kết quả đã kiểm chứng trừ khi có bằng chứng mới mâu thuẫn; việc nhỏ, đảo ngược được thì tự quyết, không hỏi lại.
 - Giới hạn phạm vi tìm kiếm/tool output đúng câu hỏi còn lại — không đọc lại file không đổi, dump nguyên văn log dài, hay poll trạng thái lặp lại không cần thiết.
@@ -35,7 +38,7 @@ Hoàn thành bất kỳ task nào (kể cả khi phiên chính tự `Edit`/`Writ
 
 ## Điều phối giữa subagent
 
-- Subagent sau đọc **bàn giao** của subagent trước qua file trong `docs/` (`requirement-analysis.md`, `system-design.md`, `implementation-plan.json`) — không diễn giải lại nội dung đã có trong file đó khi gọi `Agent`.
+- Subagent sau đọc **bàn giao** của subagent trước qua file trong `docs/` (ví dụ `requirement-analysis.md`, `system-design.md`, hoặc plan JSON được tìm qua `docs/plans/index.json`) — không diễn giải lại nội dung đã có trong file đó khi gọi `Agent`.
 - Mỗi subagent chỉ làm đúng vai trò được giao, không tự lấn sang vai trò khác trong cùng chuỗi: `reviewer-agent` không tự sửa code, `planner-agent` không tự triển khai, `qa-tester-agent` không tự sửa code ứng dụng để test đạt.
 - Bàn giao cũ còn hợp lệ (yêu cầu chưa đổi) → tái dùng, không gọi lại subagent đã chạy xong cho cùng input.
 - Gọi `Agent` cho subagent sau kèm đúng file/diff/phạm vi cụ thể cần xử lý trong prompt — không bắt subagent tự dò lại toàn repo hoặc toàn bộ hội thoại trước đó để suy ra phạm vi.

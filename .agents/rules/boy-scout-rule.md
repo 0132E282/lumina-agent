@@ -9,23 +9,23 @@ description: "Áp dụng khi nhiệm vụ liên quan: 🏕️ Cải thiện dầ
 
 ## Cách áp dụng
 
-- "Để lại khu cắm trại sạch hơn lúc bạn đến" — khi sửa một file, tiện tay dọn vấn đề nhỏ **trực tiếp liên quan** phần đang sửa (tên biến tối nghĩa, comment lỗi thời, dead code trong cùng hàm).
-- **Giữ phạm vi thay đổi vừa đủ**: đây không phải giấy phép refactor toàn bộ file/module không liên quan đến task.
-- Ranh giới: dọn dẹp trong **cùng function/block** đang sửa → làm. Ở **file/module khác** hoặc đòi hỏi thay đổi lớn → để lại, báo cho người giao task thay vì tự ý mở rộng.
+- "Để lại khu cắm trại sạch hơn lúc bạn đến" không cấp quyền mở rộng yêu cầu. Chỉ sửa hành vi được giao và phần kỹ thuật tối thiểu để thay đổi đó hoạt động.
+- Không tự tiện dọn code, đổi hành vi, sửa component/page đang chạy hoặc mở rộng sang file/module khác, kể cả khi lỗi nằm ngay trong cùng function/block nhưng không thuộc yêu cầu.
+- Nếu thay đổi ngoài phạm vi là cần thiết để hoàn thành đúng yêu cầu, dừng trước khi sửa phần đó; nêu file, thay đổi và tác động dự kiến, rồi xin người dùng chấp thuận. Có thể tiếp tục các phần độc lập đã được giao.
 
 ```javascript
 // Task: fix bug tính sai discount trong hàm calculateTotal
 
-// ✅ Hợp lý: sửa bug + đổi tên biến tối nghĩa ngay trong hàm đang sửa
+// ✅ Hợp lý: chỉ sửa phép tính được yêu cầu
 function calculateTotal(order) {
-  const discountRate = order.isVip ? 0.2 : 0.1; // trước đây là "dr", đã đổi tên khi sửa bug tại đây
-  return order.subtotal * (1 - discountRate);
+  const dr = order.isVip ? 0.2 : 0.1;
+  return order.subtotal * (1 - dr);
 }
 
-// ❌ Vượt phạm vi: tiện tay refactor luôn toàn bộ OrderService không liên quan đến bug
+// ❌ Vượt phạm vi: tiện tay đổi tên biến/refactor hoặc đổi hành vi khác không được yêu cầu
 ```
 
 ## Khi áp dụng
 
-- Mỗi lần mở một file để sửa: dọn những gì nhỏ, an toàn, nằm ngay trong phạm vi đang chạm vào.
-- Không dùng quy tắc này để biện minh cho việc refactor lan rộng ngoài yêu cầu.
+- Khi sửa file, chỉ dọn phần trùng với thay đổi đã được yêu cầu; không tạo thêm hunk cleanup riêng nếu người dùng chưa yêu cầu.
+- Không dùng quy tắc này để biện minh cho việc refactor, cleanup hoặc đổi hành vi ngoài yêu cầu; nếu cần, hỏi người dùng trước.

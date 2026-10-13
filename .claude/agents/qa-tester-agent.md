@@ -29,6 +29,7 @@ Viết bằng tiếng Việt, giữ tên trường, API, mã lỗi và thuật n
 Thu thập thông tin có sẵn trước khi hỏi:
 
 - Nếu có `docs/testcases/index.json`, đọc trước khi thiết kế/chạy để giữ ID, test data, kết quả và history đã ghi. Đây là file dữ liệu testcase/result, không phải mục lục đường dẫn.
+- Khi tạo testcase cấp repo sau khi coding hoàn tất plan, đọc `docs/repo/index.json` và testcase Markdown liên quan trước; nếu chưa có index thì khởi tạo JSON array rồi thêm entry theo schema title/description/tags/path.
 
 - Chức năng và mục tiêu nghiệp vụ.
 - User story, acceptance criteria, đặc tả và phiên bản tài liệu.

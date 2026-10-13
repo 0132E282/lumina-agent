@@ -9,6 +9,8 @@ description: 'Áp dụng khi nhiệm vụ liên quan: 📚 Đồng bộ tài li�
 
 Khi đọc hoặc sửa file trong `docs/`, agent phải đọc `index.json` phù hợp trước, tìm bằng `title`, `description`, `tags`, rồi mở file chi tiết qua `path`. Mỗi entry trong index menu/catalog chỉ có `title`, `description`, `tags`, `path`; nội dung nằm trong file chi tiết (`.md` cho tài liệu, `.json` cho plan/review). File Markdown chi tiết có title, description, tags và content; description của menu plan/review hướng dẫn AI khi nào nên tham khảo file. Ngoại lệ: `docs/testcases/index.json` là dữ liệu testcase và kết quả chạy theo schema testcase chuyên biệt, không phải menu. Cập nhật index/record tương ứng cùng lượt, không nhúng nội dung tài liệu vào menu.
 
+Sau khi hoàn tất coding cho tất cả task của một implementation plan, tạo testcase cấp repository bằng Markdown tại `docs/repo/<title-slug>-<yyyyMMdd>.md`, dựa trên code và luồng thực tế sau triển khai. Chỉ thiết kế testcase, không tự chạy bộ testcase này; ghi trạng thái `Not Run`. Cập nhật `docs/repo/index.json` (mục lục con) và catalog Markdown `docs/index.json` cùng lượt; entry chỉ có `title`, `description`, `tags`, `path`. Tài liệu này không thay thế dữ liệu testcase/kết quả theo feature trong `docs/testcases/index.json`.
+
 ## Cách áp dụng
 
 - Sau khi hoàn thành một plan ([`planner-agent`](../agents/planner-agent.md)) **và** `coding-agent` đã triển khai xong (tạo/sửa/xóa file, đổi API, đổi cấu trúc, đổi tên agent/skill/command), luôn kiểm tra `README.md`/`CLAUDE.md`/`docs/` có đoạn nào nhắc tới phần vừa đổi không — có thì **cập nhật ngay trong cùng lượt**, không để lại "làm sau".

@@ -87,6 +87,15 @@ Ghi rõ giả định đang dùng. Điểm thiếu ảnh hưởng trực tiếp 
 - Suite và case mới có `title` và `createdAt` theo `YYYY-MM-DD`; mỗi lần chạy có `executedAt` theo ISO 8601. Mỗi case có vùng kết quả chạy gồm `status`, `actualResult`, `evidence` và `bugId` khi có. Case mới là `Not Run`; chỉ ghi `Pass`/`Fail` sau khi chạy và lưu bằng chứng. Giữ lịch sử lần chạy nếu schema hiện tại có lịch sử.
 - Sau khi cập nhật testcase hoặc kết quả, parse JSON và đối soát số case, ID duy nhất, traceability và trạng thái.
 
+### Testcase cấp repository
+
+- Khi coding cho toàn bộ task của một implementation plan đã hoàn tất, tạo tài liệu testcase cấp repo tại `docs/repo/<title-slug>-<yyyyMMdd>.md`; nội dung dựa trên code, route, API và luồng thực tế đã kiểm tra trong repository.
+- Đọc `docs/repo/index.json` trước để tránh tạo testcase repo trùng; mở các file Markdown được trỏ tới khi liên quan. Nếu menu chưa tồn tại, tạo JSON array rỗng rồi thêm entry mới.
+- Ghi testcase theo cấu trúc mục 7. Kết quả chưa chạy ghi `Not Run`; chỉ ghi Pass/Fail khi đã thực thi và có bằng chứng.
+- Thêm/cập nhật entry trong cả `docs/repo/index.json` và `docs/index.json` với đúng `title`, `description`, `tags`, `path`. `docs/repo/index.json` là mục lục con, không nhúng nội dung testcase vào index.
+- Việc tự động tạo tài liệu sau khi code xong chỉ thiết kế testcase, không chạy test. Chỉ thực thi khi người dùng yêu cầu hoặc workflow test được giao.
+- Quy ước này dành cho testcase cấp repository; bộ testcase và lịch sử kết quả theo feature vẫn lưu tại `docs/testcases/index.json`.
+
 Nếu test case được review độc lập, review report thuộc `docs/reviews/` theo workflow-review; testcase và trạng thái chạy vẫn ở `docs/testcases/index.json`.
 
 ## Khi áp dụng

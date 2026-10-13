@@ -10,6 +10,7 @@ description: "Áp dụng khi nhiệm vụ liên quan: ⚙️ Backend — Contrac
 ## Cách áp dụng
 
 - **Theo stack và contract thật**: đọc schema, route, model/service và API contract trước khi sửa; tái sử dụng cấu trúc hiện có. Tách HTTP, validation, phân quyền và nghiệp vụ; không tự đổi kiến trúc hoặc phá contract ngoài phạm vi yêu cầu.
+- **Khoanh phạm vi hành vi**: chỉ đổi endpoint, module và hành vi cần thiết cho yêu cầu. Giữ nguyên luồng đang hoạt động ngoài phạm vi. Nếu cần thay đổi contract, module dùng chung hoặc hành vi khác để triển khai, nêu file/tác động và xin người dùng chấp thuận trước khi sửa.
 - **Quyền kiểm tra tại backend**: kiểm tra quyền trên từng tài nguyên/tenant, validate input tại boundary, allowlist field ghi và parameterize query. Không tin frontend đã kiểm tra quyền hoặc dữ liệu.
 - **Vòng đời nội dung đúng**: API công khai chỉ trả nội dung đã xuất bản được phép truy cập; draft/preview cần quyền. Lịch đăng có timezone rõ và job chạy lại không tạo tác dụng trùng. Thao tác nhiều bước cần atomicity dùng transaction phù hợp.
 - **URL và SEO nhất quán**: slug unique đúng phạm vi bằng constraint phù hợp; đổi slug giữ redirect theo yêu cầu, tránh loop/chain. Metadata có fallback từ dữ liệu thật; canonical dùng host/protocol tin cậy. Sitemap chỉ gồm URL canonical công khai, đã xuất bản, indexable; `lastmod` phản ánh cập nhật có ý nghĩa. Chỉ thêm đa ngôn ngữ/hreflang khi có phiên bản thật.
