@@ -3,12 +3,20 @@ name: docs
 description: Viết hoặc đồng bộ tài liệu dự án (README.md, CLAUDE.md, docs/) — (1) ĐỒNG BỘ khi đã có tài liệu, đối chiếu với trạng thái THỰC TẾ của codebase, phát hiện phần lỗi thời/sai và sửa lại; (2) VIẾT MỚI khi project/module chưa có gì để đối chiếu — quét stack/lệnh/convention thật rồi viết gọn, giống `/init` nhưng tối ưu hơn (không liệt kê dư). Mặc định viết theo chế độ AI-readable để agent đọc và truy vết; chỉ dùng human-readable khi người dùng yêu cầu tài liệu cho người đọc. Khi tài liệu cần sơ đồ cấu trúc, ERD hoặc user/system flow, kết hợp skill `system-diagrams`; không dùng `docs` để tự thiết kế HLD/LLD mới.
 license: MIT
 metadata:
-  version: '1.3'
+  version: '1.4'
 ---
 
 # 🔄 Docs
 
 Viết mới hoặc đồng bộ README, hướng dẫn project và `docs/`; đối chiếu mọi nội dung với nguồn thật ([`search-priority`](../../rules/search-priority.md)). Tuân thủ schema và luồng catalog trong [`docs-sync`](../../rules/docs-sync.md) và [`documentation-reading-and-toc`](../../rules/documentation-reading-and-toc.md). Không thiết kế HLD/LLD; bàn giao cho [`system-design-agent`](../../agents/system-design-agent.md). Khi cần sơ đồ hiện trạng, dùng [`system-diagrams`](../system-diagrams/SKILL.md).
+
+## Mục lục
+
+- [Hai chế độ đọc tài liệu](#hai-chế-độ-đọc-tài-liệu)
+- [Giảm tải đọc hiểu bằng sơ đồ](#giảm-tải-đọc-hiểu-bằng-sơ-đồ)
+- [Chế độ 1 — Đồng bộ](#chế-độ-1--đồng-bộ-đã-có-tài-liệu)
+- [Chế độ 2 — Viết mới](#chế-độ-2--viết-mới-chưa-có-gì-để-đối-chiếu)
+- [Template theo loại tài liệu](#template-theo-loại-tài-liệu)
 
 ## Hai chế độ đọc tài liệu
 
@@ -59,3 +67,15 @@ Dùng khi project/module/feature chưa có CLAUDE.md/README, cần viết lần 
    - **Lệnh thường dùng** (dev/build/test/lint) — chỉ lệnh đã xác minh chạy được.
    - **Convention quan trọng cần biết trước khi sửa code** — quy ước/rule bắt buộc nếu có, pattern lặp lại thật đang dùng.
 5. Không tự thiết kế kiến trúc hệ thống (HLD/LLD) — phần đó thuộc agent [`system-design-agent`](../../agents/system-design-agent.md). Nếu chỉ cần minh họa cấu trúc/flow đã có trong codebase, dùng [`system-diagrams`](../system-diagrams/SKILL.md).
+
+## Template theo loại tài liệu
+
+Đọc registry và file hiện hữu theo rule ở đầu skill trước khi chọn template. Template là khung điền từ nguồn đã xác minh, không phải nội dung hoàn chỉnh; thay toàn bộ placeholder, bỏ mục không áp dụng kèm lý do và cập nhật menu cùng lượt. Không ghi đè schema, ID hoặc lịch sử có sẵn để khớp template.
+
+- [Tài liệu Markdown](assets/document-template.md): dùng cho `docs/**/*.md`; frontmatter là metadata, thân Markdown là `content`. README/AGENTS/CLAUDE giữ convention riêng, không thêm vào catalog.
+- [Testcase cấp repo](assets/repo-testcase-template.md): dùng tại `docs/repo/<title-slug>-<yyyyMMdd>.md` khi toàn bộ task của một implementation plan đã coding xong. Chỉ thiết kế từ code/luồng thực tế và ghi `Not Run`; cập nhật cả `docs/repo/index.json` và `docs/index.json`.
+- [Testcase theo feature](assets/feature-testcase-template.json): khung tối thiểu khi chưa có `docs/testcases/index.json`. File này là dữ liệu suite/case/kết quả, không phải menu. Nếu đã có schema, map field tương đương vào schema đó, giữ ID/history và trạng thái cũ; case mới là `Not Run`, `executedAt` chỉ điền ISO 8601 khi thực sự chạy. Đọc [skill testcase](../testcase/SKILL.md) để thiết kế và đối soát.
+- [Implementation plan](assets/implementation-plan-template.json): khung cho agent được giao lập plan, lưu tại `docs/plans/<title-slug>-<yyyyMMdd>.json`. Theo [plan-format](../../rules/plan-format.md), mọi task giữ đầy đủ field và `filesToChange` chỉ chứa path đã xác minh; mục nhiều bản ghi dùng object đồng nhất field, gồm cả `remainingRisks`. Chưa rõ path thì để `[]` và ghi blocker. `docs` chỉ đồng bộ/định dạng plan đã có, không tự lập giải pháp hay chuyển sang triển khai; đọc [planner-agent](../../agents/planner-agent.md) khi được giao vai trò planner.
+- [Menu JSON](assets/menu-template.json): mỗi entry chỉ `title`, `description`, `tags`, `path` repo-relative. Áp dụng cho `docs/index.json`, `docs/repo/index.json`, `docs/plans/index.json`; catalog gốc chỉ trỏ tài liệu Markdown. Không copy menu này vào `docs/testcases/index.json`.
+
+`<...>` là placeholder; ngày tạo phải được thay bằng ngày có nguồn xác minh, không suy ra cho artifact cũ. Khi đã xác minh file cần sửa, điền `filesToChange` bằng object dạng `{"path": "<path-repo-relative>", "changes": "<thay đổi chính xác>"}` và giải quyết blocker tương ứng. Trước bàn giao, parse JSON, kiểm tra metadata/link/TOC, field menu, ID và truy vết REQ/BR → AC → Task/Test. Không chạy testcase chỉ vì vừa tạo tài liệu.

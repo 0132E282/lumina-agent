@@ -1,0 +1,68 @@
+{
+  "title": "<Tiêu đề plan>",
+  "description": "<Mục tiêu và khi nào nên tham khảo plan>",
+  "tags": ["<tag-kebab-case>"],
+  "createdAt": "<YYYY-MM-DD>",
+  "content": {
+    "meta": {
+      "objective": "<Mục tiêu đã xác nhận>",
+      "inScope": "<Phạm vi được giao>",
+      "outOfScope": "<Ngoài phạm vi>",
+      "currentState": "<Hiện trạng và nguồn đã kiểm tra>"
+    },
+    "requirements": [
+      {
+        "id": "REQ-001",
+        "description": "<Yêu cầu được xác nhận>",
+        "source": "<Nguồn yêu cầu thật>"
+      }
+    ],
+    "businessRules": [],
+    "acceptanceCriteria": [
+      {
+        "id": "AC-001",
+        "requirements": ["REQ-001"],
+        "description": "<Tiêu chí đo/quan sát được>",
+        "source": "<Nguồn AC thật>"
+      }
+    ],
+    "assumptions": [],
+    "openQuestions": [],
+    "blockers": ["<Chưa xác minh filesToChange; giải quyết trước khi triển khai>"],
+    "technicalSolution": "<Luồng, dữ liệu, API, migration/rollback từ thiết kế được giao; không tự tạo HLD/LLD>",
+    "tasks": [
+      {
+        "id": "TASK-001",
+        "title": "<Kết quả cụ thể>",
+        "status": "TODO",
+        "priority": "P1",
+        "priorityReason": "<Lý do ưu tiên>",
+        "requirements": ["REQ-001"],
+        "acceptanceCriteria": ["AC-001"],
+        "inScope": "<Trong phạm vi task>",
+        "outOfScope": "<Ngoài phạm vi task>",
+        "dependencies": [],
+        "approach": "<Các bước triển khai theo thiết kế/convention thật>",
+        "filesToChange": [],
+        "test": "<Dữ liệu, thao tác, kết quả mong đợi>",
+        "doneWhen": "<AC đáp ứng và có bằng chứng check thật>"
+      }
+    ],
+    "executionOrder": ["TASK-001"],
+    "traceability": [
+      {
+        "requirementId": "REQ-001",
+        "acceptanceCriteria": ["AC-001"],
+        "tasks": ["TASK-001"],
+        "test": "<Test kiểm tra AC-001>",
+        "result": "Not Run"
+      }
+    ],
+    "remainingRisks": [
+      {
+        "description": "<Rủi ro còn lại>",
+        "mitigation": "<Cách xử lý hoặc phần chưa xác nhận>"
+      }
+    ]
+  }
+}

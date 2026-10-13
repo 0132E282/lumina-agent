@@ -1,0 +1,36 @@
+{
+  "suites": [
+    {
+      "id": "<SUITE-ID-duy-nhất>",
+      "title": "<Tên tính năng/luồng>",
+      "createdAt": "<YYYY-MM-DD>",
+      "cases": [
+        {
+          "id": "<TC-ID-duy-nhất>",
+          "requirementIds": ["<REQ/BR/AC-từ-nguồn>"],
+          "title": "<Hành vi quan sát được>",
+          "createdAt": "<YYYY-MM-DD>",
+          "priority": "High",
+          "preconditions": ["<Trạng thái trước test>"],
+          "testData": "<Dữ liệu giả>",
+          "steps": ["<Thao tác cụ thể>"],
+          "expectedResult": "<Output/checkpoint gắn với bước>",
+          "postconditionsCleanup": "<Trạng thái sau test/cách dọn>",
+          "result": {
+            "status": "Not Run",
+            "actualResult": null,
+            "evidence": [],
+            "bugId": null,
+            "executedAt": null
+          }
+        }
+      ],
+      "traceability": [
+        {
+          "requirementId": "<REQ/BR/AC-từ-nguồn>",
+          "caseIds": ["<TC-ID-duy-nhất>"]
+        }
+      ]
+    }
+  ]
+}
