@@ -22,8 +22,8 @@ const instructionBlock = `${startMarker}
 
 - Giữ hướng dẫn riêng của project; nội dung Lumina bổ sung workflow và không tự đổi stack/UI/contract.
 - Đọc [CONTRACT.md](./CONTRACT.md) trước khi làm việc; trước khi code đọc toàn bộ rule trong [.agents/rules/](./.agents/rules/), chỉ áp dụng phần liên quan.
-- Skills dùng nguồn chung [.agents/skills/](./.agents/skills/). Claude dùng /lumina:..., Codex dùng $workflow-..., Antigravity dùng /workflow-... theo runtime thực tế.
-- Khi triển khai, giao vai trò coding-agent; đọc toàn bộ tài liệu vai trò tương ứng trong [.claude/agents/](./.claude/agents/) trước khi thực hiện. Codex adapters nằm trong [.codex/agents/](./.codex/agents/).
+- Skills dùng nguồn chung [.agents/skills/](./.agents/skills/). Claude dùng command trực tiếp /review, /git, /cleanup; khi lập kế hoạch dùng Plan mode có sẵn kết hợp skill workflow-plan. Codex dùng $workflow-..., Antigravity dùng /workflow-... theo runtime thực tế.
+- Khi triển khai, tuân thủ rule chung và giao vai trò coding-agent; đọc toàn bộ tài liệu vai trò tương ứng trong [.claude/agents/](./.claude/agents/) trước khi thực hiện. Codex adapters nằm trong [.codex/agents/](./.codex/agents/).
 - Hoàn thành task có kết quả cụ thể: dùng skill report; code có xử lý phụ thuộc dữ liệu dùng complexity-performance trước báo cáo. Database thật mặc định read-only.
 - Commit/push/deploy chỉ khi được yêu cầu rõ. Dùng formatter/linter/test có sẵn; không tự tải package để kiểm tra.
 - Claude hooks được cấu hình trong .claude/settings.json; Codex và Antigravity không tự chạy hooks Claude. Không báo đã chạy hook/tool khi chưa thực thi.

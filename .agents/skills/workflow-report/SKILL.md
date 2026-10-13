@@ -5,4 +5,4 @@ description: "Xuất báo cáo thay đổi (change report) cho các Edit/Write v
 
 # workflow-report
 
-Đọc và thực hiện workflow trong `.claude/commands/lumina/report.md`. Thay `$ARGUMENTS` bằng yêu cầu/đường dẫn người dùng cung cấp; giải quyết link từ `.claude/commands/lumina/`. Đọc hướng dẫn vai trò liên quan trong `.claude/agents/`; khi workflow yêu cầu delegation và có công cụ, dùng agent cùng vai trò do runtime hỗ trợ (Codex dùng custom agent cùng tên). Nếu không có delegation, thực hiện tuần tự theo cùng phạm vi và nêu rõ cách thực hiện. Không coi slash command/hook Claude là chức năng Codex tự chạy. Giữ điểm bàn giao, kiểm chứng và phạm vi cho phép của workflow.
+Đọc skill [`report`](../report/SKILL.md) và rule [`mandatory-report`](../../rules/mandatory-report.md), format kết quả/thay đổi đã có theo loại báo cáo đúng. Báo cáo là bước bắt buộc khi task có kết quả, không chờ command report; skill này chỉ là cách gọi riêng khi cần xuất lại kết quả đã có, không thực hiện review mới. Không có command report riêng. Code có xử lý runtime thì dùng complexity-performance trước report; config/docs/template thuần túy ghi Big O không áp dụng. Không bịa kiểm chứng.

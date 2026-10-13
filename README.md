@@ -28,7 +28,7 @@ A reusable **`.claude/` configuration** that turns Claude Code into a structured
 | [`.codex/rules/`](./.codex/rules) | Link to `.agents/rules/`, loaded through AGENTS.md |
 | [`.codex/skills/`](./.codex/skills) | Convenience link to `.agents/skills/`; Codex discovery remains in `.agents/skills/` |
 | [`.claude/agents/`](./.claude/agents) | Subagents — each with its own tools, model, and single responsibility |
-| [`.claude/commands/lumina/`](./.claude/commands/lumina) | Slash commands, namespaced `/lumina:...` — the entry points a user actually types |
+| [`.claude/commands/`](./.claude/commands) | Direct slash commands such as `/review`, `/git`, `/cleanup` — planning uses native Plan mode |
 | [`.claude/skills/`](./.claude/skills) | Link to the shared `.agents/skills/` directory |
 | [`.claude/rules/`](./.claude/rules) | Link to the shared rules in `.agents/rules/` |
 | [`.claude/hooks/`](./.claude/hooks) | Automated hooks (audit log, commit-msg guard, secret scan, auto-format, auto-lint...) |
@@ -52,22 +52,29 @@ A reusable **`.claude/` configuration** that turns Claude Code into a structured
 
 | Command | Does |
 |---|---|
-| `/lumina:analyze` | Run `requirement-analysis-agent`, then stop and ask whether to continue to `/lumina:plan` or go straight to `coding-agent` |
-| `/lumina:plan` | Full planning pipeline: research → system-design-agent → planner-agent → review → report |
-| `/lumina:implement` | Hand a task (or `docs/implementation-plan.json`) to `coding-agent` |
-| `/lumina:test` | Hand a feature/flow to `qa-tester-agent` |
-| `/lumina:review` | Review the current diff (via the `open-code-review` skill) or a plan/test case (via `reviewer-agent`) |
-| `/lumina:report` | Produce a change report for recent edits |
-| `/lumina:commit` | Commit with Conventional Commits, validated by script |
-| `/lumina:pr` | Create/update a PR — checks for conflicts first |
-| `/lumina:cleanup` | Delete temp/scratch files Claude created this session |
-| `/lumina:audit-workspace` | List (never delete) suspicious leftover files in the workspace |
+| `/test [feature\|repo [branch]\|pr [URL/#number]]` | QA features from the active plan by default; save cases, results and algorithm complexity in root testcase.json |
+| `/review` | Review current working-tree changes; return findings in chat by default |
+| `/review repo [.|branch]` | Review the full tracked code snapshot at HEAD or a named branch |
+| `/review pr [URL|#number] [--comment] [--file]` | Review a PR; optionally post a PR comment and/or save a JSON report |
+| `/git` or `/git commit [all]` | Commit all valid changes by default, excluding secrets and temporary/junk files |
+| `/git commit change` | Commit only the current task's changes with a validated Conventional Commit |
+| `/git merge source [into target]` | Merge source into the current branch by default, resolve supported conflicts, and run relevant checks |
+| `/git pr [into target] [from source]` | Create/update a PR; default to a confirmed parent branch, otherwise a development branch, then the primary branch |
+| `/git main [repository-name] [into current\|main] [from source]` | Prepare the repository and create/update a PR into the selected branch (primary by default), then ask before merging |
+| `/cleanup` | Compact working context while retaining objectives, decisions, evidence and next steps; does not delete files |
+
+`/review` is the single review entrypoint; Codex uses `$workflow-review` with the same arguments. PR comments require `pr --comment`; JSON reports require `--file` and use `.agents/skills/workflow-review/assets/review-json-template.json`, with a matching `docs/reviews/index.json` entry. Without those flags, results stay in chat.
+
+Implementation is a shared rule (`.agents/rules/implementation.md`), and reports are mandatory at task completion; neither needs a separate command. `/cleanup` and Codex's `$workflow-cleanup` consolidate context refresh. They preserve pending tasks and decisions, use native compaction only when available, and otherwise provide a handoff summary without claiming to reset history or memory. Workspace file cleanup remains a separate skill.
+
+`/test` reads the current plan's features/tasks when available; `repo` and `pr` select broader or PR-specific scopes. Cases/results go to root `testcase.json` using `.agents/skills/workflow-test/assets/testcase-template.json`, preserving IDs/history. `algorithmComplexity` records input sizes, Before/After time and space, allocation, preprocessing, I/O and supporting evidence. Unexecuted tests are Not Run; static analysis is not a benchmark.
 
 ### Skills
 
 | Skill | Purpose |
 |---|---|
 | `git-workflow` | Gatekeeper for every commit/PR — Conventional Commits, conflict-safe merging |
+| `workflow-plan` | Adds project-specific task/AC/test planning and handoff rules to the runtime's existing Plan mode |
 | `report` | Formats change reports and review reports from already-done work |
 | `docs` | Reconciles README/CLAUDE.md/docs against the actual codebase, or writes a lean first version when none exists (leaner `/init`) — not system architecture specs |
 | `cleanup-temp-files` | Removes Claude's own temp files from the current session |
@@ -86,12 +93,26 @@ A reusable **`.claude/` configuration** that turns Claude Code into a structured
 ## 🔄 End-to-end workflow
 
 ```
-/lumina:analyze  →  (new feature?) → /lumina:plan  →  /lumina:implement  →  /lumina:test  →  /lumina:review  →  /lumina:commit  →  /lumina:pr
+user request  →  (planning needed?) → native Plan mode + workflow-plan  →  implementation rules  →  /test  →  /review  →  /git commit  →  /git main
                  │                                               ↑
                  └── (small fix) ────────────────────────────────┘
 ```
 
 Each stage **stops and asks for confirmation** before moving to the next — nothing auto-cascades from analysis straight to a commit. Documents are handed off **by file path** (`docs/requirement-analysis.md` → `docs/system-design.md` → `docs/implementation-plan.json`), not by pasting full text into the next agent's prompt, so context stays small and traceable.
+
+Planning has no custom slash command. Use the runtime's existing Plan mode and describe the work; `AGENTS.md` routes planning to the shared `workflow-plan` skill. Codex can also invoke `$workflow-plan` explicitly. The skill supplements the native mode with scoped research/design, tasks, acceptance criteria, tests and handoff; it does not switch modes or bypass their permissions. If native mode restricts repository writes or requires its own plan-file format, use that permitted output and report the JSON/index handoff as not yet saved. Save the structured handoff when repository-document writes become permitted, then follow the runtime's existing approval step without asking for duplicate approval.
+
+`/git` and `/git commit` default to `commit all`; `/git help` displays usage. No `--` prefixes are used in these workflow arguments. Commit does not imply push or PR creation. Temporary/scratch/debug/ad-hoc test files, logs/cache, `.DS_Store`, `.dssc`, backups and secrets are excluded from commit/push; official tests remain deliverables. Before pushing, inspect every outgoing commit, including files added then deleted, and stop if prohibited content is present.
+
+`main` combines repository preparation and PR creation; an existing repository is reused. The optional name identifies the repository, not a branch. Missing repository details or permissions are resolved before dependent work; a fresh repository without the commits/branches required for a PR is reported as incomplete. PR merge approval is requested only after the concrete PR is ready and its checks/conflicts have been assessed. Codex uses the single `$workflow-git` skill with the same arguments; old commit/PR adapters are removed. `git-workflow` remains the shared rules skill, not another command.
+
+`/git merge feature/login` merges that branch into the current branch; `into main` explicitly selects a named target. Local merge resolves conflicts with sufficient evidence, runs checks, and never implies push. Ambiguous conflicts or a dirty worktree are reported before proceeding.
+
+`/git main` targets the remote's actual primary branch, using the current branch as source. `/git main into current from feature/login` instead opens a PR from `feature/login` into the branch checked out when the command was invoked. Missing source branches are clarified before creating the PR; source and base must differ. These options select the PR's target, not an immediate local merge.
+
+`/git pr` is the short PR command. Explicit targets and an existing PR's base take precedence; otherwise a confirmed branch of origin is used (for example, a feature created from `developer` targets `developer`). When origin is unknown, use the project's `developer`/`develop` integration branch if present, otherwise the actual primary branch. Ambiguous origins or multiple development branches require clarification; Git ancestry and upstream tracking alone do not identify the original branch. Use `/git pr into release/1.0` to select another target explicitly.
+
+Before resolving remote conflicts, fetch the relevant refs and record their SHAs and merge-base. Resolve each hunk against that base: accept incoming changes where the user made no change, preserve the user's edits where both sides conflict, and retain non-conflicting incoming changes. Determine the user's side from scope and diffs rather than branch names or ours/theirs labels. Fetch does not silently authorize an extra pull/merge/rebase; unresolved ownership or a dirty worktree requires clarification.
 
 ---
 
@@ -141,7 +162,7 @@ All content/link/settings conflicts are checked before writing. Different existi
 
 Removing repository access prevents future authenticated installs, but cannot revoke configuration someone already downloaded or copied. The CLI is an installer, not DRM; it cannot prevent an authorized collaborator from sharing received files. Keep the repository private and manage collaborators in GitHub.
 
-Start a new agent session after installation. Claude: `/lumina:analyze`; Codex: `$workflow-implement` or another `workflow-*` skill; Antigravity: `/workflow-implement`. Claude hook settings do not activate Claude hooks in Codex or Antigravity. Some Claude hooks need tools such as `jq` or `rtk`; consult [the hook guide](./.claude/hooks/README.md) and install only the dependencies you need.
+Start a new agent session after installation. Describe the task directly; use native Plan mode when planning is needed. Implementation follows the shared implementation rule and coding-agent; explicit workflow skills remain available across runtimes. Claude hook settings do not activate Claude hooks in Codex or Antigravity. Some Claude hooks need tools such as `jq` or `rtk`; consult [the hook guide](./.claude/hooks/README.md) and install only the dependencies you need.
 
 ## ✅ GitHub Actions
 
@@ -173,6 +194,8 @@ npm run design:spec
 ```
 
 The format and CLI are currently alpha and may change. This agent-configuration repository does not define product UI design tokens; lint the actual `DESIGN.md` from a UI project.
+
+In Claude Code, run `/design path/to/DESIGN.md` to set up the tooling in the active project, add missing `design:lint` / `design:spec` scripts, print the spec, and lint the selected file. With no argument, it checks `DESIGN.md`; if the file is missing, setup and spec still run and lint is reported as not run. The command preserves existing scripts, dependency versions and the project's package manager. A command installed under `~/` still sets up the active project, not a global npm package. The command file is included by the existing project/global installer; start a new Claude session after installation. Codex can follow `.claude/commands/design.md` as workflow instructions; these Claude slash commands are not registered automatically in Codex.
 
 When enabling branch protection on GitHub, require the `Validate agent configuration` status check before merging. The installer CLI uses Node built-ins and `node --test`; the optional DESIGN.md tooling is a development dependency and is not used by installer runtime code. CI does not install dependencies, clone the private remote through SSH, lint a design file or deploy. No formatter is bundled; syntax/tests and whitespace checks are explicit.
 

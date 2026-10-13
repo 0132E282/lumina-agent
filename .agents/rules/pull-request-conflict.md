@@ -9,6 +9,9 @@ description: "Áp dụng khi nhiệm vụ liên quan: 🔀 Pull Request — Conf
 
 ## Quy tắc
 
+- Trước xử lý conflict với remote, lấy ref mới nhất bằng `git fetch` đúng remote/nhánh, chốt SHA trước/sau và merge-base. Không chạy `git pull` mù quáng làm merge/rebase ngoài thao tác được giao; fetch không đồng nghĩa đã tích hợp code. Lấy dữ liệu thất bại thì báo chưa cập nhật, không dùng ref cũ như mới.
+- Ưu tiên theo thay đổi của người dùng so với merge-base, ở từng file/hunk: phần người dùng **không thay đổi** nhận bản incoming/remote; phần người dùng **đã thay đổi** và xung đột giữ bản người dùng. Giữ các thay đổi incoming không xung đột. Dùng diff/SHA làm căn cứ, không suy từ tên nhánh, timestamp hoặc tác giả commit; không chọn nguyên file ours/theirs nếu làm mất hunk độc lập.
+- Trước tích hợp, xác định rõ phía chứa thay đổi của người dùng và phía incoming bằng SHA và scope task. Nếu có thay đổi chưa commit thì bảo vệ working tree/index và hỏi cách xử lý; không tự stash/reset/ghi đè. Trong rebase/cherry-pick, ours/theirs có thể khác ý nghĩa so với merge; không dùng nhãn đó thay cho xác định nội dung. Không đủ căn cứ về phía/thay đổi thì hỏi trước resolve.
 - Trước khi tạo/cập nhật PR: **bắt buộc** kiểm tra nhánh có conflict với nhánh đích không.
 - Nếu có conflict: **bắt buộc đọc cả hai phía** (`<<<<<<<` / `=======` / `>>>>>>>`) trước khi resolve — không bao giờ xóa một bên mà không xem nội dung.
 - Nếu nghi ngờ việc resolve có thể làm mất một logic quan trọng không liên quan đến task của PR: **dừng lại và hỏi người dùng**, không tự quyết âm thầm.

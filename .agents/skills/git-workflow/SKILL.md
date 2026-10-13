@@ -12,6 +12,8 @@ Skill gatekeeper bắt buộc cho **commit** và **pull request** — hành đ�
 
 ## 1. Trước khi `git commit` ([rules/commit-discipline](../../rules/commit-discipline.md))
 
+Riêng `/git` và `$workflow-git` mặc định scope `all`; `change` khi người dùng chọn rõ. Giữ loại trừ file tạm/rác/secret theo rule `commit-discipline`; mặc định này không cho phép tự push.
+
 1. **Có lệnh rõ ràng từ người dùng chưa?** Chưa có → dừng, không commit, bất kể code đã xong hay chưa.
 2. **Gộp đúng phạm vi** — một commit cho toàn bộ thay đổi liên quan của task hiện tại, không tách vụn, không gộp thêm thay đổi ngoài phạm vi. Chỉ 2 kiểu phạm vi hợp lệ: "push hết" (toàn bộ thay đổi hiện có, khi người dùng nói rõ) hoặc "push theo tính năng" (chỉ phần liên quan task, mặc định khi không chỉ định) — **cả hai đều tuyệt đối không được kèm file tmp/scratch/debug/test thử nghiệm hoặc file rác**. Chạy `git status` rà lại trước `git add`; thấy file rác do mình tạo trong session thì dọn bằng skill [`cleanup-temp-files`](../cleanup-temp-files/SKILL.md) trước, không add vào commit.
 3. **Conventional Commits**: tiêu đề `<type>: <mô tả ngắn gọn>` (`feat`/`fix`/`refactor`/`docs`/`test`/`chore`/`style`/`perf`/`build`/`ci`), tối đa **75 ký tự**; body liệt kê thay đổi chính, nêu rõ vấn đề được giải quyết.
@@ -24,6 +26,8 @@ Skill gatekeeper bắt buộc cho **commit** và **pull request** — hành đ�
 
 ## 2. Trước khi `git push`
 
+Trước mọi push, rà toàn bộ lịch sử sắp gửi so với remote đích, không chỉ diff cuối: tmp/scratch/debug/test thử nghiệm, log/output tạm, cache, `.DS_Store`, `.dssc`, backup `.bak`/`.orig` và secret tuyệt đối không được push. Kiểm tra cả file tracked và file thêm rồi xóa trong commit sau; `.gitignore` không đủ. Test chính thức vẫn hợp lệ. Phát hiện vi phạm thì dừng và báo, không tự rewrite lịch sử.
+
 1. **Format lại một lần** các file đã đổi so với remote tracking branch (`git diff --name-only @{upstream}...HEAD`) bằng Prettier, nếu project có cài — tránh đẩy lên code lệch format so với lúc Edit/Write (hook `format-on-edit.sh` format theo từng file sửa, bước này là lượt quét cuối trên toàn bộ diff trước khi push).
 2. Prettier format sinh ra thay đổi → đó là thay đổi **chưa commit**; gộp vào đúng commit đang chuẩn bị push (xem mục 1) trước khi push, không để lại format fix trôi sang lần sau.
 3. Project chưa cài Prettier (không có trong `PATH` và `npx` không resolve được) → bỏ qua bước này, không tự cài khi chưa được yêu cầu.
@@ -32,10 +36,10 @@ Hook [`format-before-push.sh`](../../hook/scripts/format-before-push.sh) tự ch
 
 ## 3. Trước khi tạo Pull Request / khi gặp conflict ([rules/pull-request-conflict](../../rules/pull-request-conflict.md))
 
-1. Trước khi tạo PR, luôn kiểm tra nhánh có **conflict** với nhánh đích (base, thường `main`) không.
+1. Trước khi tạo PR hoặc xử lý conflict, cập nhật ref remote bằng fetch đúng remote/nhánh, chốt SHA/merge-base rồi kiểm tra conflict với đích thực tế. Không pull mù quáng làm tích hợp ngoài quyền được giao; network thất bại thì báo chưa cập nhật.
 2. Có conflict: **đọc cả hai phía** (`<<<<<<<`/`=======`/`>>>>>>>`) trước khi quyết định — không xóa trắng một bên mà không xem nội dung.
-3. **Conflict chỉ do format/vị trí dòng**: giữ code của **nhánh nguồn** (nhánh đang tạo PR).
-4. **Conflict do logic thật sự thay đổi ở cả hai bên**: giữ logic của **nhánh nguồn** (thay đổi cần merge vào), nhưng đọc lướt phần bị ghi đè ở nhánh đích — nghi ngờ đó là fix quan trọng không liên quan task của PR thì dừng lại hỏi người dùng thay vì tự quyết.
+3. Xác định phía chứa thay đổi của người dùng, incoming và merge-base bằng SHA/diff; không suy từ nhãn ours/theirs (đặc biệt rebase/cherry-pick). Phần người dùng không sửa nhận incoming/remote; phần đã sửa và conflict ưu tiên bản người dùng, kể cả conflict format. Giữ thay đổi incoming không xung đột, không chọn toàn bộ file mù quáng.
+4. Thiếu căn cứ xác định thay đổi người dùng hoặc có thể mất logic quan trọng ngoài scope thì hỏi trước phần đó. Dirty working tree/index phải được bảo vệ, không tự stash/reset/ghi đè.
 5. **Không tự ý kéo thêm logic từ nhánh đích vào nhánh nguồn** ngoài phần bắt buộc phải gộp để resolve conflict — kể cả khi thấy nhánh đích có tính năng/fix "có vẻ nên có". Người dùng chỉ giao task trên nhánh nguồn; thấy thiếu gì từ nhánh khác thì báo và hỏi, không tự quyết gộp vào.
 6. Resolve xong, chạy lại test/lint liên quan trước khi coi là hoàn tất.
 
@@ -45,4 +49,4 @@ Hook [`format-before-push.sh`](../../hook/scripts/format-before-push.sh) tự ch
 
 **Push**: đã format lại diff so với remote bằng Prettier (nếu project có cài) · không còn thay đổi format nào trôi ra ngoài commit đang push.
 
-**Pull Request**: đã kiểm tra conflict với nhánh đích · nếu có conflict đã đọc cả hai phía trước khi resolve · xử lý đúng ưu tiên (nhánh nguồn) và rà soát để không mất fix quan trọng ở nhánh đích · không tự kéo thêm logic từ nhánh đích ngoài phần bắt buộc để resolve conflict · đã chạy lại test/lint sau khi resolve.
+**Pull Request**: ref remote đã cập nhật và SHA/merge-base đã chốt · đã đọc cả hai phía · hunk người dùng không sửa nhận incoming, hunk đã sửa ưu tiên bản người dùng · giữ incoming không xung đột và scope được giao · đã chạy lại test/lint sau resolve.

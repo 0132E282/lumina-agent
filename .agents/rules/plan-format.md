@@ -9,6 +9,7 @@ description: "Áp dụng khi nhiệm vụ liên quan: 📋 Viết plan — JSON 
 
 ## Cách áp dụng
 
+- Với Plan mode native, áp dụng [`workflow-plan`](../skills/workflow-plan/SKILL.md) làm phần mở rộng quy trình. Quyền ghi/vị trí/format của runtime có ưu tiên: chưa được ghi repo thì dùng output/plan file được phép và ghi rõ JSON/index chưa lưu; không vượt giới hạn qua subagent. Schema dưới đây dùng cho JSON bàn giao khi runtime cho phép ghi.
 - Kế hoạch triển khai ghi thành file **JSON hợp lệ** trong `docs/plans/` (mặc định `docs/plans/<title-slug>-<yyyyMMdd>.json`); file chi tiết có `title`, `description`, `tags`, `content`, `createdAt` theo `YYYY-MM-DD`. `content` chứa kế hoạch có cấu trúc theo schema bên dưới. Cập nhật `docs/plans/index.json` cùng lượt với entry chỉ gồm `title`, `description`, `tags`, `path`; description hướng dẫn AI khi nào nên tham khảo plan. Không dùng Markdown tự do hay bảng Markdown rời rạc làm plan.
 - `tasks` là một **mảng object đồng nhất field** (dạng bảng): mọi task dùng đúng bộ field theo bảng dưới. Field không có dữ liệu để `null`/`[]`, không xóa key — giữ mọi task cùng cấu trúc để so sánh/truy vết được như một bảng thật.
 
@@ -68,5 +69,5 @@ description: "Áp dụng khi nhiệm vụ liên quan: 📋 Viết plan — JSON 
 ## Khi áp dụng
 
 - Agent `planner-agent` (hoặc agent khác được giao viết kế hoạch triển khai) đọc `docs/plans/index.json`, xuất plan JSON mới trong `docs/plans/`, rồi thêm/cập nhật mục lục. Mỗi task nêu file path cần sửa và thay đổi cụ thể; chỉ ghi path đã xác minh từ repository, điểm chưa xác định chuyển thành câu hỏi mở.
-- `reviewer-agent` review plan, hoặc `coding-agent`/`/lumina:implement` đọc plan để biết task nào `TODO` — đọc đúng theo field JSON đã định nghĩa, không suy đoán cấu trúc tự do.
+- `reviewer-agent` review plan, hoặc `coding-agent`/`/implement` đọc plan để biết task nào `TODO` — đọc đúng theo field JSON đã định nghĩa, không suy đoán cấu trúc tự do.
 - **Không áp dụng** cho báo cáo thay đổi/review report của skill [`report`](../skills/report/SKILL.md) (vẫn Markdown) hay tài liệu `docs/system-design.md`/`docs/requirement-analysis.md` (không phải "plan", giữ Markdown).

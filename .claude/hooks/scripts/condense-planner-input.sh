@@ -5,7 +5,7 @@
 # hiểu ngữ nghĩa (system-design-agent nói gì, phần nào planner-agent thật sự cần) —
 # bash không làm được, nên trách nhiệm đó thuộc về bước gọi `planner-agent`
 # (session điều phối đã đọc toàn văn tài liệu, tự chọn lọc phần liên quan
-# trước khi đưa vào prompt — xem commands/plan.md). Hook này chỉ cắt cơ học
+# trước khi đưa vào prompt — xem skills/workflow-plan/SKILL.md). Hook này chỉ cắt cơ học
 # khi prompt vượt ngưỡng rất lớn, phòng trường hợp dán nhầm nguyên văn tài
 # liệu dài mà quên chọn lọc.
 #

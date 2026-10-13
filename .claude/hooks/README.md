@@ -142,7 +142,7 @@ Sau mỗi lần Edit/Write một file workflow CI (`.github/workflows/*.yml`, `.
 
 ## remind-cleanup — nhắc dọn file tạm cuối session
 
-Khi Claude Code kết thúc một turn, hook này tìm file đã `Write` trong session hiện tại (qua `.claude/storage/logs/logs.jsonl`), giới hạn trong phạm vi dự án (so khớp `cwd`), còn tồn trên đĩa và khớp pattern tên file tạm (`tmp`/`scratch`/`debug`/`draft`/`sandbox`/`test-output`/`.bak`/`.orig`) — nếu có, nhắc qua `additionalContext` để Claude thấy và tự quyết có chạy `/lumina:cleanup` không. Liên hệ skill [`cleanup-temp-files`](../skills/cleanup-temp-files/SKILL.md).
+Khi Claude Code kết thúc một turn, hook này tìm file đã `Write` trong session hiện tại (qua `.claude/storage/logs/logs.jsonl`), giới hạn trong phạm vi dự án (so khớp `cwd`), còn tồn trên đĩa và khớp pattern tên file tạm (`tmp`/`scratch`/`debug`/`draft`/`sandbox`/`test-output`/`.bak`/`.orig`) — nếu có, nhắc qua `additionalContext` để Claude thấy và tự quyết có dùng skill `cleanup-temp-files` để dọn file tạm không; `/cleanup` chỉ làm gọn context. Liên hệ skill [`cleanup-temp-files`](../skills/cleanup-temp-files/SKILL.md).
 
 - **Script**: [`scripts/remind-cleanup.sh`](./scripts/remind-cleanup.sh) — gọi `skills/cleanup-temp-files/scripts/find-session-scratch-files.sh`
 - **Loại hook**: `Stop`
@@ -171,7 +171,7 @@ Khi Claude Code kết thúc một turn (trả lời xong, không còn việc gì
 
 ## condense-planner-input — lưới an toàn chặn prompt quá dài khi gọi planner-agent
 
-Trước mỗi lần gọi Agent tool với `subagent_type: planner-agent`, hook này kiểm tra độ dài `prompt` — nếu vượt ngưỡng rất lớn (ví dụ dán nhầm nguyên văn cả tài liệu `system-design-agent` dài), tự cắt gọn (giữ phần đầu + phần cuối, cắt phần giữa) trước khi `planner-agent` nhận. **Đây chỉ là lưới an toàn cuối, không phải cơ chế rút gọn context chính** — bash không hiểu ngữ nghĩa nên không biết phần nào thật sự cần giữ; việc chọn lọc đúng phần liên quan là trách nhiệm của bước gọi `planner-agent` (xem [`commands/lumina/plan.md`](../commands/lumina/plan.md)).
+Trước mỗi lần gọi Agent tool với `subagent_type: planner-agent`, hook này kiểm tra độ dài `prompt` — nếu vượt ngưỡng rất lớn (ví dụ dán nhầm nguyên văn cả tài liệu `system-design-agent` dài), tự cắt gọn (giữ phần đầu + phần cuối, cắt phần giữa) trước khi `planner-agent` nhận. **Đây chỉ là lưới an toàn cuối, không phải cơ chế rút gọn context chính** — bash không hiểu ngữ nghĩa nên không biết phần nào thật sự cần giữ; việc chọn lọc đúng phần liên quan là trách nhiệm của bước gọi `planner-agent` (xem [`workflow-plan`](../skills/workflow-plan/SKILL.md)).
 
 - **Script**: [`scripts/condense-planner-input.sh`](./scripts/condense-planner-input.sh)
 - **Loại hook**: `PreToolUse`, matcher `Agent`

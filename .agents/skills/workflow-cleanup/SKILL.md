@@ -1,8 +1,8 @@
 ---
 name: workflow-cleanup
-description: "Dọn file tạm/scratch/debug/test thử nghiệm do Claude tự tạo trong session này (skill cleanup-temp-files)"
+description: "Làm gọn context agent, giữ mục tiêu/quyết định/tiến độ và bước tiếp theo; không dọn file workspace."
 ---
 
 # workflow-cleanup
 
-Đọc và thực hiện workflow trong `.claude/commands/lumina/cleanup.md`. Thay `$ARGUMENTS` bằng yêu cầu/đường dẫn người dùng cung cấp; giải quyết link từ `.claude/commands/lumina/`. Đọc hướng dẫn vai trò liên quan trong `.claude/agents/`; khi workflow yêu cầu delegation và có công cụ, dùng agent cùng vai trò do runtime hỗ trợ (Codex dùng custom agent cùng tên). Nếu không có delegation, thực hiện tuần tự theo cùng phạm vi và nêu rõ cách thực hiện. Không coi slash command/hook Claude là chức năng Codex tự chạy. Giữ điểm bàn giao, kiểm chứng và phạm vi cho phép của workflow.
+Đọc nguồn `.claude/commands/cleanup.md`; Claude dùng `/cleanup`, Codex dùng `$workflow-cleanup`. Rút gọn context và giữ yêu cầu/quyết định/bằng chứng/bước tiếp theo, dùng khả năng compact thật của runtime nếu có. Nếu chỉ tạo tóm tắt thì báo đúng trạng thái đó, không giả lập reset bộ nhớ. Không delegation chỉ để làm gọn context, không xóa file hoặc gọi skill dọn workspace. Không tự lưu handoff nếu chưa được yêu cầu.

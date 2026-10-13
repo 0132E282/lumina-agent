@@ -1,0 +1,33 @@
+{
+  "title": "<tên bộ testcase>",
+  "createdAt": "<YYYY-MM-DD>",
+  "scope": {
+    "kind": "<feature|repo|pr>",
+    "repository": "<repo>",
+    "branch": null,
+    "planPath": null,
+    "prUrl": null,
+    "baseSha": null,
+    "headSha": null
+  },
+  "suites": [],
+  "cases": [],
+  "traceability": [],
+  "executions": [],
+  "algorithmComplexity": [
+    {
+      "id": "<algorithm-id>",
+      "scope": "<file/luồng>",
+      "applies": null,
+      "notApplicableReason": null,
+      "inputs": [],
+      "before": { "time": null, "space": null, "allocation": null, "preprocessing": null },
+      "after": { "time": null, "space": null, "allocation": null, "preprocessing": null },
+      "io": { "queries": null, "apiCalls": null, "filesystem": null },
+      "basis": "<static|measured|not-applicable>",
+      "evidence": [],
+      "limitations": []
+    }
+  ],
+  "remainingRisks": []
+}

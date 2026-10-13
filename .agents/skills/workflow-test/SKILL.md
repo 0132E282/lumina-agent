@@ -1,8 +1,14 @@
 ---
 name: workflow-test
-description: "Phân tích yêu cầu, thiết kế và chạy test bằng agent qa-tester-agent"
+description: "QA theo tính năng/plan, repo hoặc PR; lưu testcase/kết quả và độ phức tạp thuật toán vào testcase.json."
 ---
 
 # workflow-test
 
-Đọc và thực hiện workflow trong `.claude/commands/lumina/test.md`. Thay `$ARGUMENTS` bằng yêu cầu/đường dẫn người dùng cung cấp; giải quyết link từ `.claude/commands/lumina/`. Đọc `.claude/agents/qa-tester-agent.md` và `docs/testcases/index.json` (nếu có) trước khi thiết kế hoặc chạy; giữ ID, ghi kết quả có bằng chứng vào JSON này và không đánh dấu Pass/Fail khi chưa chạy. Khi workflow yêu cầu delegation và có công cụ, dùng agent cùng vai trò do runtime hỗ trợ (Codex dùng custom agent cùng tên). Nếu không có delegation, thực hiện tuần tự theo cùng phạm vi và nêu rõ cách thực hiện. Không coi slash command/hook Claude là chức năng Codex tự chạy. Giữ điểm bàn giao, kiểm chứng và phạm vi cho phép của workflow.
+Đọc nguồn `.claude/commands/test.md` và vai trò `.claude/agents/qa-tester-agent.md`; Claude dùng `/test`, Codex dùng `$workflow-test` cùng argument. Mặc định tính năng/task trong plan được giao; `repo [nhánh]` kiểm thử repo, `pr [URL|#số]` kiểm thử PR và regression liên quan. Không tự lập lại plan hoặc sửa ứng dụng.
+
+Output mặc định là `testcase.json` ở gốc repo theo [template](./assets/testcase-template.json), không phải menu docs. Giữ ID/history, tái dùng case từ index cũ nếu có mà không tạo hai nguồn kết quả. Đường dẫn này ưu tiên hơn mặc định lưu docs của vai trò/skill QA khi chạy workflow này. Case chưa chạy là `Not Run`; mỗi execution có thời gian, status và evidence thật.
+
+Ghi `algorithmComplexity` bằng complexity-performance (database khi có query): Before/After time/space/allocation/preprocessing, input, I/O, basis, evidence và giới hạn. Không benchmark thì báo tĩnh; chưa biết thì null có lý do, không có runtime liên quan thì N/A.
+
+Giao qa-tester-agent khi runtime hỗ trợ theo workflow; thiếu thì làm tuần tự cùng vai trò và báo giới hạn, không giả lập agent/checks. Dùng skill `report` khi hoàn tất.

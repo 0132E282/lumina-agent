@@ -1,0 +1,26 @@
+{
+  "title": "<tiêu đề review>",
+  "description": "<scope và mục đích review>",
+  "tags": ["review"],
+  "createdAt": "<YYYY-MM-DD>",
+  "reviewType": "<code|plan|testcase|system-design|security>",
+  "content": {
+    "artifact": {
+      "kind": "<changes|repo|pr|plan|testcase|system-design|security>",
+      "repository": "<path hoặc repository identifier>",
+      "pathOrUrl": null,
+      "branch": null,
+      "baseSha": null,
+      "headSha": null,
+      "mergeBaseSha": null,
+      "filesReviewed": [],
+      "limitations": []
+    },
+    "findings": [],
+    "verification": [],
+    "summary": {
+      "conclusion": "<kết luận dựa trên bằng chứng>",
+      "remainingRisks": []
+    }
+  }
+}

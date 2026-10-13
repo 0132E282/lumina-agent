@@ -22,11 +22,14 @@ Các file Markdown trong `.codex/rules/` được đọc theo hướng dẫn nà
 
 - `.codex/skills/` là đường dẫn liên kết để quản lý cùng bộ skill; Codex khám phá skill qua `.agents/skills/`. `.agents/skills/` là nguồn skill chung; `.claude/skills/` và `.codex/skills/` cùng liên kết tới đó. Giải quyết liên kết và script theo thư mục nguồn `.agents/skills/<name>/`; `.agents/agents`, `.agents/hook` và `.agents/commands` liên kết tới tài nguyên Claude để giữ các tham chiếu tương đối.
 - `.codex/agents/*.toml` định nghĩa custom agent tương ứng `.claude/agents/*.md`, kế thừa model của phiên. Chỉ delegation khi nhiệm vụ/workflow được giao yêu cầu; đọc tài liệu vai trò trước khi thực hiện.
-- Workflow gọi bằng `$workflow-analyze`, `$workflow-plan`, `$workflow-implement`, `$workflow-test`, `$workflow-review`, `$workflow-report`, `$workflow-commit`, `$workflow-pr`, `$workflow-cleanup`, `$workflow-audit-workspace`. Chúng chuyển hành vi từ `.claude/commands/lumina/` (Claude gọi bằng slash command namespace `/lumina:...`), không phải slash command Claude trên Codex.
+- Workflow gọi bằng `$workflow-analyze`, `$workflow-plan`, `$workflow-implement`, `$workflow-test`, `$workflow-review`, `$workflow-report`, `$workflow-git`, `$workflow-cleanup`. Các workflow có command dùng nguồn `.claude/commands/` (Claude gọi `/review`, `/git`, `/cleanup`), không phải slash command Claude trên Codex. Riêng planning dùng Plan mode có sẵn kết hợp nguồn `.agents/skills/workflow-plan/SKILL.md`, không có command plan riêng. Git dùng một entrypoint: `/git` hoặc `$workflow-git`, mặc định `commit all`; không tự push, không gửi file tạm/rác/secret.
+- Khi người dùng yêu cầu lập kế hoạch trong Plan mode native, đọc skill `workflow-plan` và áp dụng phần mở rộng của project cùng giới hạn mode hiện tại. Không tự giả lập chuyển mode, không vượt quyền ghi qua subagent; dùng điểm duyệt sẵn có. JSON/index bàn giao chỉ lưu khi runtime cho phép ghi repo, nếu chưa thì báo trạng thái chưa lưu.
 - Bàn giao bằng file trong `docs/` theo vai trò, giữ điểm duyệt của workflow. Không tự chạy toàn pipeline từ phân tích tới commit.
 - Hoàn thành task (dù tự làm trực tiếp hay qua subagent) → bắt buộc xuất báo cáo bằng skill `report`, mặc định ngắn gọn, chỉ chi tiết khi được yêu cầu ([`rules/mandatory-report`](./.agents/rules/mandatory-report.md)).
 
 ## Execution discipline
+
+Triển khai áp dụng rule chung [implementation](./.agents/rules/implementation.md), không cần command implement. Báo cáo luôn theo mandatory-report, không cần command report. `/cleanup` hoặc `$workflow-cleanup` chỉ làm gọn context, không dọn file workspace. `/test`/`$workflow-test` lưu testcase/kết quả/algorithmComplexity mặc định trong `testcase.json` ở gốc repo; đường dẫn này ưu tiên hơn mặc định docs của QA khi gọi workflow test.
 
 Ưu tiên hoàn thành task với effort tương xứng độ lớn/độ mơ hồ/rủi ro — không mặc định chạy đủ chuỗi `requirement-analysis-agent`/`planner-agent`/`reviewer-agent`/`qa-tester-agent` cho mọi thay đổi; chỉ dùng khi độ phức tạp, rủi ro hoặc yêu cầu thật sự cần.
 

@@ -7,24 +7,24 @@
 ## Cấu hình riêng
 
 - `.claude/agents/*.md`: vai trò, tools và model cho Claude Code.
-- `.claude/commands/lumina/*.md`: slash command, namespace `/lumina:...`; skill `workflow-*` dùng cùng nguồn quy trình trên các công cụ khác.
+- `.claude/commands/*.md`: slash command trực tiếp như `/review`, `/git`, `/cleanup`; skill `workflow-*` dùng cùng nguồn quy trình trên các công cụ khác. Planning dùng Plan mode có sẵn kết hợp `.agents/skills/workflow-plan/SKILL.md`, không cần command riêng.
 - `.claude/settings.json` và `.claude/hooks/`: hook Claude, không tự chạy trên Codex hoặc Antigravity.
 - `.claude/storage/` bị ignore; không commit log/file tạm. Tài liệu bàn giao `docs/` là deliverable.
 - Docs mặc định là `AI-readable`: context tối thiểu, chỉ đọc phần liên quan, tóm tắt một lần ở nguồn chuẩn, link thay vì lặp và dùng `system-diagrams` khi quan hệ/flow phức tạp. `human-readable` chỉ dùng khi người dùng yêu cầu.
 
 ## Pipeline
 
-`/lumina:analyze` → `/lumina:plan` → `/lumina:implement` → `/lumina:test` → `/lumina:review` → `/lumina:commit` → `/lumina:pr`.
+Yêu cầu người dùng → Plan mode + `workflow-plan` (khi cần) → triển khai theo rule chung → `/test` → `/review` → `/git commit` → `/git main`.
 
 Chạy bước được giao, giữ điểm bàn giao/duyệt; không tự chạy toàn pipeline. Khi chuyển project, copy cùng `.agents/`, `.claude/`, `AGENTS.md` và `CLAUDE.md`, giữ symlink tương đối.
 
-Triển khai code luôn giao subagent `coding-agent` (qua `/lumina:implement` hoặc Agent tool) — phiên chính không tự `Edit`/`Write` code sản phẩm trực tiếp. Setup tool/thư viện/runtime/ứng dụng (không phải viết code) giao `setup-agent`, không phải `coding-agent`. Phiên chính vẫn được tự sửa file cấu hình/docs (`AGENTS.md`, `CLAUDE.md`, `README.md`, rule/skill...) khi task không phải triển khai tính năng.
+Triển khai code luôn giao subagent `coding-agent` theo rule implementation và Agent tool — phiên chính không tự `Edit`/`Write` code sản phẩm trực tiếp. Setup tool/thư viện/runtime/ứng dụng (không phải viết code) giao `setup-agent`, không phải `coding-agent`. Phiên chính vẫn được tự sửa file cấu hình/docs (`AGENTS.md`, `CLAUDE.md`, `README.md`, rule/skill...) khi task không phải triển khai tính năng.
 
 Hoàn thành bất kỳ task nào (kể cả khi phiên chính tự `Edit`/`Write` file cấu hình/docs, hay giao subagent) → bắt buộc xuất báo cáo bằng skill `report`, mặc định ngắn gọn, chỉ chi tiết khi được yêu cầu ([`rules/mandatory-report`](./.agents/rules/mandatory-report.md)).
 
 ## Execution discipline
 
-Ưu tiên hoàn thành task với effort tương xứng độ lớn/độ mơ hồ/rủi ro — không mặc định chạy đủ `/lumina:analyze` → `/lumina:plan` → `/lumina:review` cho mọi thay đổi; chỉ dùng khi độ phức tạp, rủi ro hoặc yêu cầu thật sự cần.
+Ưu tiên hoàn thành task với effort tương xứng độ lớn/độ mơ hồ/rủi ro — không mặc định chạy đủ analyze → Plan mode → review cho mọi thay đổi; chỉ dùng khi độ phức tạp, rủi ro hoặc yêu cầu thật sự cần.
 
 - Đọc rule/tài liệu liên quan, khảo sát đúng phần bị ảnh hưởng; đủ bằng chứng cho một thay đổi nhỏ, đúng phạm vi thì triển khai luôn — không tiếp tục dò thêm phương án hay edge case giả định.
 - Dùng pattern/component có sẵn; không tách file, thêm abstraction, hay refactor phần không liên quan chỉ để "cho gọn" hoặc nhất quán hình thức.

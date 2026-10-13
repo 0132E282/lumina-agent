@@ -1,8 +1,23 @@
 ---
 name: workflow-plan
-description: "Pipeline lập kế hoạch đầy đủ — research → system-design-agent (nếu cần) → planner-agent → review kế hoạch → report"
+description: "Bổ sung quy trình lập kế hoạch của project vào Plan mode có sẵn khi người dùng yêu cầu plan; khảo sát, thiết kế khi cần, task/AC/test và bàn giao, không triển khai."
 ---
 
 # workflow-plan
 
-Đọc và thực hiện workflow trong `.claude/commands/lumina/plan.md`. Thay `$ARGUMENTS` bằng yêu cầu/đường dẫn người dùng cung cấp; giải quyết link từ `.claude/commands/lumina/`. Đọc `docs/plans/index.json`, tìm theo title/description/tags và mở plan liên quan qua path. Lưu plan JSON chi tiết trong `docs/plans/`, mô tả từng file cần sửa trong task, đặt tên từ title + ngày tạo, rồi thêm entry chỉ gồm title/description/tags/path vào index. Đọc hướng dẫn vai trò liên quan trong `.claude/agents/`; khi workflow yêu cầu delegation và có công cụ, dùng agent cùng vai trò do runtime hỗ trợ (Codex dùng custom agent cùng tên). Nếu không có delegation, thực hiện tuần tự theo cùng phạm vi và nêu rõ cách thực hiện. Không coi slash command/hook Claude là chức năng Codex tự chạy. Giữ điểm bàn giao, kiểm chứng và phạm vi cho phép của workflow.
+## Kết hợp Plan mode
+
+Đây là nguồn quy trình planning chung, không phụ thuộc command riêng. Khi người dùng yêu cầu lập kế hoạch trong Plan mode của Claude/Codex/Antigravity, áp dụng skill này cùng hướng dẫn project. Có thể gọi `$workflow-plan` nếu cần; không cần `/plan` custom.
+
+- Mode, quyền ghi và định dạng trả lời do runtime quyết định. Skill không tự bật/tắt mode, không giả lập tool chuyển mode, không vượt read-only bằng subagent.
+- Không sửa code sản phẩm, cài dependency, migrate hoặc commit/push khi đang planning. Tái dùng handoff/plan còn hợp lệ; không chạy lại phân tích cho cùng input.
+- Nếu native mode chỉ cho đọc hoặc ghi một plan file chuyên biệt, tuân thủ vị trí/format đó; trình bày nội dung kế hoạch trong output được phép, ghi rõ JSON/index chưa lưu. Khi runtime cho phép ghi tài liệu, lưu bàn giao theo rule dưới đây trước triển khai. Không nói đã lưu khi chưa ghi.
+
+## Quy trình theo phạm vi
+
+1. Đọc yêu cầu và hướng dẫn project; đọc `docs/plans/index.json` nếu có, tìm bằng title/description/tags rồi mở file liên quan qua path. Tái sử dụng `docs/requirement-analysis.md`/`docs/system-design.md` nếu còn đúng. Khảo sát stack, file và hành vi bị ảnh hưởng; không dump toàn repo.
+2. Research chỉ khi thiếu bằng chứng. System design chỉ khi cần HLD/LLD/mô hình dữ liệu mới; dùng vai trò tương ứng và file handoff khi runtime cho phép. Không mặc định full pipeline cho thay đổi nhỏ.
+3. Dùng vai trò [`planner-agent`](../../agents/planner-agent.md) để lập yêu cầu → task → AC → test, phạm vi, dependency, file/hành vi cụ thể, thứ tự thực hiện, rollback/rủi ro và câu hỏi còn thiếu. Chỉ giao subagent khi workflow/phạm vi cần và runtime hỗ trợ; nếu không, thực hiện planning tuần tự theo vai trò, không giả lập delegation.
+4. Review plan khi độ phức tạp/rủi ro cần hoặc người dùng yêu cầu. `reviewer-agent` chỉ nêu findings; planner xử lý findings trong phạm vi kế hoạch. Báo ngắn phần đã chốt/còn thiếu, không tự chuyển sang implement.
+5. Khi được phép ghi, lưu JSON hợp lệ tại `docs/plans/<title-slug>-<yyyyMMdd>.json` theo [`plan-format`](../../rules/plan-format.md), mỗi task có `filesToChange` là path đã xác minh. Cập nhật `docs/plans/index.json` với entry chỉ gồm `title`, `description`, `tags`, `path`. Native plan file là draft; JSON là bàn giao có cấu trúc, không duy trì hai nguồn yêu cầu trái nhau.
+6. Xuất Plan Summary bằng skill `report`, nêu trạng thái lưu file và kiểm chứng thật. Dùng điểm duyệt/thoát Plan mode của runtime; chỉ triển khai khi người dùng đã cho phép và runtime cho phép. Không tạo thêm vòng xác nhận trùng với phê duyệt đã có.
