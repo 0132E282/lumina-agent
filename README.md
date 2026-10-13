@@ -114,19 +114,28 @@ This is a **private GitHub repository**. Only accounts granted read access can i
 From your target project directory, install **skills, rules, agents, commands and Claude hook configuration together**:
 
 ```bash
-npx --yes --package='git+ssh://git@github.com/0132E282/lumina-agent.git' lumina-agent init
+npx --yes --package='git+ssh://git@github.com/0132E282/lumina-agent.git' lumina-agent setup
 ```
 
 Preview changes, or choose another project directory:
 
 ```bash
-npx --yes --package='git+ssh://git@github.com/0132E282/lumina-agent.git' lumina-agent init --dry-run
-npx --yes --package='git+ssh://git@github.com/0132E282/lumina-agent.git' lumina-agent init --target /absolute/path/to/project
+npx --yes --package='git+ssh://git@github.com/0132E282/lumina-agent.git' lumina-agent setup --dry-run
+npx --yes --package='git+ssh://git@github.com/0132E282/lumina-agent.git' lumina-agent setup --target /absolute/path/to/project
 ```
 
-The CLI clones the private repository's current default branch through SSH on **every init**, including dry runs and runs using npm's cached CLI. Authentication or network failure stops installation. Clone timeout is 120 seconds; the temporary clone is cleaned up after success or failure. npm distributes only the executable, not the configuration payload (npm packaging does not preserve symlinks). See [npm exec](https://docs.npmjs.com/cli/v11/commands/npm-exec/) and [package bin/private fields](https://docs.npmjs.com/cli/v11/configuring-npm/package-json/).
+Or install user configuration under your home directory (`~/`) for Claude and Codex:
 
-The installer preserves relative symlinks and executable file modes on macOS/Linux. It includes shared `.agents/rules/` and `.agents/skills/`, Claude agents/commands/hooks/settings, Codex adapters and their shared links, plus `CONTRACT.md`. It appends a small integration block to `AGENTS.md` and `CLAUDE.md`, preserving existing project instructions rather than copying this repository's maintenance guide. Existing Claude settings are preserved and hook commands are merged without adding duplicate matching commands. It excludes repository history, storage/logs, project docs, `.DS_Store`, credential/key files and environment files. It does not install hook dependencies, run hooks or alter your project's package manifest/Git hooks.
+```bash
+npx --yes --package='git+ssh://git@github.com/0132E282/lumina-agent.git' lumina-agent setup --global
+npx --yes --package='git+ssh://git@github.com/0132E282/lumina-agent.git' lumina-agent setup --global --dry-run
+```
+
+`setup` defaults to the current project directory. `--global` uses the operating system's home directory and cannot be combined with `--target`. Global instructions are appended to `~/.codex/AGENTS.md` and `~/.claude/CLAUDE.md`; shared payload stays in `~/.agents/`, `~/.claude/`, `~/.codex/` and `~/CONTRACT.md`. Global instruction links and Claude hook script commands use absolute home paths, so opening another project does not change where these files resolve. Hooks still operate on the active project's working directory. Existing user settings and instructions are preserved; conflicting payload files stop the install. A custom `CODEX_HOME` is not targeted by `--global`. `init` remains a compatible alias for `setup`.
+
+The CLI clones the private repository's current default branch through SSH on **every setup/init**, including dry runs and runs using npm's cached CLI. Authentication or network failure stops installation. Clone timeout is 120 seconds; the temporary clone is cleaned up after success or failure. npm distributes only the executable, not the configuration payload (npm packaging does not preserve symlinks). See [npm exec](https://docs.npmjs.com/cli/v11/commands/npm-exec/) and [package bin/private fields](https://docs.npmjs.com/cli/v11/configuring-npm/package-json/).
+
+The installer preserves relative symlinks and executable file modes on macOS/Linux. It includes shared `.agents/rules/` and `.agents/skills/`, Claude agents/commands/hooks/settings, Codex adapters and their shared links, plus `CONTRACT.md`. Project setup appends a small integration block to `AGENTS.md` and `CLAUDE.md`, preserving existing project instructions rather than copying this repository's maintenance guide. Existing Claude settings are preserved and hook commands are merged without adding duplicate matching commands. It excludes repository history, storage/logs, project docs, `.DS_Store`, credential/key files and environment files. It does not install or update the Claude/Codex applications, install hook dependencies, run hooks or alter your project's package manifest/Git hooks.
 
 All content/link/settings conflicts are checked before writing. Different existing files, a different `CONTRACT.md`, an edited integration block or malformed settings stop the install; there is no overwrite/force option. Repeating the same install is idempotent. Dry runs do not write to the target. Use actual directory paths: target roots/ancestors and payload parent directories cannot be symlinks. Keep the target directory unchanged while installation runs; unexpected filesystem failures or process interruption during writes can leave a partial install.
 

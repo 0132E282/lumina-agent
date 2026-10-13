@@ -170,15 +170,15 @@ function mergeSettings(existing, incoming) {
   return Buffer.from(`${JSON.stringify(merged, null, 2)}\n`);
 }
 
-function appendInstructions(existing, relative) {
+function appendInstructions(existing, relative, block = instructionBlock) {
   const text = existing.toString('utf8');
   if (text.includes(startMarker) || text.includes(endMarker)) {
-    if (text.split(startMarker).length !== 2 || text.split(endMarker).length !== 2 || !text.includes(instructionBlock)) {
+    if (text.split(startMarker).length !== 2 || text.split(endMarker).length !== 2 || !text.includes(block)) {
       throw new Error(`Integration block đã khác nội dung: ${relative}`);
     }
     return existing;
   }
-  return Buffer.from(`${text}${text.length ? (text.endsWith('\n') ? '\n' : '\n\n') : ''}${instructionBlock}\n`);
+  return Buffer.from(`${text}${text.length ? (text.endsWith('\n') ? '\n' : '\n\n') : ''}${block}\n`);
 }
 
 async function preflight(target, entries) {
@@ -202,7 +202,7 @@ async function preflight(target, entries) {
     if (status && !status.isFile()) throw new Error(`File conflict: ${entry.relative}`);
     const existing = status ? await fs.readFile(filename) : Buffer.alloc(0);
     let content = entry.content;
-    if (entry.instructions) content = appendInstructions(existing, entry.relative);
+    if (entry.instructions) content = appendInstructions(existing, entry.relative, entry.block);
     else if (entry.relative === '.claude/settings.json') {
       content = mergeSettings(status ? parseSettings(existing, 'Settings hiện có') : {}, parseSettings(content, 'Settings nguồn'));
     } else if (status && !existing.equals(content)) {
@@ -213,13 +213,31 @@ async function preflight(target, entries) {
   return changes;
 }
 
-export async function installFromSource({ source, target, dryRun = false }) {
+export async function installFromSource({ source, target, dryRun = false, global = false }) {
   source = await fs.realpath(source);
   target = path.resolve(target);
   await assertDirectories(target);
   const entries = await collectPayload(source);
-  for (const relative of ['AGENTS.md', 'CLAUDE.md']) {
-    entries.set(relative, { relative, kind: 'file', instructions: true, mode: 0o644 });
+  let block = instructionBlock;
+  if (global) {
+    block = instructionBlock.replace(/\]\(\.\/([^)]*)\)/g, (_, relative) => `](<${path.join(target, relative)}>)`)
+      .replace('trong .claude/settings.json', `trong ${path.join(target, '.claude/settings.json')}`);
+    const settingsEntry = entries.get('.claude/settings.json');
+    const settings = object(parseSettings(settingsEntry.content, 'Settings nguồn'), 'Settings nguồn');
+    for (const [event, groups] of Object.entries(object(settings.hooks ?? {}, 'hooks nguồn'))) {
+      for (const group of hookGroups(groups, event)) {
+        for (const hook of group.hooks) {
+          if (hook.type === 'command' && typeof hook.command === 'string' && hook.command.startsWith('bash .claude/hooks/')) {
+            const filename = path.join(target, hook.command.slice(5));
+            hook.command = `bash '${filename.replaceAll("'", "'\\''")}'`;
+          }
+        }
+      }
+    }
+    settingsEntry.content = Buffer.from(`${JSON.stringify(settings, null, 2)}\n`);
+  }
+  for (const relative of global ? ['.codex/AGENTS.md', '.claude/CLAUDE.md'] : ['AGENTS.md', 'CLAUDE.md']) {
+    entries.set(relative, { relative, kind: 'file', instructions: true, block, mode: 0o644 });
   }
   const changes = await preflight(target, entries);
   if (dryRun) return { target, changes: changes.length, dryRun };
@@ -258,7 +276,7 @@ export async function installFromSource({ source, target, dryRun = false }) {
   return { target, changes: changes.length, dryRun };
 }
 
-export async function initialize({ target, dryRun = false }, runGit = executeFile) {
+export async function initialize({ target, dryRun = false, global = false }, runGit = executeFile) {
   const temporary = await fs.mkdtemp(path.join(os.tmpdir(), 'lumina-agent-'));
   try {
     const source = path.join(temporary, 'source');
@@ -271,33 +289,36 @@ export async function initialize({ target, dryRun = false }, runGit = executeFil
     } catch {
       throw new Error('Không đọc được private repo. Kiểm tra quyền collaborator, Git và SSH key GitHub đã được cấp quyền; clone timeout 120 giây.');
     }
-    return await installFromSource({ source, target, dryRun });
+    return await installFromSource({ source, target, dryRun, global });
   } finally {
     await fs.rm(temporary, { recursive: true, force: true });
   }
 }
 
-function parseArguments(argumentsList) {
+export function parseArguments(argumentsList, { cwd = process.cwd(), home = os.homedir() } = {}) {
   if (argumentsList.length === 0 || argumentsList[0] === '--help' || argumentsList[0] === '-h') return null;
-  if (argumentsList[0] !== 'init') throw new Error('Chỉ hỗ trợ lệnh init. Dùng --help để xem cú pháp.');
-  const options = { target: process.cwd(), dryRun: false };
+  if (!['setup', 'init'].includes(argumentsList[0])) throw new Error('Chỉ hỗ trợ lệnh setup hoặc init. Dùng --help để xem cú pháp.');
+  const options = { target: cwd, dryRun: false, global: false };
   const seen = new Set();
   for (let index = 1; index < argumentsList.length; index++) {
     const argument = argumentsList[index];
     if (seen.has(argument)) throw new Error(`Option trùng: ${argument}`);
     seen.add(argument);
     if (argument === '--dry-run') options.dryRun = true;
+    else if (argument === '--global') options.global = true;
     else if (argument === '--target' && argumentsList[index + 1] && !argumentsList[index + 1].startsWith('--')) {
       options.target = argumentsList[++index];
     } else throw new Error(`Option không hợp lệ: ${argument}`);
   }
+  if (options.global && seen.has('--target')) throw new Error('Không kết hợp --global với --target.');
+  if (options.global) options.target = home;
   return options;
 }
 
 if (process.argv[1] && await fs.realpath(process.argv[1]) === fileURLToPath(import.meta.url)) {
   try {
     const options = parseArguments(process.argv.slice(2));
-    if (!options) console.log('lumina-agent init [--target <project-directory>] [--dry-run]\nYêu cầu Node.js >=20, Git và quyền đọc private GitHub repo qua SSH.');
+    if (!options) console.log('lumina-agent setup [--global | --target <project-directory>] [--dry-run]\nlumina-agent init: alias của setup. Mặc định cài tại project hiện tại; --global cài tại ~/.\nYêu cầu Node.js >=20, Git và quyền đọc private GitHub repo qua SSH.');
     else {
       const result = await initialize(options);
       console.log(`${result.dryRun ? 'Dry run' : 'Đã cài'}: ${result.changes} mục thay đổi tại ${result.target}`);

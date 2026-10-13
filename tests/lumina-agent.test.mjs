@@ -6,7 +6,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import test from 'node:test';
-import { initialize, installFromSource } from '../bin/lumina-agent.mjs';
+import { initialize, installFromSource, parseArguments } from '../bin/lumina-agent.mjs';
 
 const executeFile = promisify(execFile);
 const repository = fileURLToPath(new URL('../', import.meta.url));
@@ -24,6 +24,56 @@ async function fixture(context, copySource = false) {
   }
   return { temporary, target, source };
 }
+
+test('setup selects project, explicit target or home; init remains compatible', () => {
+  const locations = { cwd: '/example/project', home: '/example/home' };
+  assert.deepEqual(parseArguments(['setup'], locations), { target: locations.cwd, dryRun: false, global: false });
+  assert.deepEqual(parseArguments(['init'], locations), parseArguments(['setup'], locations));
+  assert.deepEqual(parseArguments(['setup', '--global', '--dry-run'], locations), { target: locations.home, dryRun: true, global: true });
+  assert.equal(parseArguments(['setup', '--target', '/another/project'], locations).target, '/another/project');
+  for (const args of [['--global', '--target', '/project'], ['--target', '/project', '--global'], ['--global', '--global'], ['--target'], ['--unknown']]) {
+    assert.throws(() => parseArguments(['setup', ...args], locations));
+  }
+});
+
+test('global install preserves user configuration and resolves hooks from another cwd', async context => {
+  const options = await fixture(context);
+  options.target = path.join(options.temporary, "home with ' quote $ and ` characters");
+  options.global = true;
+  await fs.mkdir(path.join(options.target, '.claude'), { recursive: true });
+  await fs.mkdir(path.join(options.target, '.codex'));
+  await fs.writeFile(path.join(options.target, '.claude/CLAUDE.md'), '# Existing Claude\n');
+  await fs.writeFile(path.join(options.target, '.codex/AGENTS.md'), '# Existing Codex\n');
+  await fs.writeFile(path.join(options.target, '.claude/settings.json'), JSON.stringify({ model: 'existing-model' }));
+  assert.ok((await installFromSource(options)).changes > 0);
+  for (const relative of ['.claude/CLAUDE.md', '.codex/AGENTS.md']) {
+    const content = await fs.readFile(path.join(options.target, relative), 'utf8');
+    assert.match(content, /^# Existing/);
+    assert.ok(content.includes(`](<${path.join(options.target, 'CONTRACT.md')}>)`));
+    assert.doesNotMatch(content, /\]\(\.\//);
+  }
+  for (const name of ['AGENTS.md', 'CLAUDE.md']) {
+    await assert.rejects(fs.stat(path.join(options.target, name)), { code: 'ENOENT' });
+  }
+  const settings = JSON.parse(await fs.readFile(path.join(options.target, '.claude/settings.json'), 'utf8'));
+  assert.equal(settings.model, 'existing-model');
+  const command = settings.hooks.UserPromptSubmit[0].hooks[0].command;
+  assert.ok(command.includes(options.target.replaceAll("'", "'\\''")));
+  const resolved = await executeFile('sh', ['-c', `set -- ${command}; printf '%s' "$2"`], { cwd: options.temporary });
+  assert.equal(resolved.stdout, path.join(options.target, '.claude/hooks/scripts/markitdown.sh'));
+  assert.equal((await installFromSource(options)).changes, 0);
+});
+
+test('global dry run and instruction conflict do not write home payload', async context => {
+  const options = { ...await fixture(context), global: true };
+  await installFromSource({ ...options, dryRun: true });
+  await assert.rejects(fs.stat(options.target), { code: 'ENOENT' });
+  await fs.mkdir(path.join(options.target, '.codex'), { recursive: true });
+  const instruction = path.join(options.target, '.codex/AGENTS.md');
+  await fs.writeFile(instruction, '<!-- lumina-agent:start -->\nedited\n<!-- lumina-agent:end -->');
+  await assert.rejects(installFromSource(options), /Integration block/);
+  assert.deepEqual(await fs.readdir(options.target), ['.codex']);
+});
 
 test('empty install preserves relative links and executables; repeat is idempotent', async context => {
   const options = await fixture(context);
@@ -198,9 +248,13 @@ test('package contains CLI without configuration payload; npx resolves bin offli
   const sentinel = path.join(temporary, 'git-invoked');
   await fs.writeFile(path.join(fakeCommands, 'git'), `#!${process.execPath}\nrequire('node:fs').writeFileSync(${JSON.stringify(sentinel)}, 'called');\nconsole.error('raw-sensitive-credential');\nprocess.exit(1);\n`, { mode: 0o755 });
   const target = path.join(temporary, 'denied-project');
-  await assert.rejects(executeFile('npx', ['--offline', '--yes', `--package=${path.join(temporary, metadata.filename)}`, 'lumina-agent', 'init', '--target', target], {
-    env: { ...environment, PATH: `${fakeCommands}${path.delimiter}${process.env.PATH}` },
-  }), error => /private repo/.test(error.stderr) && !error.stderr.includes('raw-sensitive-credential'));
+  const home = path.join(temporary, 'denied-home');
+  for (const args of [['init', '--target', target], ['setup', '--global']]) {
+    await assert.rejects(executeFile('npx', ['--offline', '--yes', `--package=${path.join(temporary, metadata.filename)}`, 'lumina-agent', ...args], {
+      env: { ...environment, HOME: home, PATH: `${fakeCommands}${path.delimiter}${process.env.PATH}` },
+    }), error => /private repo/.test(error.stderr) && !error.stderr.includes('raw-sensitive-credential'));
+  }
   assert.equal(await fs.readFile(sentinel, 'utf8'), 'called');
   await assert.rejects(fs.stat(target), { code: 'ENOENT' });
+  await assert.rejects(fs.stat(path.join(home, '.claude/settings.json')), { code: 'ENOENT' });
 });
