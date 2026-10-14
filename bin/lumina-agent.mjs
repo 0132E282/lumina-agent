@@ -388,12 +388,13 @@ function cleanupPrompt(input, output, onKeypress, { lineCount, erase = false, ap
 
 export async function withProgress(task, output = process.stdout) {
   if (!output.isTTY || typeof output.write !== 'function') return task();
-  const trackWidth = 20;
+  const totalWidth = Math.max(3, (output.columns ?? 3) - 2);
+  const trackWidth = totalWidth - 2;
   const progress = 65;
   const render = () => {
     const filledWidth = Math.round(trackWidth * progress / 100);
     const bar = `${'█'.repeat(filledWidth)}${'░'.repeat(trackWidth - filledWidth)}`;
-    output.write(`\r\u001b[2KInstalling... [${bar}] ~${progress}%`);
+    output.write(`\r\u001b[2K[${bar}]`);
   };
   const clear = () => output.write('\r\u001b[2K');
   output.write('\u001b[?25l');

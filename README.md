@@ -26,46 +26,6 @@ The interactive install runs two steps:
 
 Shared rules and skills required by the selected agents are installed automatically.
 
----
-
-## Install options
-
-### Choose agents directly
-
-```bash
-npx --yes --package='git+ssh://git@github.com/0132E282/lumina-agent.git' \
-  lumina-agent install --agent codex --agent claude
-```
-
-Combine `--agent` with `--target` or `--global` to skip all prompts.
-
-### Preview before installing (dry run)
-
-```bash
-npx --yes --package='git+ssh://git@github.com/0132E282/lumina-agent.git' \
-  lumina-agent install --dry-run
-```
-
-### Install to a specific project path
-
-```bash
-npx --yes --package='git+ssh://git@github.com/0132E282/lumina-agent.git' \
-  lumina-agent install --target /path/to/project
-```
-
-### User-level (global) install
-
-Installs Claude Code and Codex instructions under `~/`:
-
-```bash
-npx --yes --package='git+ssh://git@github.com/0132E282/lumina-agent.git' \
-  lumina-agent install --global
-```
-
-> **Note:** Antigravity is project-only — run install inside the project it should use.
-
----
-
 ## What gets installed
 
 | Scope               | Contents                                                       |
