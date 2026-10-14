@@ -372,12 +372,46 @@ function clearPrompt(output, lineCount) {
   output.write(`\u001b[${lineCount}A\u001b[0J`);
 }
 
+function drainInput(input) {
+  if (typeof input.read !== 'function') return;
+  while (input.read() !== null) {}
+}
+
 function cleanupPrompt(input, output, onKeypress, { lineCount, erase = false, appendNewline = true }) {
   input.removeListener('keypress', onKeypress);
   if (typeof input.pause === 'function') input.pause();
+  drainInput(input);
+  input.setRawMode(false);
   if (erase && lineCount > 0) clearPrompt(output, lineCount);
   else if (appendNewline) output.write('\n');
-  process.nextTick(() => input.setRawMode(false));
+}
+
+export async function withProgress(task, output = process.stdout) {
+  if (!output.isTTY || typeof output.write !== 'function') return task();
+  const trackWidth = Math.max(12, Math.min(24, (output.columns ?? 80) - 2));
+  const frames = Array.from({ length: trackWidth - 3 }, (_, index) => {
+    const track = '━'.repeat(trackWidth);
+    return `${track.slice(0, index)}\u001b[1;36m━━━\u001b[0m${track.slice(index + 3)}`;
+  });
+  let frameIndex = 0;
+  const render = () => {
+    const bar = frames[frameIndex++ % frames.length];
+    output.write(`\u001b[2K\r🚀 DEPLOY APPLICATION\n\u001b[2KBuilding production assets...\n\u001b[2K${bar}`);
+  };
+  const clear = () => output.write(`\r\u001b[2K\u001b[1A\u001b[2K\u001b[1A\u001b[2K\r`);
+  output.write('\u001b[?25l');
+  render();
+  const timer = setInterval(() => {
+    output.write('\u001b[2A');
+    render();
+  }, 100);
+  try {
+    return await task();
+  } finally {
+    clearInterval(timer);
+    clear();
+    output.write('\u001b[?25h');
+  }
 }
 
 function promptCheckboxes(input, output, { choices, title, description = '', footer = '', minimum = 0, cancelMessage, eraseOnConfirm = true }) {
@@ -553,12 +587,12 @@ if (process.argv[1] && await fs.realpath(process.argv[1]) === fileURLToPath(impo
       }
       let result;
       try {
-        result = await initialize(options);
+        result = await withProgress(() => initialize(options));
       } catch (error) {
         if (!(error instanceof InstallConflictError)) throw error;
         const confirmed = await promptOverwrite(process.stdin, process.stdout, error.relative);
         if (!confirmed) throw new Error(`Installation cancelled; existing ${error.relative} was not overwritten.`);
-        result = await initialize({ ...options, overwrite: true });
+        result = await withProgress(() => initialize({ ...options, overwrite: true }));
       }
       console.log(`${result.dryRun ? 'Dry run' : 'Installed'}: ${result.changes} change(s) at ${result.target}`);
     }
