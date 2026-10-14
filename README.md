@@ -3,16 +3,13 @@
 > Shared agent rules, skills and workflows for **Claude Code**, **Codex** and **Antigravity** — install them into any project with `npx`.
 
 <div align="center">
-<pre>
-██╗     ██╗   ██╗███╗   ███╗██╗███╗   ██╗ █████╗
-██║     ██║   ██║████╗ ████║██║████╗  ██║██╔══██╗
-██║     ██║   ██║██╔████╔██║██║██╔██╗ ██║███████║
-██║     ██║   ██║██║╚██╔╝██║██║██║╚██╗██║██╔══██║
-███████╗╚██████╔╝██║ ╚═╝ ██║██║██║ ╚████║██║  ██║
-╚══════╝ ╚═════╝ ╚═╝     ╚═╝╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝
-
-                   A G E N T
-</pre>
+<code>██╗&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;██╗&nbsp;&nbsp;&nbsp;██╗███╗&nbsp;&nbsp;&nbsp;███╗██╗███╗&nbsp;&nbsp;&nbsp;██╗&nbsp;█████╗<br>
+██║&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;██║&nbsp;&nbsp;&nbsp;██║████╗&nbsp;████║██║████╗&nbsp;&nbsp;██║██╔══██╗<br>
+██║&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;██║&nbsp;&nbsp;&nbsp;██║██╔████╔██║██║██╔██╗&nbsp;██║███████║<br>
+██║&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;██║&nbsp;&nbsp;&nbsp;██║██║╚██╔╝██║██║██║╚██╗██║██╔══██║<br>
+███████╗╚██████╔╝██║&nbsp;╚═╝&nbsp;██║██║██║&nbsp;╚████║██║&nbsp;&nbsp;██║<br>
+╚══════╝&nbsp;╚═════╝&nbsp;╚═╝&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;╚═╝╚═╝╚═╝&nbsp;&nbsp;╚═══╝╚═╝&nbsp;&nbsp;╚═╝<br><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;A G E N T</code>
 </div>
 
 The CLI uses a compact version of this banner on terminals narrower than 60 columns, including mobile terminals.
