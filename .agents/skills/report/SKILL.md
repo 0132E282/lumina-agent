@@ -1,61 +1,35 @@
 ---
 name: report
-description: CHỈ tạo báo cáo (report), KHÔNG tự thực hiện review/phân tích code. (1) Báo cáo thay đổi/commit: file nào bị sửa, sửa gì, tại sao — dùng ngay sau khi hoàn thành một task code (Edit/Write) hoặc trước khi soạn commit. (2) Báo cáo kế hoạch: tóm tắt plan vừa `planner-agent` viết xong (số REQ/task/câu hỏi mở/rủi ro) trước khi chờ duyệt. (3) Báo cáo kết quả review: trình bày lại issue, mức độ nghiêm trọng, đề xuất xử lý, độ phức tạp Big O theo format chuẩn — dùng sau khi việc review/audit đã được thực hiện (bởi coding-agent hoặc skill review khác), không dùng skill này để tự đi tìm lỗi.
+description: Format báo cáo thay đổi, plan, review, security, dependency, test và feedback từ kết quả đã có; không tự review hay phân tích code.
 license: MIT
 metadata:
-  version: "1.5"
+  version: "1.6"
 ---
 
-# 📊 Report
+# Report
 
-Skill này **chỉ format và xuất báo cáo** — không tự đi tìm lỗi, không tự đánh giá chất lượng code. Việc review/phân tích là của subagent [`coding-agent`](../../agents/coding-agent.md) hoặc một skill review khác; skill này nhận kết quả đó (hoặc diff/thay đổi đã làm) và trình bày lại theo format chuẩn, dễ đọc, dễ copy vào PR/commit.
+Chỉ trình bày kết quả/diff đã có; không tự tìm lỗi, review, kiểm thử hay đánh giá code. Mặc định ngắn gọn, đúng template; không bỏ field bắt buộc. Áp dụng theo [mandatory-report](../../rules/mandatory-report.md) và [quality-assurance](../../rules/quality-assurance.md).
 
-| Loại báo cáo | Input là gì | Dùng khi | Template |
-|---|---|---|---|
-| **Báo cáo thay đổi/commit** | Danh sách file + diff vừa Edit/Write | Vừa sửa code xong, hoặc trước khi soạn commit message | [`assets/change-report-template.md`](./assets/change-report-template.md) |
-| **Báo cáo kế hoạch (Plan Summary)** | Plan JSON vừa ghi trong `docs/plans/` | Agent `planner-agent` vừa xong một plan, trước khi dừng chờ duyệt | [`assets/plan-summary-report-template.md`](./assets/plan-summary-report-template.md) |
-| **Báo cáo kết quả review** | Finding đã có sẵn — code, plan (`planner-agent`/`system-design-agent`) hoặc test case (`qa-tester-agent`) | Sau khi agent `reviewer-agent` (hoặc coding-agent tự review) đã xong, cần trình bày lại | [`assets/review-report-template.md`](./assets/review-report-template.md) |
-| **Báo cáo security review** | Finding đã có sẵn từ skill `review-web-security` | Sau khi security review xong — format riêng vì có field confidence/exploit condition/CWE mà bảng review thường không cần | [`assets/security-review-report-template.md`](./assets/security-review-report-template.md) |
-| **Báo cáo dependency audit** | Kết quả audit đã có sẵn từ skill `dependency-audit` | Sau khi audit dependency xong, cần trình bày danh sách lỗ hổng + lệnh đề xuất | [`assets/dependency-audit-report-template.md`](./assets/dependency-audit-report-template.md) |
-| **Báo cáo test (digest)** | Kết quả đã thiết kế/thực thi từ agent `qa-tester-agent` | Cần bản tóm tắt ngắn để copy vào PR/commit, không cần nguyên văn chi tiết của `qa-tester-agent` | [`assets/qa-test-report-template.md`](./assets/qa-test-report-template.md) |
-| **Báo cáo Bug/Feedback** | Bug/feedback phát hiện trong lúc làm việc (không phải kết quả review có sẵn, không phải bug ứng dụng từ test case) | Ghi nhận nhanh: type, title, url (vị trí cần sửa), description | [`assets/bug-feedback-report-template.md`](./assets/bug-feedback-report-template.md) |
+## Chọn template
 
-Tất cả bắt buộc theo [quality-assurance.md](../../rules/quality-assurance.md) — báo cáo là bước cuối, không được bỏ qua.
+| Loại | Input và thời điểm | Template |
+|---|---|---|
+| Thay đổi/commit | Diff sau Edit/Write hoặc trước khi soạn commit | [Change](./assets/change-report-template.md) |
+| Plan | Plan JSON vừa hoàn thành, trước khi chờ duyệt | [Plan](./assets/plan-summary-report-template.md) |
+| Review | Finding đã có từ review code, plan hoặc testcase | [Review](./assets/review-report-template.md) |
+| Security | Kết quả review-web-security | [Security](./assets/security-review-report-template.md) |
+| Dependency | Kết quả dependency-audit | [Dependency](./assets/dependency-audit-report-template.md) |
+| Test | Kết quả QA đã thiết kế/thực thi | [QA digest](./assets/qa-test-report-template.md) |
+| Bug/Feedback | Phát hiện trong lúc làm việc | [Feedback](./assets/bug-feedback-report-template.md) |
 
-Các report dùng đúng template tương ứng. Chỉ báo cáo dạng text dùng `-------------` trước từng phần và mỗi finding, kèm tiêu đề để nhận biết nội dung thuộc phần nào. Báo cáo dạng bảng không cần dòng phân cách này. Riêng **Review Report** dùng format text trong `assets/review-report-template.md`, không dùng pipe-table.
+## Yêu cầu theo loại
 
-## 1. Báo cáo thay đổi (Change Report)
+- **Change**: template là nguồn chuẩn định dạng; chỉ nêu thay đổi thực tế và vấn đề được giải quyết, không diễn giải lại file. Code phụ thuộc dữ liệu dùng [complexity-performance](../complexity-performance/SKILL.md); có query/database kết hợp [database](../database/SKILL.md). Giữ kiểm chứng, giới hạn, đánh giá; rule/skill/docs/config thuần túy ghi Big O không áp dụng. Chỉ thêm code cũ/mới khi được yêu cầu.
+- **Plan**: tóm tắt số REQ/task/câu hỏi mở/rủi ro, rủi ro chính và bước tiếp theo; không chép toàn bộ plan. Có từ hai câu hỏi mở thì dùng bảng theo [open-questions-table](../../rules/open-questions-table.md).
+- **Review**: dùng text, không pipe-table; giữ các field và thống kê trong template. Severity: CRITICAL (logic nặng/bảo mật/crash), WARNING (code smell/hiệu năng/edge case), SUGGESTION (gợi ý), GOOD (điểm tốt). Code phụ thuộc dữ liệu ghi time/space Before/After, input, query/API/I/O và preprocessing; ngoài runtime ghi N/A.
+- **Security**: giữ đủ chín field theo [review-web-security](../review-web-security/SKILL.md), gồm confidence, điều kiện khai thác và CWE/OWASP; không gộp vào review thường.
+- **Dependency**: giữ package, severity, phiên bản hiện tại → fix, loại thay đổi và lệnh đề xuất; không tự thực thi lệnh sửa.
+- **Test**: chỉ tóm tắt kết quả QA; không thay thế ma trận bao phủ hoặc bug report chi tiết, không suy đoán Pass/Fail.
+- **Feedback**: ba dòng `Title: [Type] tiêu đề`, `URL: vị trí hoặc chưa xác định`, `Description: hiện tượng + đã làm gì`. Type tự do; không thay thế bug report QA hay tool SendFeedback.
 
-Copy khung `assets/change-report-template.md`; mỗi file là một mục giữ `Path`, không có `Title` hay `Description`. Nhóm các thay đổi dưới `Đã sửa:`, `Đã thêm mới:` hoặc `Đã xóa:`; Nhóm có đúng một thay đổi thì ghi nội dung cùng hàng với nhãn, không dùng bullet, ví dụ `Đã sửa: [29](link): nội dung`. Nhóm có từ hai thay đổi trở lên thì đặt nhãn trên dòng riêng và liệt kê từng thay đổi bằng bullet. Nhóm không có thay đổi thì ẩn hoàn toàn. Chỉ hiển thị nhóm có thay đổi thực tế; phân biệt sửa nội dung và thêm nội dung mới ngay trong cùng file. Nhãn liên kết chỉ hiển thị số dòng hoặc khoảng dòng, ví dụ `3–27`; đường dẫn chỉ nằm trong đích Markdown `[3–27](/absolute/path/to/file:3)`, không viết thêm đường dẫn hay `file:dòng` trong ngoặc sau link. Khoảng dòng phải đúng vị trí thực tế, link dùng đường dẫn tuyệt đối và mở tại dòng đầu; không bịa số dòng. Mỗi thay đổi trong `Đã xóa:` phải nêu nội dung đã xóa và lý do xóa dựa trên thay đổi/yêu cầu thực tế, không suy đoán lý do. Với nội dung xóa không còn vị trí truy cập được, ghi mô tả kèm lý do, không tạo link giả. Dùng dòng phân cách dài 80 dấu `-` ở đầu và cuối danh sách file; giữa hai file chỉ có một dòng chung. Xuất ngoài code fence để link bấm được; riêng dòng gạch dùng inline code. Chừa dòng trống trước danh sách bullet. Không dùng bảng. Với báo cáo kết quả của task coding/sửa code, đọc và áp dụng skill [`complexity-performance`](../complexity-performance/SKILL.md) trước khi format report; nếu có query/database, kết hợp thêm skill [`database`](../database/SKILL.md). **Chỉ khi thay đổi có code hoặc luồng xử lý phụ thuộc dữ liệu** mới phân tích Big O Before/After: time complexity, space complexity, allocation nếu đáng kể và chi phí khởi tạo/preprocessing. Nêu `n`, `m` và căn cứ đo; với rule, skill, docs, template hoặc config thuần túy, ghi `Không áp dụng — không có thuật toán/runtime phụ thuộc input`, không bịa Big O từ việc agent đọc file hoặc số lượng file. Sau các khối file, ghi lệnh kiểm chứng và kết quả thực tế, giới hạn chưa kiểm tra, cùng đánh giá ngắn gồm kết luận, trade-off và rủi ro còn lại. **Không thêm code cũ/mới** dù thay đổi có vẻ đáng kể; chỉ thêm khi người dùng yêu cầu rõ. Chỉ liệt kê những gì **thật sự thay đổi**, không diễn giải lại toàn bộ file; phần nội dung sau nhãn hành động nêu thay đổi và vấn đề được giải quyết ([commit-discipline.md](../../rules/commit-discipline.md) — description có thể dùng làm nội dung commit).
-
-## 2. Báo cáo kế hoạch (Plan Summary)
-
-Copy khung `assets/plan-summary-report-template.md`, điền ngay sau khi `planner-agent` `Write` xong plan JSON trong `docs/plans/`: số REQ/task/câu hỏi mở/rủi ro, bảng câu hỏi mở cần chốt (nếu ≥2 câu — theo [rules/open-questions-table](../../rules/open-questions-table.md)), rủi ro chính, bước tiếp theo. Không chép lại nguyên văn plan — chỉ tóm tắt để người dùng duyệt nhanh.
-
-## 3. Báo cáo kết quả review (Review Report)
-
-Trình bày lại kết quả review **đã có** (do agent `reviewer-agent`, `coding-agent` tự review, hoặc con người cung cấp) — không tự review. Dùng chung cho cả 3 loại artifact `reviewer-agent` review (code/plan/test case). Copy khung text `assets/review-report-template.md`, gồm:
-
-- **4 mức nghiêm trọng** (bắt buộc dùng đúng khi phân loại lại finding): CRITICAL 🚨 (lỗi logic nặng/bảo mật/crash), WARNING ⚠️ (code smell/hiệu năng/thiếu edge case), SUGGESTION 💡 (gợi ý refactor nhỏ), GOOD ✅ (giải pháp tốt, nên nhân rộng).
-- Mỗi finding ghi dạng text: `File`, `Type`, `Severity`, `Big O`, `Chi tiết`, `Đề xuất`, `Kiểm chứng`.
-- Với review code có xử lý phụ thuộc dữ liệu, Big O bắt buộc ghi Time/Space Before/After, `n`/`m`, query/API/I/O và preprocessing nếu có; không liên quan runtime thì ghi `N/A — không áp dụng`.
-- **Thống kê cuối**: số `Issue`, `Suggestion`, `Good` và finding chưa kiểm chứng.
-
-## 4. Báo cáo chuyên biệt (security, dependency, test)
-
-Ba loại còn lại trong bảng trên có **field riêng không fit khung review chung** — copy đúng template tương ứng, không gộp vào `review-report-template.md`:
-
-- **Security**: 9 field bắt buộc theo đúng mục "Định dạng báo cáo" của skill [`review-web-security`](../review-web-security/SKILL.md) (severity+confidence, điều kiện khai thác, CWE/OWASP...).
-- **Dependency audit**: package/severity theo tool/version hiện tại→fix/loại thay đổi/lệnh đề xuất — không tự chạy lệnh, chỉ đề xuất.
-- **Test (digest)**: bản tóm tắt từ kết quả `qa-tester-agent`, không thay thế ma trận bao phủ hay bug report chi tiết mà agent đó đã tạo riêng.
-
-## 5. Báo cáo Bug/Feedback
-
-Copy khung `assets/bug-feedback-report-template.md`, điền đúng 3 dòng dạng `Field: nội dung` (**ngoại lệ duy nhất không dùng pipe-table** — đơn giản hơn cho ghi chú nhanh): `Title` (dạng `[Type] tiêu đề` — Type tự do, không ràng buộc enum cố định), `URL` (vị trí cần sửa — `file:dòng`, URL, hoặc "chưa xác định"), `Description` (hiện tượng + đã làm gì). Dùng cho bug/feedback phát hiện ngẫu nhiên trong lúc làm việc — **không** thay thế mẫu bug report chi tiết của `qa-tester-agent` (phát hiện qua test case có severity/priority/bước tái hiện riêng) hay draft của tool `SendFeedback` (về chính Claude Code).
-
-## Khi áp dụng
-
-- Báo cáo thay đổi/commit: ngay sau khi hoàn thành một task Edit/Write, trước khi báo "xong" hoặc trước khi soạn commit message (xem [git-workflow](../git-workflow/SKILL.md)).
-- Báo cáo kế hoạch: ngay sau khi `planner-agent` `Write` xong plan JSON trong `docs/plans/`, trước khi dừng chờ người dùng duyệt.
-- Báo cáo review/security/dependency/test: ngay sau khi việc tương ứng đã hoàn tất (ở nơi khác) và cần trình bày lại kết quả — không dùng skill này để tự thực hiện review/audit/test.
-- Báo cáo Bug/Feedback: ngay khi phát hiện một vấn đề ngoài phạm vi task chính đang làm, cần ghi lại nhanh để không quên.
+Dấu phân cách và bố cục theo template tương ứng. Báo cáo sau khi công việc nguồn hoàn tất; feedback ghi ngay khi phát hiện.
