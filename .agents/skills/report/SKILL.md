@@ -1,9 +1,9 @@
 ---
 name: report
-description: Format báo cáo thay đổi, plan, review, security, dependency, test và feedback từ kết quả đã có; không tự review hay phân tích code.
+description: "Báo cáo kết quả đã có khi hoàn thành task hoặc gọi /report, $workflow-report; ghi input/output/tổng token và phạm vi đo, thiếu số liệu ghi N/A. Không tự review hay phân tích code."
 license: MIT
 metadata:
-  version: "1.6"
+  version: "1.7"
 ---
 
 # Report
@@ -33,3 +33,9 @@ Chỉ trình bày kết quả/diff đã có; không tự tìm lỗi, review, ki�
 - **Feedback**: ba dòng `Title: [Type] tiêu đề`, `URL: vị trí hoặc chưa xác định`, `Description: hiện tượng + đã làm gì`. Type tự do; không thay thế bug report QA hay tool SendFeedback.
 
 Dấu phân cách và bố cục theo template tương ứng. Báo cáo sau khi công việc nguồn hoàn tất; feedback ghi ngay khi phát hiện.
+
+## Token sử dụng
+
+Cuối mọi báo cáo task, thêm một dòng `Token: input <số> | output <số> | tổng <số> | phạm vi <repo/task/skill/command> | nguồn <usage runtime>`. Chỉ dùng usage thực tế do runtime cung cấp; field không có ghi `N/A`. Không suy token từ số ký tự, độ dài context, output tool hoặc token budget. Tổng chỉ ghi khi runtime cung cấp hoặc cộng được input/output cùng phạm vi, cùng cách đếm; cached/reasoning token là thành phần con khi runtime quy định, không cộng trùng.
+
+Ghi đúng phạm vi đo: task hiện tại, một lượt hoặc toàn phiên; không gán usage toàn phiên cho riêng task/repo/skill/command. Nếu gồm subagent, chỉ cộng usage riêng không trùng của cùng task và nêu phần thiếu. Không có telemetry thì ghi `Token: N/A — runtime không cung cấp usage cho task này.` Không tự đọc log phiên khác/credential hoặc cài công cụ chỉ để lấy token. Xuất lại report dùng số liệu đã ghi với phạm vi cũ; không tự cộng thêm hoặc coi đó là usage của lần xuất lại.
