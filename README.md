@@ -62,7 +62,6 @@ npx --yes --package='git+ssh://git@github.com/0132E282/lumina-agent.git' \
 | Project             | `.agents/` rules & skills + runtime config for selected agents |
 | Global (`--global`) | Claude Code and Codex user-level instructions under `~/`       |
 
-- `setup` and `init` remain aliases for `install`
 - Re-running install asks before overwriting conflicting files
 - The CLI fetches the private repository over SSH on each run (including dry runs)
 

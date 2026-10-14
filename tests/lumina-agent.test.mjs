@@ -38,21 +38,21 @@ function terminal() {
   return { input, output };
 }
 
-test('install selects project, explicit target or home; legacy aliases remain compatible', () => {
+test('install selects project, explicit target or home', () => {
   const locations = { cwd: '/example/project', home: '/example/home' };
   assert.deepEqual(parseArguments(['install'], locations), { target: locations.cwd, dryRun: false, global: false, agents: ['codex', 'claude', 'antigravity'] });
-  assert.deepEqual(parseArguments(['setup'], locations), { target: locations.cwd, dryRun: false, global: false, agents: ['codex', 'claude', 'antigravity'] });
-  assert.deepEqual(parseArguments(['init'], locations), parseArguments(['setup'], locations));
-  assert.deepEqual(parseArguments(['setup', '--global', '--dry-run'], locations), { target: locations.home, dryRun: true, global: true, agents: ['codex', 'claude'] });
-  assert.equal(parseArguments(['setup', '--target', '/another/project'], locations).target, '/another/project');
-  assert.deepEqual(parseArguments(['setup', '--agent', 'codex', '--agent', 'ANTIGRAVITY'], locations).agents, ['codex', 'antigravity']);
+  assert.deepEqual(parseArguments(['install', '--global', '--dry-run'], locations), { target: locations.home, dryRun: true, global: true, agents: ['codex', 'claude'] });
+  assert.equal(parseArguments(['install', '--target', '/another/project'], locations).target, '/another/project');
+  assert.deepEqual(parseArguments(['install', '--agent', 'codex', '--agent', 'ANTIGRAVITY'], locations).agents, ['codex', 'antigravity']);
+  assert.throws(() => parseArguments(['setup'], locations), /Only the install command/);
+  assert.throws(() => parseArguments(['init'], locations), /Only the install command/);
   for (const args of [['--global', '--target', '/project'], ['--target', '/project', '--global'], ['--global', '--global'], ['--target'], ['--unknown']]) {
-    assert.throws(() => parseArguments(['setup', ...args], locations));
+    assert.throws(() => parseArguments(['install', ...args], locations));
   }
   for (const args of [['--agent'], ['--agent', 'unknown'], ['--agent', 'claude', '--agent', 'claude']]) {
-    assert.throws(() => parseArguments(['setup', ...args], locations));
+    assert.throws(() => parseArguments(['install', ...args], locations));
   }
-  assert.throws(() => parseArguments(['setup', '--global', '--agent', 'antigravity'], locations), /Antigravity only supports project-level/);
+  assert.throws(() => parseArguments(['install', '--global', '--agent', 'antigravity'], locations), /Antigravity only supports project-level/);
 });
 
 test('selected runtimes install only their adapter and instruction files', async context => {

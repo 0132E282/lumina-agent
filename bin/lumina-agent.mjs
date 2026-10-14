@@ -335,7 +335,7 @@ export async function initialize({ target, dryRun = false, global = false, overw
 
 export function parseArguments(argumentsList, { cwd = process.cwd(), home = os.homedir() } = {}) {
   if (argumentsList[0] === '--help' || argumentsList[0] === '-h') return null;
-  if (argumentsList.length > 0 && !['install', 'setup', 'init'].includes(argumentsList[0])) throw new Error('Only install, setup, or init commands are supported. Use --help to see usage.');
+  if (argumentsList.length > 0 && argumentsList[0] !== 'install') throw new Error('Only the install command is supported. Use --help to see usage.');
   const options = { target: cwd, dryRun: false, global: false, agents: [] };
   const seen = new Set();
   for (let index = 1; index < argumentsList.length; index++) {
@@ -503,7 +503,7 @@ if (process.argv[1] && await fs.realpath(process.argv[1]) === fileURLToPath(impo
     }
     const argumentsList = process.argv.slice(2);
     const options = parseArguments(argumentsList);
-    if (!options) console.log('lumina-agent install [--agent codex|claude|antigravity ...] [--global | --target <project-directory>] [--dry-run]\nIn a terminal, first select scope then select agents via checklist. Project defaults to all three; global has only Codex and Claude Code. Use --agent repeatedly to select directly. Outside a terminal, project defaults to all three, --global defaults to Codex and Claude Code. Antigravity is project-only.\nsetup and init remain aliases for install. If a conflict is found, the installer asks before overwriting.\nRequires Node.js >=20, Git, and SSH read access to the private GitHub repository.');
+    if (!options) console.log('lumina-agent install [--agent codex|claude|antigravity ...] [--global | --target <project-directory>] [--dry-run]\nRun install without scope or agent flags to choose the install scope and agents interactively. Use --agent with --target or --global to skip prompts. If a conflict is found, the installer asks before overwriting.\nRequires Node.js >=20, Git, and SSH read access to the private GitHub repository.');
     else {
       if (process.stdin.isTTY && process.stdout.isTTY) {
         readline.emitKeypressEvents(process.stdin);
