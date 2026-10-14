@@ -367,6 +367,8 @@ function promptCheckboxes(input, output, { choices, title, description = '', foo
     return Promise.resolve(choices.filter(choice => choice.selected).map(choice => choice.value));
   }
   let activeIndex = 0;
+  let message = '';
+  let renderedLineCount = 0;
   const render = () => {
     const items = choices.map((choice, index) => {
       const cursor = index === activeIndex ? '\u001b[32m❯\u001b[0m' : ' ';
@@ -375,9 +377,12 @@ function promptCheckboxes(input, output, { choices, title, description = '', foo
       const hint = choice.hint ? `  \u001b[2m${choice.hint}\u001b[0m` : '';
       return `${cursor} ${checkbox} ${label}${hint}`;
     });
-    const desc = description ? `\u001b[2m${description}\u001b[0m\n` : '';
-    const footerText = footer ? `\n${footer}` : '';
-    output.write(`\u001b[2J\u001b[H${title}\n${desc}\n${items.join('\n')}${footerText}\n`);
+    const lines = [title, description ? `\u001b[2m${description}\u001b[0m` : '', '', ...items];
+    if (footer) lines.push('', footer);
+    if (message) lines.push(message);
+    const prefix = renderedLineCount ? `\u001b[${renderedLineCount}A` : '';
+    output.write(`${prefix}${lines.map(line => `\u001b[2K\r${line}`).join('\n')}\n`);
+    renderedLineCount = lines.length;
   };
   render();
   input.setRawMode(true);
@@ -402,7 +407,7 @@ function promptCheckboxes(input, output, { choices, title, description = '', foo
       } else if (key.name === 'return' || key.name === 'enter') {
         const selected = choices.filter(choice => choice.selected);
         if (selected.length < minimum) {
-          output.write('Select at least one agent.\n');
+          message = 'Select at least one agent.';
           render();
           return;
         }
@@ -422,6 +427,7 @@ function promptList(input, output, { choices, title, description = '', cancelMes
     return Promise.resolve(defaultChoice.value);
   }
   let activeIndex = Math.max(0, choices.findIndex(c => c.selected));
+  let renderedLineCount = 0;
   const render = () => {
     const items = choices.map((choice, index) => {
       const cursor = index === activeIndex ? '\u001b[32m❯\u001b[0m' : ' ';
@@ -429,8 +435,10 @@ function promptList(input, output, { choices, title, description = '', cancelMes
       const hint = choice.hint ? `  \u001b[2m${choice.hint}\u001b[0m` : '';
       return `${cursor} ${label}${hint}`;
     });
-    const desc = description ? `\u001b[2m${description}\u001b[0m\n` : '';
-    output.write(`\u001b[2J\u001b[H${title}\n${desc}\n${items.join('\n')}\n`);
+    const lines = [title, description ? `\u001b[2m${description}\u001b[0m` : '', '', ...items];
+    const prefix = renderedLineCount ? `\u001b[${renderedLineCount}A` : '';
+    output.write(`${prefix}${lines.map(line => `\u001b[2K\r${line}`).join('\n')}\n`);
+    renderedLineCount = lines.length;
   };
   render();
   input.setRawMode(true);

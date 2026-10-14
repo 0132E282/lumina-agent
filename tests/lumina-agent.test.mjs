@@ -107,7 +107,7 @@ test('interactive agent selection defaults all checked and supports toggling', a
   assert.match(output.text, /\[x\] Codex/);
   assert.match(output.text, /\[x\] Claude Code/);
   assert.match(output.text, /\[x\] Antigravity/);
-  assert.match(output.text, /\[x\] Antigravity[^\n]*\nNhấn Enter để hoàn tất/);
+  assert.match(output.text, /\[x\] Antigravity[^\n]*\n(?:\u001b\[2K\r[^\n]*\n)*\u001b\[2K\rNhấn Enter để hoàn tất/);
   input.emit('keypress', ' ', { name: 'space' });
   input.emit('keypress', '', { name: 'down' });
   input.emit('keypress', '', { name: 'down' });
@@ -115,6 +115,27 @@ test('interactive agent selection defaults all checked and supports toggling', a
   assert.deepEqual(await selection, ['claude', 'antigravity']);
   await new Promise(resolve => setImmediate(resolve));
   assert.equal(input.rawMode, false);
+});
+
+test('interactive prompts redraw in place when navigating or toggling', async () => {
+  const agentPrompt = terminal();
+  const selection = promptAgents(agentPrompt.input, agentPrompt.output);
+  agentPrompt.input.emit('keypress', '', { name: 'down' });
+  agentPrompt.input.emit('keypress', ' ', { name: 'space' });
+  assert.match(agentPrompt.output.text, /\u001b\[\d+A/);
+  assert.match(agentPrompt.output.text, /\u001b\[2K/);
+  assert.doesNotMatch(agentPrompt.output.text, /\u001b\[2J\u001b\[H/);
+  agentPrompt.input.emit('keypress', '', { name: 'escape' });
+  await assert.rejects(selection, /Agent selection cancelled/);
+
+  const scopePrompt = terminal();
+  const scope = promptInstallScope(scopePrompt.input, scopePrompt.output, { project: '/work/project' });
+  scopePrompt.input.emit('keypress', '', { name: 'up' });
+  scopePrompt.input.emit('keypress', '', { name: 'down' });
+  assert.match(scopePrompt.output.text, /\u001b\[\d+A/);
+  assert.match(scopePrompt.output.text, /\u001b\[2K/);
+  scopePrompt.input.emit('keypress', '', { name: 'escape' });
+  await assert.rejects(scope, /Install scope selection cancelled/);
 });
 
 test('interactive selection requires at least one agent; non-TTY keeps default selection', async () => {
