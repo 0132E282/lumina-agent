@@ -467,6 +467,9 @@ export function promptInstallScope(input = process.stdin, output = process.stdou
 
 if (process.argv[1] && await fs.realpath(process.argv[1]) === fileURLToPath(import.meta.url)) {
   try {
+    if (process.stdout.isTTY) {
+      process.stdout.write('\x1b[1;36m\n  ╭─────────────────────────────────────────────────────╮\n  │                                                     │\n  │  ██╗     ██╗   ██╗███╗   ███╗██╗███╗   ██╗ █████╗    │\n  │  ██║     ██║   ██║████╗ ████║██║████╗  ██║██╔══██╗   │\n  │  ██║     ██║   ██║██╔████╔██║██║██╔██╗ ██║███████║   │\n  │  ██║     ██║   ██║██║╚██╔╝██║██║██║╚██╗██║██╔══██║   │\n  │  ███████╗╚██████╔╝██║ ╚═╝ ██║██║██║ ╚████║██║  ██║   │\n  │  ╚══════╝ ╚═════╝ ╚═╝     ╚═╝╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝   │\n  │                                                     │\n  │                  ✦  A G E N T  ✦                    │\n  │                                                     │\n  ╰─────────────────────────────────────────────────────╯\n\x1b[0m\n');
+    }
     const argumentsList = process.argv.slice(2);
     const options = parseArguments(argumentsList);
     if (!options) console.log('lumina-agent setup [--agent codex|claude|antigravity ...] [--global | --target <project-directory>] [--dry-run]\nIn a terminal, first select scope then select agents via checklist. Project defaults to all three; global has only Codex and Claude Code. Use --agent repeatedly to select directly. Outside a terminal, project defaults to all three, --global defaults to Codex and Claude Code. Antigravity is project-only.\nlumina-agent init: alias for setup. Defaults to current project directory; --global installs to ~/.\nRequires Node.js >=20, Git, and SSH read access to the private GitHub repository.');
