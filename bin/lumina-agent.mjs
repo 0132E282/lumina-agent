@@ -421,6 +421,15 @@ function promptCheckboxes(input, output, { choices, title, description = '', foo
   });
 }
 
+function truncateText(value, maximumLength) {
+  if (maximumLength === null || value.length <= maximumLength) return value;
+  if (maximumLength <= 0) return '';
+  if (maximumLength === 1) return '…';
+  const headLength = Math.ceil((maximumLength - 1) / 2);
+  const tailLength = maximumLength - headLength - 1;
+  return `${value.slice(0, headLength)}…${tailLength > 0 ? value.slice(-tailLength) : ''}`;
+}
+
 function promptList(input, output, { choices, title, description = '', cancelMessage }) {
   if (!input.isTTY || !output.isTTY || typeof input.setRawMode !== 'function') {
     const defaultChoice = choices.find(c => c.selected) ?? choices[0];
@@ -432,7 +441,14 @@ function promptList(input, output, { choices, title, description = '', cancelMes
     const items = choices.map((choice, index) => {
       const cursor = index === activeIndex ? '\u001b[32m❯\u001b[0m' : ' ';
       const label = choice.label.padEnd(8);
-      const hint = choice.hint ? `  \u001b[2m${choice.hint}\u001b[0m` : '';
+      const terminalColumns = Number.isInteger(output.columns) && output.columns > 0 ? output.columns : null;
+      const availableHintLength = terminalColumns === null
+        ? null
+        : Math.max(0, terminalColumns - 1 - 2 - label.length - 2);
+      const hintText = choice.hint && availableHintLength !== 0
+        ? truncateText(choice.hint, availableHintLength)
+        : '';
+      const hint = hintText ? `  \u001b[2m${hintText}\u001b[0m` : '';
       return `${cursor} ${label}${hint}`;
     });
     const lines = [title, description ? `\u001b[2m${description}\u001b[0m` : '', '', ...items];

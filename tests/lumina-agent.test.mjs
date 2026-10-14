@@ -26,7 +26,7 @@ async function fixture(context, copySource = false) {
   return { temporary, target, source };
 }
 
-function terminal() {
+function terminal(columns = 80) {
   class Input extends EventEmitter {
     isTTY = true;
     rawMode = false;
@@ -35,8 +35,12 @@ function terminal() {
     resume() {}
   }
   const input = new Input();
-  const output = { isTTY: true, text: '', write(value) { this.text += value; } };
+  const output = { isTTY: true, columns, text: '', write(value) { this.text += value; } };
   return { input, output };
+}
+
+function stripAnsi(value) {
+  return value.replace(/\u001b\[[0-?]*[ -/]*[@-~]/g, '');
 }
 
 test('install selects project, explicit target or home', () => {
@@ -189,6 +193,22 @@ test('interactive scope defaults to project and navigates to global', async () =
   global.input.emit('keypress', '', { name: 'return' });
   assert.equal(await globalScope, true);
   await new Promise(resolve => setImmediate(resolve));
+});
+
+test('interactive scope truncates long project hints to keep choices on one line', async () => {
+  const project = '/Users/hoangphuc01975/Documents/developers/lumina-agent/project-with-a-very-long-name';
+  const { input, output } = terminal(40);
+  const selection = promptInstallScope(input, output, { project });
+  input.emit('keypress', '', { name: 'down' });
+  const choiceLines = stripAnsi(output.text).replaceAll('\r', '').split('\n').filter(line => /(?:Project|Global)/.test(line));
+
+  assert.ok(choiceLines.length > 0);
+  assert.ok(choiceLines.every(line => line.length <= 39));
+  assert.doesNotMatch(output.text, new RegExp(project));
+  assert.match(output.text, /…/);
+
+  input.emit('keypress', '', { name: 'return' });
+  assert.equal(await selection, true);
 });
 
 test('interactive scope selection cancels on Ctrl+C without echoing the control character', async () => {
