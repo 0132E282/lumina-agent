@@ -262,20 +262,19 @@ test('interactive prompt drains buffered escape input before returning to the sh
   assert.doesNotMatch(output.text, /\^\[\[/);
 });
 
-test('progress UI renders an animated deploy surface and clears before the installation result', async () => {
+test('progress UI renders a compact animated line and clears before the installation result', async () => {
   const { output } = terminal(40);
   const result = await withProgress(async () => new Promise(resolve => {
     setTimeout(() => resolve({ changes: 1 }), 120);
   }), output);
   assert.deepEqual(result, { changes: 1 });
   assert.match(output.text, /\u001b\[\?25l/);
-  assert.match(stripAnsi(output.text), /🚀 DEPLOY APPLICATION/);
-  assert.match(stripAnsi(output.text), /Building production assets\.\.\./);
-  assert.match(stripAnsi(output.text), /━{38}/);
+  assert.match(stripAnsi(output.text), /Installing\.\.\. \[━{3}─{17}\]/);
+  assert.doesNotMatch(stripAnsi(output.text), /DEPLOY APPLICATION|Building production assets/);
+  assert.match(stripAnsi(output.text), /Installing\.\.\. \[[━─]{20}\]/);
   assert.doesNotMatch(stripAnsi(output.text), /\d+%/);
-  assert.match(output.text, /\u001b\[2A/);
-  assert.match(output.text, /\u001b\[2K\u001b\[1A\u001b\[2K\u001b\[1A\u001b\[2K\r\u001b\[\?25h$/);
-  assert.doesNotMatch(output.text, /Installing…/);
+  assert.doesNotMatch(output.text, /\u001b\[2A/);
+  assert.match(output.text, /\r\u001b\[2K\u001b\[\?25h$/);
 });
 
 test('progress UI stays silent and runs the task in non-TTY output', async () => {
@@ -290,11 +289,10 @@ test('progress UI stays silent and runs the task in non-TTY output', async () =>
   assert.equal(output.text, '');
 });
 
-test('progress UI keeps the bar within an extremely narrow terminal', async () => {
+test('progress UI keeps a fixed compact bar in any terminal width', async () => {
   const { output } = terminal(2);
   await withProgress(async () => ({ changes: 0 }), output);
-  assert.match(stripAnsi(output.text), /━/);
-  assert.doesNotMatch(stripAnsi(output.text), /━{2}/);
+  assert.match(stripAnsi(output.text), /Installing\.\.\. \[[━─]{20}\]/);
 });
 
 test('progress indicator clears when installation fails', async () => {
@@ -302,7 +300,7 @@ test('progress indicator clears when installation fails', async () => {
   await assert.rejects(withProgress(async () => {
     throw new Error('clone failed');
   }, output), /clone failed/);
-  assert.match(output.text, /\u001b\[2K\u001b\[1A\u001b\[2K\u001b\[1A\u001b\[2K\r\u001b\[\?25h$/);
+  assert.match(output.text, /\r\u001b\[2K\u001b\[\?25h$/);
 });
 
 test('global install preserves user configuration and resolves hooks from another cwd', async context => {

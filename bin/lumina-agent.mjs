@@ -388,23 +388,21 @@ function cleanupPrompt(input, output, onKeypress, { lineCount, erase = false, ap
 
 export async function withProgress(task, output = process.stdout) {
   if (!output.isTTY || typeof output.write !== 'function') return task();
-  const terminalColumns = Number.isInteger(output.columns) && output.columns > 0 ? output.columns : 80;
-  const trackWidth = Math.max(1, terminalColumns - 2);
-  const highlightWidth = Math.min(3, trackWidth);
-  const frames = Array.from({ length: Math.max(1, trackWidth - highlightWidth + 1) }, (_, index) => {
-    const track = '━'.repeat(trackWidth);
+  const trackWidth = 20;
+  const highlightWidth = 3;
+  const frames = Array.from({ length: trackWidth - highlightWidth + 1 }, (_, index) => {
+    const track = '─'.repeat(trackWidth);
     return `${track.slice(0, index)}\u001b[1;36m${'━'.repeat(highlightWidth)}\u001b[0m${track.slice(index + highlightWidth)}`;
   });
   let frameIndex = 0;
   const render = () => {
     const bar = frames[frameIndex++ % frames.length];
-    output.write(`\u001b[2K\r🚀 DEPLOY APPLICATION\n\u001b[2KBuilding production assets...\n\u001b[2K${bar}`);
+    output.write(`\r\u001b[2KInstalling... [${bar}]`);
   };
-  const clear = () => output.write(`\r\u001b[2K\u001b[1A\u001b[2K\u001b[1A\u001b[2K\r`);
+  const clear = () => output.write('\r\u001b[2K');
   output.write('\u001b[?25l');
   render();
   const timer = setInterval(() => {
-    output.write('\u001b[2A');
     render();
   }, 100);
   try {
