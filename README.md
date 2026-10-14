@@ -1,65 +1,129 @@
 # Lumina Agent
 
-Shared agent rules, skills and workflows for Claude Code, Codex and Antigravity. Install them into a project with `npx`.
+> Shared agent rules, skills and workflows for **Claude Code**, **Codex** and **Antigravity** — install them into any project with `npx`.
 
-## Setup
+---
 
-Requirements: Node.js 20+, npm/npx, Git, and SSH access to this private GitHub repository (`0132E282/lumina-agent`). The installer does not install the AI applications themselves.
+## Requirements
 
-Run from the project directory:
+| Requirement | Notes |
+|---|---|
+| Node.js 20+ | |
+| npm / npx | |
+| Git | |
+| SSH access | Private repo `0132E282/lumina-agent` |
+
+The installer does not install the AI applications themselves.
+
+---
+
+## Quick start
+
+Run from your project directory:
 
 ```bash
 npx --yes --package='git+ssh://git@github.com/0132E282/lumina-agent.git' lumina-agent setup
 ```
 
-In an interactive terminal, setup runs two steps: first pick a scope with **↑/↓** and **Enter** (project is the default), then select one or more agents with **Space** and confirm with **Enter**. Global setup offers Codex and Claude Code; Antigravity is project-only. Shared rules and skills required by selected agents are installed with them. To choose agents directly, repeat `--agent`:
+The interactive setup runs two steps:
+
+1. **Pick a scope** — `↑/↓` to move, `Enter` to confirm (`project` is the default)
+2. **Select agents** — `Space` to toggle, `Enter` to confirm
+
+Shared rules and skills required by the selected agents are installed automatically.
+
+---
+
+## Install options
+
+### Choose agents directly
 
 ```bash
-npx --yes --package='git+ssh://git@github.com/0132E282/lumina-agent.git' lumina-agent setup --agent codex --agent claude
+npx --yes --package='git+ssh://git@github.com/0132E282/lumina-agent.git' \
+  lumina-agent setup --agent codex --agent claude
 ```
 
-Combine `--agent` with `--target` or `--global` to skip both prompts.
+Combine `--agent` with `--target` or `--global` to skip all prompts.
 
-Without a TTY, setup selects all three for a project, or Codex and Claude Code with `--global`. Use `--target` to skip the scope prompt and choose a project path.
-
-Preview a project install or choose a project directory explicitly:
+### Preview before installing (dry run)
 
 ```bash
-npx --yes --package='git+ssh://git@github.com/0132E282/lumina-agent.git' lumina-agent setup --dry-run
-npx --yes --package='git+ssh://git@github.com/0132E282/lumina-agent.git' lumina-agent setup --target /path/to/project
+npx --yes --package='git+ssh://git@github.com/0132E282/lumina-agent.git' \
+  lumina-agent setup --dry-run
 ```
 
-Install user-level instructions for Claude Code and Codex under `~/`:
+### Install to a specific project path
 
 ```bash
-npx --yes --package='git+ssh://git@github.com/0132E282/lumina-agent.git' lumina-agent setup --global
+npx --yes --package='git+ssh://git@github.com/0132E282/lumina-agent.git' \
+  lumina-agent setup --target /path/to/project
 ```
 
-Project setup installs the shared `.agents/` rules and skills plus configuration for the selected runtimes. Global setup supports Claude Code and Codex; for Antigravity, run setup in the project it should use. `setup` can also be called as `init`. Re-running setup is safe; conflicting existing files stop the installer instead of being overwritten. The CLI fetches the private repository over SSH on each run, including dry runs.
+### User-level (global) install
 
-Once setup finishes, start a new agent session. Claude hooks only run in Claude Code; Codex and Antigravity use the shared rules and skills through their own discovery mechanisms.
+Installs Claude Code and Codex instructions under `~/`:
+
+```bash
+npx --yes --package='git+ssh://git@github.com/0132E282/lumina-agent.git' \
+  lumina-agent setup --global
+```
+
+> **Note:** Antigravity is project-only — run setup inside the project it should use.
+
+---
+
+## What gets installed
+
+| Scope | Contents |
+|---|---|
+| Project | `.agents/` rules & skills + runtime config for selected agents |
+| Global (`--global`) | Claude Code and Codex user-level instructions under `~/` |
+
+- `setup` can also be called as `init`
+- Re-running setup is safe — conflicting files stop the installer instead of being overwritten
+- The CLI fetches the private repository over SSH on each run (including dry runs)
+
+After setup finishes, **start a new agent session**. Claude hooks only run in Claude Code; Codex and Antigravity use the shared rules and skills through their own discovery mechanisms.
+
+---
 
 ## Workflows
 
-- Plan in the runtime's native Plan mode; project guidance adds task, acceptance-criteria and test handoffs.
-- `/test` in Claude Code or `$workflow-test` in Codex tests the active plan by default. Use `repo` or `pr` to select a broader scope. Test cases and algorithm complexity go to the repository-root `testcase.json` by default.
-- `/review` reviews current changes; `repo` and `pr` select a repository snapshot or pull request.
-- `/git` commits all eligible changes by default. It also supports scoped commits, merges and pull requests. Commit does not push.
-- `/cleanup` refreshes agent context; it does not delete project files.
-- Implementation follows the shared implementation rule. A change report is required when a task is complete.
+| Command | Claude Code | Codex | What it does |
+|---|---|---|---|
+| Plan | native Plan mode | native Plan mode | Adds task, acceptance-criteria and test handoffs |
+| Test | `/test` | `$workflow-test` | Tests the active plan; use `repo` or `pr` for broader scope |
+| Review | `/review` | `$workflow-review` | Reviews current changes, a repo snapshot, or a PR |
+| Commit | `/git` | `$workflow-git` | Commits eligible changes (does not push); supports merges and PRs |
+| Cleanup | `/cleanup` | `$workflow-cleanup` | Refreshes agent context (does not delete project files) |
 
-Codex workflow skills use `$workflow-test`, `$workflow-review`, `$workflow-git` and `$workflow-cleanup`. Antigravity reads project `AGENTS.md` and shared `.agents/` resources.
+A **change report** is required when a task is complete. Implementation follows the shared implementation rule.
+
+Antigravity reads the project `AGENTS.md` and shared `.agents/` resources directly.
+
+---
 
 ## Development
 
 ```bash
-npm run check
-npm test
-python3 scripts/check-agent-config.py
+npm run check                             # syntax check
+npm test                                  # run test suite
+python3 scripts/check-agent-config.py    # validate agent config
 ```
 
-`npm run design:lint -- path/to/DESIGN.md` checks a design file; `npm run design:spec` prints its format specification. Claude Code can set up and run these with `/design path/to/DESIGN.md`.
+Design file checks:
 
-Edit shared rules and skills in `.agents/`. Run the checks above after configuration changes. The installer package is private and is fetched from GitHub over SSH; it is not published to the public npm registry.
+```bash
+npm run design:lint -- path/to/DESIGN.md  # lint a design file
+npm run design:spec                        # print the design format spec
+```
+
+Claude Code can set up and run these with `/design path/to/DESIGN.md`.
+
+Edit shared rules and skills in `.agents/`. Run the checks above after any configuration changes.
+
+> The installer package is private and fetched from GitHub over SSH — it is not published to the public npm registry.
+
+---
 
 **License:** [MIT](./LICENSE)

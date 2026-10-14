@@ -51,7 +51,7 @@ test('setup selects project, explicit target or home; init remains compatible', 
   for (const args of [['--agent'], ['--agent', 'unknown'], ['--agent', 'claude', '--agent', 'claude']]) {
     assert.throws(() => parseArguments(['setup', ...args], locations));
   }
-  assert.throws(() => parseArguments(['setup', '--global', '--agent', 'antigravity'], locations), /chỉ hỗ trợ cài theo project/);
+  assert.throws(() => parseArguments(['setup', '--global', '--agent', 'antigravity'], locations), /Antigravity only supports project-level/);
 });
 
 test('selected runtimes install only their adapter and instruction files', async context => {
@@ -122,7 +122,7 @@ test('interactive selection requires at least one agent; non-TTY keeps default s
   input.emit('keypress', '', { name: 'down' });
   input.emit('keypress', ' ', { name: 'space' });
   input.emit('keypress', '', { name: 'return' });
-  assert.match(output.text, /Chọn ít nhất một agent/);
+  assert.match(output.text, /Select at least one agent/);
   input.emit('keypress', '', { name: 'up' });
   input.emit('keypress', ' ', { name: 'space' });
   input.emit('keypress', '', { name: 'return' });
@@ -133,7 +133,7 @@ test('interactive selection requires at least one agent; non-TTY keeps default s
 test('global agent checklist excludes Antigravity', async () => {
   const { input, output } = terminal();
   const selection = promptAgents(input, output, { global: true });
-  assert.match(output.text, /Antigravity chỉ hỗ trợ cài theo project/);
+  assert.match(output.text, /Antigravity is project-only/);
   assert.doesNotMatch(output.text, /\[[ x]\] Antigravity/);
   input.emit('keypress', '', { name: 'down' });
   input.emit('keypress', ' ', { name: 'space' });
@@ -255,7 +255,7 @@ test('edited integration block and invalid settings fail before writing', async 
   await assert.rejects(installFromSource(options), /array/);
   assert.deepEqual(await fs.readdir(options.target), ['.claude']);
   await fs.writeFile(path.join(options.target, '.claude/settings.json'), 'sensitive-credential-not-json');
-  await assert.rejects(installFromSource(options), error => /JSON không hợp lệ/.test(error.message) && !error.message.includes('sensitive-credential'));
+  await assert.rejects(installFromSource(options), error => /invalid JSON/.test(error.message) && !error.message.includes('sensitive-credential'));
 });
 
 test('dry run does not create target or alter existing settings', async context => {
@@ -274,12 +274,12 @@ test('target symlink root, ancestor, directory and instruction file are rejected
   const outside = path.join(options.temporary, 'outside');
   await fs.mkdir(outside);
   await fs.symlink(outside, options.target);
-  await assert.rejects(installFromSource(options), /directory thật/);
-  await assert.rejects(installFromSource({ ...options, target: path.join(options.target, 'nested') }), /directory thật/);
+  await assert.rejects(installFromSource(options), /real directory/);
+  await assert.rejects(installFromSource({ ...options, target: path.join(options.target, 'nested') }), /real directory/);
   await fs.unlink(options.target);
   await fs.mkdir(options.target);
   await fs.symlink(outside, path.join(options.target, '.agents'));
-  await assert.rejects(installFromSource(options), /directory thật/);
+  await assert.rejects(installFromSource(options), /real directory/);
   await fs.unlink(path.join(options.target, '.agents'));
   await fs.writeFile(path.join(outside, 'instructions'), 'Do not touch');
   await fs.symlink(path.join(outside, 'instructions'), path.join(options.target, 'AGENTS.md'));
@@ -293,11 +293,11 @@ test('source links escaping repo, outside allowlist and broken links are rejecte
   const link = path.join(options.source, '.agents/skills/unsafe');
   await fs.writeFile(path.join(options.temporary, 'private-data'), 'Private');
   await fs.symlink('../../../private-data', link);
-  await assert.rejects(installFromSource(options), /thoát khỏi repo/);
+  await assert.rejects(installFromSource(options), /Source escapes repository/);
   await fs.unlink(link);
   await fs.writeFile(path.join(options.source, 'secret.txt'), 'Excluded');
   await fs.symlink('../../secret.txt', link);
-  await assert.rejects(installFromSource(options), /ngoài payload/);
+  await assert.rejects(installFromSource(options), /outside payload/);
   await fs.unlink(link);
   await fs.symlink('missing-file', link);
   await assert.rejects(installFromSource(options), { code: 'ENOENT' });
