@@ -2,7 +2,7 @@
 
 > Shared agent rules, skills and workflows for **Claude Code**, **Codex** and **Antigravity** — install them into any project with `npx`.
 
-<pre>
+<pre style="text-align: center;">
 ██╗     ██╗   ██╗███╗   ███╗██╗███╗   ██╗ █████╗
 ██║     ██║   ██║████╗ ████║██║████╗  ██║██╔══██╗
 ██║     ██║   ██║██╔████╔██║██║██╔██╗ ██║███████║
