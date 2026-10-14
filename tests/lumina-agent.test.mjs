@@ -188,16 +188,31 @@ test('interactive scope defaults to project and navigates to global', async () =
   assert.match(project.output.text, /\/work\/project/);
   project.input.emit('keypress', '', { name: 'return' });
   assert.equal(await projectScope, false);
-  assert.match(project.output.text, /\u001b\[5A/);
-  assert.match(project.output.text, /\u001b\[2K\r(?:\n\u001b\[2K\r){4}$/);
+  assert.match(project.output.text, /\u001b\[5A\u001b\[0J$/);
+  assert.doesNotMatch(project.output.text, /\u001b\[5A[^\n]*\n/);
 
   const global = terminal();
   const globalScope = promptInstallScope(global.input, global.output, { project: '/work/project' });
   global.input.emit('keypress', '', { name: 'down' });
   global.input.emit('keypress', '', { name: 'return' });
   assert.equal(await globalScope, true);
-  assert.match(global.output.text, /\u001b\[5A/);
+  assert.match(global.output.text, /\u001b\[5A\u001b\[0J$/);
   await new Promise(resolve => setImmediate(resolve));
+});
+
+test('scope cleanup leaves the next prompt at the banner edge without blank lines', async () => {
+  const { input, output } = terminal();
+  const scope = promptInstallScope(input, output, { project: '/work/project' });
+  input.emit('keypress', '', { name: 'return' });
+  assert.equal(await scope, false);
+
+  const previousLength = output.text.length;
+  const agents = promptAgents(input, output);
+  const nextPrompt = output.text.slice(previousLength);
+  assert.doesNotMatch(nextPrompt, /^\n/);
+  assert.match(stripAnsi(nextPrompt), /Select agents to install/);
+  input.emit('keypress', '', { name: 'return' });
+  await agents;
 });
 
 test('interactive agent selection keeps the final prompt visible after Enter', async () => {

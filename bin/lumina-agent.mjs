@@ -362,6 +362,24 @@ export function parseArguments(argumentsList, { cwd = process.cwd(), home = os.h
   return options;
 }
 
+function renderPrompt(output, lines, previousLineCount) {
+  const prefix = previousLineCount ? `\u001b[${previousLineCount}A` : '';
+  output.write(`${prefix}${lines.map(line => `\u001b[2K\r${line}`).join('\n')}\n`);
+  return lines.length;
+}
+
+function clearPrompt(output, lineCount) {
+  output.write(`\u001b[${lineCount}A\u001b[0J`);
+}
+
+function cleanupPrompt(input, output, onKeypress, { lineCount, erase = false, appendNewline = true }) {
+  input.removeListener('keypress', onKeypress);
+  if (typeof input.pause === 'function') input.pause();
+  if (erase && lineCount > 0) clearPrompt(output, lineCount);
+  else if (appendNewline) output.write('\n');
+  process.nextTick(() => input.setRawMode(false));
+}
+
 function promptCheckboxes(input, output, { choices, title, description = '', footer = '', minimum = 0, cancelMessage, eraseOnConfirm = true }) {
   if (!input.isTTY || !output.isTTY || typeof input.setRawMode !== 'function') {
     return Promise.resolve(choices.filter(choice => choice.selected).map(choice => choice.value));
@@ -380,28 +398,15 @@ function promptCheckboxes(input, output, { choices, title, description = '', foo
     const lines = [title, description ? `\u001b[2m${description}\u001b[0m` : '', '', ...items];
     if (footer) lines.push('', footer);
     if (message) lines.push(message);
-    const prefix = renderedLineCount ? `\u001b[${renderedLineCount}A` : '';
-    output.write(`${prefix}${lines.map(line => `\u001b[2K\r${line}`).join('\n')}\n`);
-    renderedLineCount = lines.length;
+    renderedLineCount = renderPrompt(output, lines, renderedLineCount);
   };
   render();
   input.setRawMode(true);
   input.resume();
   return new Promise((resolve, reject) => {
-    const cleanup = ({ erase = false, appendNewline = true } = {}) => {
-      input.removeListener('keypress', onKeypress);
-      if (typeof input.pause === 'function') input.pause();
-      if (erase && renderedLineCount > 0) {
-        const clearLines = Array.from({ length: renderedLineCount }, () => '\u001b[2K\r').join('\n');
-        output.write(`\u001b[${renderedLineCount}A${clearLines}`);
-      } else if (appendNewline) {
-        output.write('\n');
-      }
-      process.nextTick(() => input.setRawMode(false));
-    };
     const onKeypress = (character, key = {}) => {
       if (key.ctrl && key.name === 'c' || key.name === 'escape') {
-        cleanup();
+        cleanupPrompt(input, output, onKeypress, { lineCount: renderedLineCount, appendNewline: true });
         reject(new Error(cancelMessage));
         return;
       }
@@ -416,7 +421,11 @@ function promptCheckboxes(input, output, { choices, title, description = '', foo
           render();
           return;
         }
-        cleanup({ erase: eraseOnConfirm, appendNewline: eraseOnConfirm });
+        cleanupPrompt(input, output, onKeypress, {
+          lineCount: renderedLineCount,
+          erase: eraseOnConfirm,
+          appendNewline: eraseOnConfirm,
+        });
         resolve(selected.map(choice => choice.value));
         return;
       } else return;
@@ -457,35 +466,22 @@ function promptList(input, output, { choices, title, description = '', cancelMes
       return `${cursor} ${label}${hint}`;
     });
     const lines = [title, description ? `\u001b[2m${description}\u001b[0m` : '', '', ...items];
-    const prefix = renderedLineCount ? `\u001b[${renderedLineCount}A` : '';
-    output.write(`${prefix}${lines.map(line => `\u001b[2K\r${line}`).join('\n')}\n`);
-    renderedLineCount = lines.length;
+    renderedLineCount = renderPrompt(output, lines, renderedLineCount);
   };
   render();
   input.setRawMode(true);
   input.resume();
   return new Promise((resolve, reject) => {
-    const cleanup = ({ erase = false } = {}) => {
-      input.removeListener('keypress', onKeypress);
-      if (typeof input.pause === 'function') input.pause();
-      if (erase && renderedLineCount > 0) {
-        const clearLines = Array.from({ length: renderedLineCount }, () => '\u001b[2K\r').join('\n');
-        output.write(`\u001b[${renderedLineCount}A${clearLines}`);
-      } else {
-        output.write('\n');
-      }
-      process.nextTick(() => input.setRawMode(false));
-    };
     const onKeypress = (character, key = {}) => {
       if (key.ctrl && key.name === 'c' || key.name === 'escape') {
-        cleanup();
+        cleanupPrompt(input, output, onKeypress, { lineCount: renderedLineCount, appendNewline: true });
         reject(new Error(cancelMessage));
         return;
       }
       if (key.name === 'up') activeIndex = (activeIndex + choices.length - 1) % choices.length;
       else if (key.name === 'down') activeIndex = (activeIndex + 1) % choices.length;
       else if (key.name === 'return' || key.name === 'enter') {
-        cleanup({ erase: true });
+        cleanupPrompt(input, output, onKeypress, { lineCount: renderedLineCount, erase: true });
         resolve(choices[activeIndex].value);
         return;
       } else return;
