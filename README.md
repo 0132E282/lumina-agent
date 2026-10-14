@@ -2,7 +2,7 @@
 
 > Shared agent rules, skills and workflows for **Claude Code**, **Codex** and **Antigravity** — install them into any project with `npx`.
 
-```text
+<pre>
 ██╗     ██╗   ██╗███╗   ███╗██╗███╗   ██╗ █████╗
 ██║     ██║   ██║████╗ ████║██║████╗  ██║██╔══██╗
 ██║     ██║   ██║██╔████╔██║██║██╔██╗ ██║███████║
@@ -11,20 +11,13 @@
 ╚══════╝ ╚═════╝ ╚═╝     ╚═╝╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝
 
                    A G E N T
-```
+</pre>
 
 The CLI uses a compact version of this banner on terminals narrower than 60 columns, including mobile terminals.
 
 ```bash
 npx --yes --package='git+ssh://git@github.com/0132E282/lumina-agent.git' lumina-agent install
 ```
-
-The interactive install runs two steps:
-
-1. **Pick a scope** — `↑/↓` to move, `Enter` to confirm (`project` is the default)
-2. **Select agents** — `Space` to toggle, `Enter` to confirm
-
-Shared rules and skills required by the selected agents are installed automatically.
 
 ## What gets installed
 
