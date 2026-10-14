@@ -388,10 +388,15 @@ function promptCheckboxes(input, output, { choices, title, description = '', foo
   input.setRawMode(true);
   input.resume();
   return new Promise((resolve, reject) => {
-    const cleanup = () => {
+    const cleanup = ({ erase = false } = {}) => {
       input.removeListener('keypress', onKeypress);
       if (typeof input.pause === 'function') input.pause();
-      output.write('\n');
+      if (erase && renderedLineCount > 0) {
+        const clearLines = Array.from({ length: renderedLineCount }, () => '\u001b[2K\r').join('\n');
+        output.write(`\u001b[${renderedLineCount}A${clearLines}`);
+      } else {
+        output.write('\n');
+      }
       process.nextTick(() => input.setRawMode(false));
     };
     const onKeypress = (character, key = {}) => {
@@ -411,7 +416,7 @@ function promptCheckboxes(input, output, { choices, title, description = '', foo
           render();
           return;
         }
-        cleanup();
+        cleanup({ erase: true });
         resolve(selected.map(choice => choice.value));
         return;
       } else return;
@@ -460,10 +465,15 @@ function promptList(input, output, { choices, title, description = '', cancelMes
   input.setRawMode(true);
   input.resume();
   return new Promise((resolve, reject) => {
-    const cleanup = () => {
+    const cleanup = ({ erase = false } = {}) => {
       input.removeListener('keypress', onKeypress);
       if (typeof input.pause === 'function') input.pause();
-      output.write('\n');
+      if (erase && renderedLineCount > 0) {
+        const clearLines = Array.from({ length: renderedLineCount }, () => '\u001b[2K\r').join('\n');
+        output.write(`\u001b[${renderedLineCount}A${clearLines}`);
+      } else {
+        output.write('\n');
+      }
       process.nextTick(() => input.setRawMode(false));
     };
     const onKeypress = (character, key = {}) => {
@@ -475,7 +485,7 @@ function promptList(input, output, { choices, title, description = '', cancelMes
       if (key.name === 'up') activeIndex = (activeIndex + choices.length - 1) % choices.length;
       else if (key.name === 'down') activeIndex = (activeIndex + 1) % choices.length;
       else if (key.name === 'return' || key.name === 'enter') {
-        cleanup();
+        cleanup({ erase: true });
         resolve(choices[activeIndex].value);
         return;
       } else return;

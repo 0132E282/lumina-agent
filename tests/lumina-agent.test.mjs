@@ -117,6 +117,8 @@ test('interactive agent selection defaults all checked and supports toggling', a
   input.emit('keypress', '', { name: 'down' });
   input.emit('keypress', '', { name: 'return' });
   assert.deepEqual(await selection, ['claude', 'antigravity']);
+  assert.match(output.text, /\u001b\[8A/);
+  assert.match(output.text, /\u001b\[2K\r(?:\n\u001b\[2K\r){7}$/);
   await new Promise(resolve => setImmediate(resolve));
   assert.equal(input.rawMode, false);
 });
@@ -186,12 +188,15 @@ test('interactive scope defaults to project and navigates to global', async () =
   assert.match(project.output.text, /\/work\/project/);
   project.input.emit('keypress', '', { name: 'return' });
   assert.equal(await projectScope, false);
+  assert.match(project.output.text, /\u001b\[5A/);
+  assert.match(project.output.text, /\u001b\[2K\r(?:\n\u001b\[2K\r){4}$/);
 
   const global = terminal();
   const globalScope = promptInstallScope(global.input, global.output, { project: '/work/project' });
   global.input.emit('keypress', '', { name: 'down' });
   global.input.emit('keypress', '', { name: 'return' });
   assert.equal(await globalScope, true);
+  assert.match(global.output.text, /\u001b\[5A/);
   await new Promise(resolve => setImmediate(resolve));
 });
 
