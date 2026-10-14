@@ -1,14 +1,32 @@
 # Mẫu Báo Cáo Thay Đổi
 
-Dùng sau khi hoàn tất task có thay đổi. Mỗi file thay đổi có một khối riêng theo đúng mẫu `Path`, `Title`, `Description`; đặt các khối trong code fence `text`. Sau danh sách file, chỉ ghi kiểm chứng, Big O khi áp dụng và đánh giá ngắn theo yêu cầu ở dưới. Không dùng bảng, đếm dòng hoặc thêm code cũ/mới nếu chưa được yêu cầu.
+Mỗi file là một mục giữ `Path`, không dùng `Title` hay `Description`. Nhóm nội dung theo `Đã sửa:`, `Đã thêm mới:` hoặc `Đã xóa:`; Nhóm có đúng một thay đổi thì ghi nội dung cùng hàng với nhãn, không dùng bullet, ví dụ `Đã sửa: [29](link): nội dung`. Nhóm có từ hai thay đổi trở lên thì đặt nhãn trên dòng riêng và liệt kê từng thay đổi bằng bullet. Nhóm không có thay đổi thì ẩn hoàn toàn. Nội dung có link khoảng dòng rồi dấu `:` và mô tả. Chỉ xuất nhóm có thay đổi thực tế, kể cả khi vừa sửa vừa thêm nội dung trong cùng file. Nhãn liên kết chỉ hiển thị số dòng hoặc khoảng dòng, ví dụ `3–27`; đường dẫn chỉ nằm trong đích Markdown `[3–27](/absolute/path/to/file:3)`, không viết thêm đường dẫn hay `file:dòng` trong ngoặc sau link. Nhãn link hiển thị khoảng dòng; đích dùng đường dẫn tuyệt đối và mở tại dòng đầu. Mỗi thay đổi trong `Đã xóa:` phải nêu nội dung đã xóa và lý do xóa dựa trên thay đổi/yêu cầu thực tế, không suy đoán lý do. Không bịa số dòng; nội dung xóa không còn vị trí truy cập được thì ghi mô tả kèm lý do, không tạo link giả.
 
-```text
---------------------------------------------------------------------------------
+Xuất ngoài code fence để link bấm được; riêng dòng gạch dùng inline code. Chừa dòng trống trước mỗi danh sách bullet. Dùng dòng 80 dấu `-` ở đầu và cuối danh sách file; giữa hai file chỉ có một dòng chung. Sau danh sách, ghi kiểm chứng, Big O khi áp dụng và đánh giá ngắn. Không dùng bảng, đếm dòng hoặc thêm code cũ/mới nếu chưa được yêu cầu.
+
+`--------------------------------------------------------------------------------`
+
 Path: path/to/file.ext
-Title: Tiêu đề ngắn
-Description: Nêu thay đổi và vấn đề được giải quyết.
---------------------------------------------------------------------------------
-```
+
+Đã sửa:
+
+- [23-34](/absolute/path/to/file.ext:23): Nêu thay đổi và vấn đề được giải quyết.
+- [40-45](/absolute/path/to/file.ext:40): Nêu thay đổi khác.
+
+Đã thêm mới:
+
+- [50-58](/absolute/path/to/file.ext:50): Nêu nội dung mới bổ sung.
+- [60-65](/absolute/path/to/file.ext:60): Nêu nội dung mới khác.
+
+Đã xóa: Xóa [nội dung đã xóa]. Lý do: [lý do thực tế].
+
+`--------------------------------------------------------------------------------`
+
+Path: path/to/new-file.ext
+
+Đã thêm mới: [1-20](/absolute/path/to/new-file.ext:1): Nêu nội dung file mới.
+
+`--------------------------------------------------------------------------------`
 
 ### Độ phức tạp thuật toán
 
