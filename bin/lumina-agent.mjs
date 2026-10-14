@@ -468,7 +468,10 @@ export function promptInstallScope(input = process.stdin, output = process.stdou
 if (process.argv[1] && await fs.realpath(process.argv[1]) === fileURLToPath(import.meta.url)) {
   try {
     if (process.stdout.isTTY) {
-      process.stdout.write('\x1b[1;36m\n  ╭─────────────────────────────────────────────────────╮\n  │                                                     │\n  │  ██╗     ██╗   ██╗███╗   ███╗██╗███╗   ██╗ █████╗    │\n  │  ██║     ██║   ██║████╗ ████║██║████╗  ██║██╔══██╗   │\n  │  ██║     ██║   ██║██╔████╔██║██║██╔██╗ ██║███████║   │\n  │  ██║     ██║   ██║██║╚██╔╝██║██║██║╚██╗██║██╔══██║   │\n  │  ███████╗╚██████╔╝██║ ╚═╝ ██║██║██║ ╚████║██║  ██║   │\n  │  ╚══════╝ ╚═════╝ ╚═╝     ╚═╝╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝   │\n  │                                                     │\n  │                  ✦  A G E N T  ✦                    │\n  │                                                     │\n  ╰─────────────────────────────────────────────────────╯\n\x1b[0m\n');
+      const banner = process.stdout.columns && process.stdout.columns < 60
+        ? '\n  ✦  L U M I N A   A G E N T  ✦\n\n'
+        : '\n  ╭─────────────────────────────────────────────────────╮\n  │                                                     │\n  │  ██╗     ██╗   ██╗███╗   ███╗██╗███╗   ██╗ █████╗   │\n  │  ██║     ██║   ██║████╗ ████║██║████╗  ██║██╔══██╗  │\n  │  ██║     ██║   ██║██╔████╔██║██║██╔██╗ ██║███████║  │\n  │  ██║     ██║   ██║██║╚██╔╝██║██║██║╚██╗██║██╔══██║  │\n  │  ███████╗╚██████╔╝██║ ╚═╝ ██║██║██║ ╚████║██║  ██║  │\n  │  ╚══════╝ ╚═════╝ ╚═╝     ╚═╝╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝  │\n  │                                                     │\n  │                  ✦  A G E N T  ✦                    │\n  │                                                     │\n  ╰─────────────────────────────────────────────────────╯\n';
+      process.stdout.write(`\x1b[1;36m${banner}\x1b[0m\n`);
     }
     const argumentsList = process.argv.slice(2);
     const options = parseArguments(argumentsList);

@@ -3,37 +3,17 @@
 
 > Shared agent rules, skills and workflows for **Claude Code**, **Codex** and **Antigravity** — install them into any project with `npx`.
 
-  ╭───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
-  │                                                                                                                                   │
-  │  ██╗     ██╗   ██╗███╗   ███╗██╗███╗   ██╗ █████╗                                                                                 │
-  │  ██║     ██║   ██║████╗ ████║██║████╗  ██║██╔══█                                                                                  │
-  │  ██║     ██║   ██║██╔████╔██║██║██╔██╗ ██║███████║                                                                                │
-  │  ██║     ██║   ██║██║╚██╔╝██║██║██║╚██╗██║██╔══██║                                                                                │
-  │  ███████╗╚██████╔╝██║ ╚═╝ ██║██║██║ ╚████║██║  ██║                                                                                │
-  │  ╚══════╝ ╚═════╝ ╚═╝     ╚═╝╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝                                                                                │
-  │                                                                                                                                   │
-  │                  ✦  A G E N T  ✦                                                                                                  │
-  │                                                                                                                                   │
-  ╰───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+```
+  ╭─────────────────────────────────────────────────────╮
+  │                                                     │
+  │                  L U M I N A                        │
+  │                                                     │
+  │                    A G E N T                        │
+  │                                                     │
+  ╰─────────────────────────────────────────────────────╯
+```
 
----
-
-## Requirements
-
-| Requirement | Notes |
-|---|---|
-| Node.js 20+ | |
-| npm / npx | |
-| Git | |
-| SSH access | Private repo `0132E282/lumina-agent` |
-
-The installer does not install the AI applications themselves.
-
----
-
-## Quick start
-
-Run from your project directory:
+The CLI uses a compact version of this banner on terminals narrower than 60 columns, including mobile terminals.
 
 ```bash
 npx --yes --package='git+ssh://git@github.com/0132E282/lumina-agent.git' lumina-agent setup
