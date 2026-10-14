@@ -9,7 +9,7 @@
 ██║&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;██║&nbsp;&nbsp;&nbsp;██║██║╚██╔╝██║██║██║╚██╗██║██╔══██║<br>
 ███████╗╚██████╔╝██║&nbsp;╚═╝&nbsp;██║██║██║&nbsp;╚████║██║&nbsp;&nbsp;██║<br>
 ╚══════╝&nbsp;╚═════╝&nbsp;╚═╝&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;╚═╝╚═╝╚═╝&nbsp;&nbsp;╚═══╝╚═╝&nbsp;&nbsp;╚═╝<br><br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;A G E N T</code>
+A G E N T</code>
 </div>
 
 The CLI uses a compact version of this banner on terminals narrower than 60 columns, including mobile terminals.
