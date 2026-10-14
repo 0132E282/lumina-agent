@@ -362,7 +362,7 @@ export function parseArguments(argumentsList, { cwd = process.cwd(), home = os.h
   return options;
 }
 
-function promptCheckboxes(input, output, { choices, title, description = '', minimum = 0, cancelMessage }) {
+function promptCheckboxes(input, output, { choices, title, description = '', footer = '', minimum = 0, cancelMessage }) {
   if (!input.isTTY || !output.isTTY || typeof input.setRawMode !== 'function') {
     return Promise.resolve(choices.filter(choice => choice.selected).map(choice => choice.value));
   }
@@ -376,7 +376,8 @@ function promptCheckboxes(input, output, { choices, title, description = '', min
       return `${cursor} ${checkbox} ${label}${hint}`;
     });
     const desc = description ? `\u001b[2m${description}\u001b[0m\n` : '';
-    output.write(`\u001b[2J\u001b[H${title}\n${desc}\n${items.join('\n')}\n`);
+    const footerText = footer ? `\n${footer}` : '';
+    output.write(`\u001b[2J\u001b[H${title}\n${desc}\n${items.join('\n')}${footerText}\n`);
   };
   render();
   input.setRawMode(true);
@@ -384,8 +385,9 @@ function promptCheckboxes(input, output, { choices, title, description = '', min
   return new Promise((resolve, reject) => {
     const cleanup = () => {
       input.removeListener('keypress', onKeypress);
-      input.setRawMode(false);
+      if (typeof input.pause === 'function') input.pause();
       output.write('\n');
+      process.nextTick(() => input.setRawMode(false));
     };
     const onKeypress = (character, key = {}) => {
       if (key.ctrl && key.name === 'c' || key.name === 'escape') {
@@ -436,8 +438,9 @@ function promptList(input, output, { choices, title, description = '', cancelMes
   return new Promise((resolve, reject) => {
     const cleanup = () => {
       input.removeListener('keypress', onKeypress);
-      input.setRawMode(false);
+      if (typeof input.pause === 'function') input.pause();
       output.write('\n');
+      process.nextTick(() => input.setRawMode(false));
     };
     const onKeypress = (character, key = {}) => {
       if (key.ctrl && key.name === 'c' || key.name === 'escape') {
@@ -465,6 +468,7 @@ export function promptAgents(input = process.stdin, output = process.stdout, { g
     choices: available.map(runtime => ({ value: runtime, label: runtimeLabels[runtime], selected: true })),
     title: 'Select agents to install',
     description: `↑/↓ move · Space toggle · Enter confirm${note}`,
+    footer: 'Nhấn Enter để hoàn tất',
     minimum: 1,
     cancelMessage: 'Agent selection cancelled.',
   });

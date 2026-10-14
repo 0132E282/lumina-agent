@@ -31,6 +31,7 @@ function terminal() {
     isTTY = true;
     rawMode = false;
     setRawMode(enabled) { this.rawMode = enabled; }
+    pause() {}
     resume() {}
   }
   const input = new Input();
@@ -106,11 +107,13 @@ test('interactive agent selection defaults all checked and supports toggling', a
   assert.match(output.text, /\[x\] Codex/);
   assert.match(output.text, /\[x\] Claude Code/);
   assert.match(output.text, /\[x\] Antigravity/);
+  assert.match(output.text, /\[x\] Antigravity[^\n]*\nNhấn Enter để hoàn tất/);
   input.emit('keypress', ' ', { name: 'space' });
   input.emit('keypress', '', { name: 'down' });
   input.emit('keypress', '', { name: 'down' });
   input.emit('keypress', '', { name: 'return' });
   assert.deepEqual(await selection, ['claude', 'antigravity']);
+  await new Promise(resolve => setImmediate(resolve));
   assert.equal(input.rawMode, false);
 });
 
@@ -129,6 +132,16 @@ test('interactive selection requires at least one agent; non-TTY keeps default s
   input.emit('keypress', '', { name: 'return' });
   assert.deepEqual(await selection, ['claude']);
   assert.deepEqual(await promptAgents({ isTTY: false }, { isTTY: false }), ['codex', 'claude', 'antigravity']);
+});
+
+test('interactive agent selection cancels on Ctrl+C without echoing the control character', async () => {
+  const { input, output } = terminal();
+  const selection = promptAgents(input, output);
+  input.emit('keypress', '\u0003', { ctrl: true, name: 'c' });
+  await assert.rejects(selection, /Agent selection cancelled/);
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(input.rawMode, false);
+  assert.doesNotMatch(output.text, /\^C/);
 });
 
 test('global agent checklist excludes Antigravity', async () => {
@@ -154,6 +167,17 @@ test('interactive scope defaults to project and navigates to global', async () =
   global.input.emit('keypress', '', { name: 'down' });
   global.input.emit('keypress', '', { name: 'return' });
   assert.equal(await globalScope, true);
+  await new Promise(resolve => setImmediate(resolve));
+});
+
+test('interactive scope selection cancels on Ctrl+C without echoing the control character', async () => {
+  const { input, output } = terminal();
+  const selection = promptInstallScope(input, output, { project: '/work/project' });
+  input.emit('keypress', '\u0003', { ctrl: true, name: 'c' });
+  await assert.rejects(selection, /Install scope selection cancelled/);
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(input.rawMode, false);
+  assert.doesNotMatch(output.text, /\^C/);
 });
 
 test('global install preserves user configuration and resolves hooks from another cwd', async context => {
