@@ -38,8 +38,9 @@ function terminal() {
   return { input, output };
 }
 
-test('setup selects project, explicit target or home; init remains compatible', () => {
+test('install selects project, explicit target or home; legacy aliases remain compatible', () => {
   const locations = { cwd: '/example/project', home: '/example/home' };
+  assert.deepEqual(parseArguments(['install'], locations), { target: locations.cwd, dryRun: false, global: false, agents: ['codex', 'claude', 'antigravity'] });
   assert.deepEqual(parseArguments(['setup'], locations), { target: locations.cwd, dryRun: false, global: false, agents: ['codex', 'claude', 'antigravity'] });
   assert.deepEqual(parseArguments(['init'], locations), parseArguments(['setup'], locations));
   assert.deepEqual(parseArguments(['setup', '--global', '--dry-run'], locations), { target: locations.home, dryRun: true, global: true, agents: ['codex', 'claude'] });
@@ -189,7 +190,7 @@ test('global dry run and instruction conflict do not write home payload', async 
   await fs.mkdir(path.join(options.target, '.codex'), { recursive: true });
   const instruction = path.join(options.target, '.codex/AGENTS.md');
   await fs.writeFile(instruction, '<!-- lumina-agent:start -->\nedited\n<!-- lumina-agent:end -->');
-  await assert.rejects(installFromSource(options), /Integration block/);
+  await assert.rejects(installFromSource(options), /Conflict at \.codex\/AGENTS\.md/);
   assert.deepEqual(await fs.readdir(options.target), ['.codex']);
 });
 
@@ -243,11 +244,23 @@ test('content conflict completes preflight without partial writes', async contex
   assert.equal(await fs.readFile(path.join(options.target, 'CONTRACT.md'), 'utf8'), 'Project contract');
 });
 
+test('overwrite replaces a conflicting payload after explicit confirmation', async context => {
+  const options = await fixture(context);
+  await fs.mkdir(options.target);
+  await fs.writeFile(path.join(options.target, 'CONTRACT.md'), 'Project contract');
+  await assert.rejects(installFromSource(options), /Conflict at CONTRACT.md/);
+  await installFromSource({ ...options, overwrite: true });
+  assert.equal(
+    await fs.readFile(path.join(options.target, 'CONTRACT.md'), 'utf8'),
+    await fs.readFile(path.join(options.source, 'CONTRACT.md'), 'utf8'),
+  );
+});
+
 test('edited integration block and invalid settings fail before writing', async context => {
   const options = await fixture(context);
   await fs.mkdir(options.target);
   await fs.writeFile(path.join(options.target, 'AGENTS.md'), '<!-- lumina-agent:start -->\nedited\n<!-- lumina-agent:end -->');
-  await assert.rejects(installFromSource(options), /Integration block/);
+  await assert.rejects(installFromSource(options), /Conflict at AGENTS\.md/);
   assert.deepEqual(await fs.readdir(options.target), ['AGENTS.md']);
   await fs.rm(path.join(options.target, 'AGENTS.md'));
   await fs.mkdir(path.join(options.target, '.claude'));
@@ -358,7 +371,7 @@ test('package contains CLI without configuration payload; npx resolves bin offli
   assert.ok(paths.includes('bin/lumina-agent.mjs'));
   assert.ok(paths.every(filename => ['bin/lumina-agent.mjs', 'package.json', 'README.md', 'LICENSE'].includes(filename)));
   const result = await executeFile('npx', ['--offline', '--yes', `--package=${path.join(temporary, metadata.filename)}`, 'lumina-agent', '--help'], { env: environment });
-  assert.match(result.stdout, /lumina-agent init/);
+  assert.match(result.stdout, /lumina-agent install/);
   const manifest = JSON.parse(await fs.readFile(path.join(repository, 'package.json'), 'utf8'));
   assert.equal(manifest.private, true);
   const fakeCommands = path.join(temporary, 'commands');
@@ -367,7 +380,7 @@ test('package contains CLI without configuration payload; npx resolves bin offli
   await fs.writeFile(path.join(fakeCommands, 'git'), `#!${process.execPath}\nrequire('node:fs').writeFileSync(${JSON.stringify(sentinel)}, 'called');\nconsole.error('raw-sensitive-credential');\nprocess.exit(1);\n`, { mode: 0o755 });
   const target = path.join(temporary, 'denied-project');
   const home = path.join(temporary, 'denied-home');
-  for (const args of [['init', '--target', target], ['setup', '--global']]) {
+  for (const args of [['install', '--target', target], ['install', '--global']]) {
     await assert.rejects(executeFile('npx', ['--offline', '--yes', `--package=${path.join(temporary, metadata.filename)}`, 'lumina-agent', ...args], {
       env: { ...environment, HOME: home, PATH: `${fakeCommands}${path.delimiter}${process.env.PATH}` },
     }), error => /private repo/.test(error.stderr) && !error.stderr.includes('raw-sensitive-credential'));

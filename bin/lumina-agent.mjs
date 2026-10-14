@@ -134,12 +134,20 @@ function parseSettings(content, label) {
   }
 }
 
-function mergeSettings(existing, incoming) {
+class InstallConflictError extends Error {
+  constructor(relative) {
+    super(`Conflict at ${relative}`);
+    this.name = 'InstallConflictError';
+    this.relative = relative;
+  }
+}
+
+function mergeSettings(existing, incoming, { overwrite = false } = {}) {
   const merged = Object.assign(Object.create(null), object(existing, 'Existing settings'));
   for (const [key, value] of Object.entries(object(incoming, 'Source settings'))) {
     if (key === 'hooks') continue;
-    if (Object.hasOwn(merged, key) && canonical(merged[key]) !== canonical(value)) {
-      throw new Error(`Settings conflict: ${key}`);
+    if (Object.hasOwn(merged, key) && canonical(merged[key]) !== canonical(value) && !overwrite) {
+      throw new InstallConflictError(`.claude/settings.json (${key})`);
     }
     merged[key] = value;
   }
@@ -174,18 +182,24 @@ function mergeSettings(existing, incoming) {
   return Buffer.from(`${JSON.stringify(merged, null, 2)}\n`);
 }
 
-function appendInstructions(existing, relative, block = instructionBlock) {
+function appendInstructions(existing, relative, block = instructionBlock, { overwrite = false } = {}) {
   const text = existing.toString('utf8');
   if (text.includes(startMarker) || text.includes(endMarker)) {
-    if (text.split(startMarker).length !== 2 || text.split(endMarker).length !== 2 || !text.includes(block)) {
-      throw new Error(`Integration block content has changed: ${relative}`);
+    const start = text.indexOf(startMarker);
+    const end = text.indexOf(endMarker);
+    const hasSinglePair = start >= 0 && end > start
+      && text.indexOf(startMarker, start + startMarker.length) < 0
+      && text.indexOf(endMarker, end + endMarker.length) < 0;
+    if (!hasSinglePair || !text.includes(block)) {
+      if (!overwrite) throw new InstallConflictError(relative);
+      return Buffer.from(`${text.slice(0, Math.max(0, start))}${block}${end >= 0 ? text.slice(end + endMarker.length) : '\n'}`);
     }
     return existing;
   }
   return Buffer.from(`${text}${text.length ? (text.endsWith('\n') ? '\n' : '\n\n') : ''}${block}\n`);
 }
 
-async function preflight(target, entries) {
+async function preflight(target, entries, { overwrite = false } = {}) {
   const changes = [];
   for (const entry of entries.values()) {
     const filename = path.join(target, entry.relative);
@@ -198,7 +212,9 @@ async function preflight(target, entries) {
     }
     if (entry.kind === 'link') {
       if (status && (!status.isSymbolicLink() || await fs.readlink(filename) !== entry.link)) {
-        throw new Error(`Link conflict: ${entry.relative}`);
+        if (!overwrite) throw new InstallConflictError(entry.relative);
+        changes.push({ ...entry, replace: true });
+        continue;
       }
       if (!status) changes.push(entry);
       continue;
@@ -206,18 +222,18 @@ async function preflight(target, entries) {
     if (status && !status.isFile()) throw new Error(`File conflict: ${entry.relative}`);
     const existing = status ? await fs.readFile(filename) : Buffer.alloc(0);
     let content = entry.content;
-    if (entry.instructions) content = appendInstructions(existing, entry.relative, entry.block);
+    if (entry.instructions) content = appendInstructions(existing, entry.relative, entry.block, { overwrite });
     else if (entry.relative === '.claude/settings.json') {
-      content = mergeSettings(status ? parseSettings(existing, 'Existing settings') : {}, parseSettings(content, 'Source settings'));
+      content = mergeSettings(status ? parseSettings(existing, 'Existing settings') : {}, parseSettings(content, 'Source settings'), { overwrite });
     } else if (status && !existing.equals(content)) {
-      throw new Error(`File already exists with different content: ${entry.relative}`);
+      if (!overwrite) throw new InstallConflictError(entry.relative);
     }
     if (!status || !existing.equals(content)) changes.push({ ...entry, content, existing: status ? existing : null });
   }
   return changes;
 }
 
-export async function installFromSource({ source, target, dryRun = false, global = false, agents = global ? ['codex', 'claude'] : runtimes }) {
+export async function installFromSource({ source, target, dryRun = false, global = false, overwrite = false, agents = global ? ['codex', 'claude'] : runtimes }) {
   source = await fs.realpath(source);
   target = path.resolve(target);
   await assertDirectories(target);
@@ -260,7 +276,7 @@ export async function installFromSource({ source, target, dryRun = false, global
   for (const relative of new Set(instructionPaths.filter(Boolean))) {
     entries.set(relative, { relative, kind: 'file', instructions: true, block, mode: 0o644 });
   }
-  const changes = await preflight(target, entries);
+  const changes = await preflight(target, entries, { overwrite });
   if (dryRun) return { target, changes: changes.length, dryRun };
   await fs.mkdir(target, { recursive: true });
   for (const entry of changes) {
@@ -271,6 +287,7 @@ export async function installFromSource({ source, target, dryRun = false, global
     } else {
       await fs.mkdir(path.dirname(filename), { recursive: true });
       if (entry.kind === 'link') {
+        if (entry.replace) await fs.unlink(filename);
         await fs.symlink(entry.link, filename);
       } else if (entry.existing === null) {
         await fs.writeFile(filename, entry.content, { flag: 'wx', mode: entry.mode });
@@ -297,7 +314,7 @@ export async function installFromSource({ source, target, dryRun = false, global
   return { target, changes: changes.length, dryRun };
 }
 
-export async function initialize({ target, dryRun = false, global = false, agents = global ? ['codex', 'claude'] : runtimes }, runGit = executeFile) {
+export async function initialize({ target, dryRun = false, global = false, overwrite = false, agents = global ? ['codex', 'claude'] : runtimes }, runGit = executeFile) {
   const temporary = await fs.mkdtemp(path.join(os.tmpdir(), 'lumina-agent-'));
   try {
     const source = path.join(temporary, 'source');
@@ -310,7 +327,7 @@ export async function initialize({ target, dryRun = false, global = false, agent
     } catch {
       throw new Error('Could not read private repository. Check collaborator access, Git, and SSH key authorization for GitHub; clone timeout is 120 seconds.');
     }
-    return await installFromSource({ source, target, dryRun, global, agents });
+    return await installFromSource({ source, target, dryRun, global, overwrite, agents });
   } finally {
     await fs.rm(temporary, { recursive: true, force: true });
   }
@@ -318,7 +335,7 @@ export async function initialize({ target, dryRun = false, global = false, agent
 
 export function parseArguments(argumentsList, { cwd = process.cwd(), home = os.homedir() } = {}) {
   if (argumentsList[0] === '--help' || argumentsList[0] === '-h') return null;
-  if (argumentsList.length > 0 && !['setup', 'init'].includes(argumentsList[0])) throw new Error('Only setup or init commands are supported. Use --help to see usage.');
+  if (argumentsList.length > 0 && !['install', 'setup', 'init'].includes(argumentsList[0])) throw new Error('Only install, setup, or init commands are supported. Use --help to see usage.');
   const options = { target: cwd, dryRun: false, global: false, agents: [] };
   const seen = new Set();
   for (let index = 1; index < argumentsList.length; index++) {
@@ -465,6 +482,17 @@ export function promptInstallScope(input = process.stdin, output = process.stdou
   });
 }
 
+function promptOverwrite(input = process.stdin, output = process.stdout, relative) {
+  if (!input.isTTY || !output.isTTY) return Promise.resolve(false);
+  const reader = readline.createInterface({ input, output });
+  return new Promise(resolve => {
+    reader.question(`Conflict at ${relative}. Overwrite? [y/N] `, answer => {
+      reader.close();
+      resolve(/^y(?:es)?$/i.test(answer.trim()));
+    });
+  });
+}
+
 if (process.argv[1] && await fs.realpath(process.argv[1]) === fileURLToPath(import.meta.url)) {
   try {
     if (process.stdout.isTTY) {
@@ -475,7 +503,7 @@ if (process.argv[1] && await fs.realpath(process.argv[1]) === fileURLToPath(impo
     }
     const argumentsList = process.argv.slice(2);
     const options = parseArguments(argumentsList);
-    if (!options) console.log('lumina-agent setup [--agent codex|claude|antigravity ...] [--global | --target <project-directory>] [--dry-run]\nIn a terminal, first select scope then select agents via checklist. Project defaults to all three; global has only Codex and Claude Code. Use --agent repeatedly to select directly. Outside a terminal, project defaults to all three, --global defaults to Codex and Claude Code. Antigravity is project-only.\nlumina-agent init: alias for setup. Defaults to current project directory; --global installs to ~/.\nRequires Node.js >=20, Git, and SSH read access to the private GitHub repository.');
+    if (!options) console.log('lumina-agent install [--agent codex|claude|antigravity ...] [--global | --target <project-directory>] [--dry-run]\nIn a terminal, first select scope then select agents via checklist. Project defaults to all three; global has only Codex and Claude Code. Use --agent repeatedly to select directly. Outside a terminal, project defaults to all three, --global defaults to Codex and Claude Code. Antigravity is project-only.\nsetup and init remain aliases for install. If a conflict is found, the installer asks before overwriting.\nRequires Node.js >=20, Git, and SSH read access to the private GitHub repository.');
     else {
       if (process.stdin.isTTY && process.stdout.isTTY) {
         readline.emitKeypressEvents(process.stdin);
@@ -488,7 +516,15 @@ if (process.argv[1] && await fs.realpath(process.argv[1]) === fileURLToPath(impo
           throw new Error('Antigravity only supports project-level install; remove --global or remove --agent antigravity.');
         }
       }
-      const result = await initialize(options);
+      let result;
+      try {
+        result = await initialize(options);
+      } catch (error) {
+        if (!(error instanceof InstallConflictError)) throw error;
+        const confirmed = await promptOverwrite(process.stdin, process.stdout, error.relative);
+        if (!confirmed) throw new Error(`Installation cancelled; existing ${error.relative} was not overwritten.`);
+        result = await initialize({ ...options, overwrite: true });
+      }
       console.log(`${result.dryRun ? 'Dry run' : 'Installed'}: ${result.changes} change(s) at ${result.target}`);
     }
   } catch (error) {

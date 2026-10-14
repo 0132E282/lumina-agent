@@ -5,10 +5,10 @@
 The CLI uses a compact version of this banner on terminals narrower than 60 columns, including mobile terminals.
 
 ```bash
-npx --yes --package='git+ssh://git@github.com/0132E282/lumina-agent.git' lumina-agent setup
+npx --yes --package='git+ssh://git@github.com/0132E282/lumina-agent.git' lumina-agent install
 ```
 
-The interactive setup runs two steps:
+The interactive install runs two steps:
 
 1. **Pick a scope** — `↑/↓` to move, `Enter` to confirm (`project` is the default)
 2. **Select agents** — `Space` to toggle, `Enter` to confirm
@@ -23,7 +23,7 @@ Shared rules and skills required by the selected agents are installed automatica
 
 ```bash
 npx --yes --package='git+ssh://git@github.com/0132E282/lumina-agent.git' \
-  lumina-agent setup --agent codex --agent claude
+  lumina-agent install --agent codex --agent claude
 ```
 
 Combine `--agent` with `--target` or `--global` to skip all prompts.
@@ -32,14 +32,14 @@ Combine `--agent` with `--target` or `--global` to skip all prompts.
 
 ```bash
 npx --yes --package='git+ssh://git@github.com/0132E282/lumina-agent.git' \
-  lumina-agent setup --dry-run
+  lumina-agent install --dry-run
 ```
 
 ### Install to a specific project path
 
 ```bash
 npx --yes --package='git+ssh://git@github.com/0132E282/lumina-agent.git' \
-  lumina-agent setup --target /path/to/project
+  lumina-agent install --target /path/to/project
 ```
 
 ### User-level (global) install
@@ -48,10 +48,10 @@ Installs Claude Code and Codex instructions under `~/`:
 
 ```bash
 npx --yes --package='git+ssh://git@github.com/0132E282/lumina-agent.git' \
-  lumina-agent setup --global
+  lumina-agent install --global
 ```
 
-> **Note:** Antigravity is project-only — run setup inside the project it should use.
+> **Note:** Antigravity is project-only — run install inside the project it should use.
 
 ---
 
@@ -62,11 +62,11 @@ npx --yes --package='git+ssh://git@github.com/0132E282/lumina-agent.git' \
 | Project             | `.agents/` rules & skills + runtime config for selected agents |
 | Global (`--global`) | Claude Code and Codex user-level instructions under `~/`       |
 
-- `setup` can also be called as `init`
-- Re-running setup is safe — conflicting files stop the installer instead of being overwritten
+- `setup` and `init` remain aliases for `install`
+- Re-running install asks before overwriting conflicting files
 - The CLI fetches the private repository over SSH on each run (including dry runs)
 
-After setup finishes, **start a new agent session**. Claude hooks only run in Claude Code; Codex and Antigravity use the shared rules and skills through their own discovery mechanisms.
+After install finishes, **start a new agent session**. Claude hooks only run in Claude Code; Codex and Antigravity use the shared rules and skills through their own discovery mechanisms.
 
 ---
 
