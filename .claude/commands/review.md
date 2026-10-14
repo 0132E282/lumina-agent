@@ -26,4 +26,6 @@ Nếu yêu cầu là **security review** chuyên sâu (lỗ hổng, xác thực/
 
 ## Kiểm chứng
 
+Mọi code review, kể cả OCR, phải thực hiện [checklist chung/backend/frontend/xuyên tầng](../skills/workflow-review/references/code-review-checklists.md). Dùng complexity-performance cho luồng phụ thuộc dữ liệu, database khi có query và review-web-security cho mọi phần bảo mật áp dụng; không chỉ khi được yêu cầu audit riêng. Báo độ bao phủ checklist, Big O và toàn bộ phát hiện có bằng chứng trong scope; bảo mật giữ đủ field template security. Nếu OCR không bao phủ các mục này, bổ sung kiểm tra cùng scope trước khi kết luận, không tự mở rộng sang toàn repo.
+
 Đọc context/code/rule thực tế; findings có vị trí, severity, bằng chứng, tác động, đề xuất và verification thật. Không bịa test/benchmark hoặc coi phần chưa đọc là đạt. Big O chỉ khi runtime/thuật toán liên quan, còn lại không áp dụng. Reviewer chỉ nêu vấn đề, không sửa code/plan/testcase, commit, push hoặc merge. Chỉ ghi file khi `--file`/yêu cầu lưu rõ, chỉ đăng comment khi `pr --comment`.
