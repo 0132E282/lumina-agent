@@ -406,7 +406,16 @@ export async function withProgress(task, output = process.stdout) {
   }
 }
 
-function promptCheckboxes(input, output, { choices, title, description = '', footer = '', minimum = 0, cancelMessage, eraseOnConfirm = true }) {
+function promptCheckboxes(input, output, {
+  choices,
+  title,
+  description = '',
+  footer = '',
+  actions = [],
+  minimum = 0,
+  cancelMessage,
+  eraseOnConfirm = true,
+}) {
   if (!input.isTTY || !output.isTTY || typeof input.setRawMode !== 'function') {
     return Promise.resolve(choices.filter(choice => choice.selected).map(choice => choice.value));
   }
@@ -423,6 +432,14 @@ function promptCheckboxes(input, output, { choices, title, description = '', foo
     });
     const lines = [title, description ? `\u001b[2m${description}\u001b[0m` : '', '', ...items];
     if (footer) lines.push('', footer);
+    if (actions.length > 0) {
+      const actionLine = actions.map((action, index) => {
+        const actionIndex = choices.length + index;
+        const cursor = actionIndex === activeIndex ? '\u001b[32m❯\u001b[0m' : ' ';
+        return `${cursor} [ ${action.label} ]`;
+      }).join('   ');
+      lines.push('', actionLine);
+    }
     if (message) lines.push(message);
     renderedLineCount = renderPrompt(output, lines, renderedLineCount);
   };
@@ -436,11 +453,18 @@ function promptCheckboxes(input, output, { choices, title, description = '', foo
         reject(new Error(cancelMessage));
         return;
       }
-      if (key.name === 'up') activeIndex = (activeIndex + choices.length - 1) % choices.length;
-      else if (key.name === 'down') activeIndex = (activeIndex + 1) % choices.length;
-      else if (key.name === 'space' || character === ' ') {
+      const focusableCount = choices.length + actions.length;
+      if (key.name === 'up') activeIndex = (activeIndex + focusableCount - 1) % focusableCount;
+      else if (key.name === 'down') activeIndex = (activeIndex + 1) % focusableCount;
+      else if ((key.name === 'space' || character === ' ') && activeIndex < choices.length) {
         choices[activeIndex].selected = !choices[activeIndex].selected;
       } else if (key.name === 'return' || key.name === 'enter') {
+        const action = actions[activeIndex - choices.length];
+        if (action?.cancel) {
+          cleanupPrompt(input, output, onKeypress, { lineCount: renderedLineCount, appendNewline: true });
+          reject(new Error(cancelMessage));
+          return;
+        }
         const selected = choices.filter(choice => choice.selected);
         if (selected.length < minimum) {
           message = 'Select at least one agent.';
@@ -525,6 +549,10 @@ export function promptAgents(input = process.stdin, output = process.stdout, { g
     title: 'Select agents to install',
     description: `↑/↓ move · Space toggle · Enter confirm${note}`,
     footer: 'Ctrl+C để thoát',
+    actions: [
+      { label: 'Install' },
+      { label: 'Cancel', cancel: true },
+    ],
     minimum: 1,
     cancelMessage: 'Agent selection cancelled.',
     eraseOnConfirm: false,

@@ -111,6 +111,8 @@ test('interactive agent selection defaults all checked and supports toggling', a
   assert.match(output.text, /\[x\] Codex/);
   assert.match(output.text, /\[x\] Claude Code/);
   assert.match(output.text, /\[x\] Antigravity/);
+  assert.match(output.text, /\[ Install \]/);
+  assert.match(output.text, /\[ Cancel \]/);
   assert.match(output.text, /\[x\] Antigravity[^\n]*\n(?:\u001b\[2K\r[^\n]*\n)*\u001b\[2K\rCtrl\+C để thoát/);
   input.emit('keypress', ' ', { name: 'space' });
   input.emit('keypress', '', { name: 'down' });
@@ -118,7 +120,7 @@ test('interactive agent selection defaults all checked and supports toggling', a
   input.emit('keypress', '', { name: 'return' });
   assert.deepEqual(await selection, ['claude', 'antigravity']);
   assert.doesNotMatch(output.text, /\u001b\[8A\u001b\[2K\r(?:\n\u001b\[2K\r){7}$/);
-  assert.match(stripAnsi(output.text).replaceAll('\r', ''), /Ctrl\+C để thoát\n$/);
+  assert.match(stripAnsi(output.text).replaceAll('\r', ''), /Ctrl\+C để thoát[\s\S]*\[ Install \][\s\S]*\[ Cancel \]\n$/);
   await new Promise(resolve => setImmediate(resolve));
   assert.equal(input.rawMode, false);
 });
@@ -142,6 +144,27 @@ test('interactive prompts redraw in place when navigating or toggling', async ()
   assert.match(scopePrompt.output.text, /\u001b\[2K/);
   scopePrompt.input.emit('keypress', '', { name: 'escape' });
   await assert.rejects(scope, /Install scope selection cancelled/);
+});
+
+test('interactive agent actions install or cancel with arrow navigation', async () => {
+  const installPrompt = terminal();
+  const installation = promptAgents(installPrompt.input, installPrompt.output);
+  installPrompt.input.emit('keypress', '', { name: 'down' });
+  installPrompt.input.emit('keypress', '', { name: 'down' });
+  installPrompt.input.emit('keypress', '', { name: 'down' });
+  assert.match(stripAnsi(installPrompt.output.text), /❯ \[ Install \]/);
+  installPrompt.input.emit('keypress', '', { name: 'return' });
+  assert.deepEqual(await installation, ['codex', 'claude', 'antigravity']);
+
+  const cancelPrompt = terminal();
+  const cancellation = promptAgents(cancelPrompt.input, cancelPrompt.output);
+  cancelPrompt.input.emit('keypress', '', { name: 'down' });
+  cancelPrompt.input.emit('keypress', '', { name: 'down' });
+  cancelPrompt.input.emit('keypress', '', { name: 'down' });
+  cancelPrompt.input.emit('keypress', '', { name: 'down' });
+  assert.match(stripAnsi(cancelPrompt.output.text), /❯ \[ Cancel \]/);
+  cancelPrompt.input.emit('keypress', '', { name: 'return' });
+  await assert.rejects(cancellation, /Agent selection cancelled/);
 });
 
 test('interactive selection requires at least one agent; non-TTY keeps default selection', async () => {
@@ -221,7 +244,7 @@ test('interactive agent selection keeps the final prompt visible after Enter', a
   input.emit('keypress', '', { name: 'return' });
 
   assert.deepEqual(await selection, ['codex', 'claude', 'antigravity']);
-  assert.match(stripAnsi(output.text).replaceAll('\r', ''), /Select agents to install[\s\S]*Ctrl\+C để thoát\n$/);
+  assert.match(stripAnsi(output.text).replaceAll('\r', ''), /Select agents to install[\s\S]*Ctrl\+C để thoát[\s\S]*\[ Install \][\s\S]*\[ Cancel \]\n$/);
   assert.doesNotMatch(output.text, /\u001b\[8A\u001b\[2K\r(?:\n\u001b\[2K\r){7}$/);
 });
 
