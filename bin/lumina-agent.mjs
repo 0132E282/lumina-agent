@@ -362,7 +362,7 @@ export function parseArguments(argumentsList, { cwd = process.cwd(), home = os.h
   return options;
 }
 
-function promptCheckboxes(input, output, { choices, title, description = '', footer = '', minimum = 0, cancelMessage }) {
+function promptCheckboxes(input, output, { choices, title, description = '', footer = '', minimum = 0, cancelMessage, eraseOnConfirm = true }) {
   if (!input.isTTY || !output.isTTY || typeof input.setRawMode !== 'function') {
     return Promise.resolve(choices.filter(choice => choice.selected).map(choice => choice.value));
   }
@@ -388,13 +388,13 @@ function promptCheckboxes(input, output, { choices, title, description = '', foo
   input.setRawMode(true);
   input.resume();
   return new Promise((resolve, reject) => {
-    const cleanup = ({ erase = false } = {}) => {
+    const cleanup = ({ erase = false, appendNewline = true } = {}) => {
       input.removeListener('keypress', onKeypress);
       if (typeof input.pause === 'function') input.pause();
       if (erase && renderedLineCount > 0) {
         const clearLines = Array.from({ length: renderedLineCount }, () => '\u001b[2K\r').join('\n');
         output.write(`\u001b[${renderedLineCount}A${clearLines}`);
-      } else {
+      } else if (appendNewline) {
         output.write('\n');
       }
       process.nextTick(() => input.setRawMode(false));
@@ -416,7 +416,7 @@ function promptCheckboxes(input, output, { choices, title, description = '', foo
           render();
           return;
         }
-        cleanup({ erase: true });
+        cleanup({ erase: eraseOnConfirm, appendNewline: eraseOnConfirm });
         resolve(selected.map(choice => choice.value));
         return;
       } else return;
@@ -505,6 +505,7 @@ export function promptAgents(input = process.stdin, output = process.stdout, { g
     footer: 'Nhấn Enter để hoàn tất',
     minimum: 1,
     cancelMessage: 'Agent selection cancelled.',
+    eraseOnConfirm: false,
   });
 }
 

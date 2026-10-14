@@ -117,8 +117,8 @@ test('interactive agent selection defaults all checked and supports toggling', a
   input.emit('keypress', '', { name: 'down' });
   input.emit('keypress', '', { name: 'return' });
   assert.deepEqual(await selection, ['claude', 'antigravity']);
-  assert.match(output.text, /\u001b\[8A/);
-  assert.match(output.text, /\u001b\[2K\r(?:\n\u001b\[2K\r){7}$/);
+  assert.doesNotMatch(output.text, /\u001b\[8A\u001b\[2K\r(?:\n\u001b\[2K\r){7}$/);
+  assert.match(stripAnsi(output.text).replaceAll('\r', ''), /Nhấn Enter để hoàn tất\n$/);
   await new Promise(resolve => setImmediate(resolve));
   assert.equal(input.rawMode, false);
 });
@@ -198,6 +198,16 @@ test('interactive scope defaults to project and navigates to global', async () =
   assert.equal(await globalScope, true);
   assert.match(global.output.text, /\u001b\[5A/);
   await new Promise(resolve => setImmediate(resolve));
+});
+
+test('interactive agent selection keeps the final prompt visible after Enter', async () => {
+  const { input, output } = terminal();
+  const selection = promptAgents(input, output);
+  input.emit('keypress', '', { name: 'return' });
+
+  assert.deepEqual(await selection, ['codex', 'claude', 'antigravity']);
+  assert.match(stripAnsi(output.text).replaceAll('\r', ''), /Select agents to install[\s\S]*Nhấn Enter để hoàn tất\n$/);
+  assert.doesNotMatch(output.text, /\u001b\[8A\u001b\[2K\r(?:\n\u001b\[2K\r){7}$/);
 });
 
 test('interactive scope truncates long project hints to keep choices on one line', async () => {
