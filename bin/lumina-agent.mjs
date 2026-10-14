@@ -388,10 +388,12 @@ function cleanupPrompt(input, output, onKeypress, { lineCount, erase = false, ap
 
 export async function withProgress(task, output = process.stdout) {
   if (!output.isTTY || typeof output.write !== 'function') return task();
-  const trackWidth = Math.max(12, Math.min(24, (output.columns ?? 80) - 2));
-  const frames = Array.from({ length: trackWidth - 3 }, (_, index) => {
+  const terminalColumns = Number.isInteger(output.columns) && output.columns > 0 ? output.columns : 80;
+  const trackWidth = Math.max(1, terminalColumns - 2);
+  const highlightWidth = Math.min(3, trackWidth);
+  const frames = Array.from({ length: Math.max(1, trackWidth - highlightWidth + 1) }, (_, index) => {
     const track = '━'.repeat(trackWidth);
-    return `${track.slice(0, index)}\u001b[1;36m━━━\u001b[0m${track.slice(index + 3)}`;
+    return `${track.slice(0, index)}\u001b[1;36m${'━'.repeat(highlightWidth)}\u001b[0m${track.slice(index + highlightWidth)}`;
   });
   let frameIndex = 0;
   const render = () => {

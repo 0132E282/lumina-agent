@@ -263,7 +263,7 @@ test('interactive prompt drains buffered escape input before returning to the sh
 });
 
 test('progress UI renders an animated deploy surface and clears before the installation result', async () => {
-  const { output } = terminal();
+  const { output } = terminal(40);
   const result = await withProgress(async () => new Promise(resolve => {
     setTimeout(() => resolve({ changes: 1 }), 120);
   }), output);
@@ -271,7 +271,7 @@ test('progress UI renders an animated deploy surface and clears before the insta
   assert.match(output.text, /\u001b\[\?25l/);
   assert.match(stripAnsi(output.text), /🚀 DEPLOY APPLICATION/);
   assert.match(stripAnsi(output.text), /Building production assets\.\.\./);
-  assert.match(stripAnsi(output.text), /━{12,}/);
+  assert.match(stripAnsi(output.text), /━{38}/);
   assert.doesNotMatch(stripAnsi(output.text), /\d+%/);
   assert.match(output.text, /\u001b\[2A/);
   assert.match(output.text, /\u001b\[2K\u001b\[1A\u001b\[2K\u001b\[1A\u001b\[2K\r\u001b\[\?25h$/);
@@ -288,6 +288,13 @@ test('progress UI stays silent and runs the task in non-TTY output', async () =>
   assert.equal(called, true);
   assert.deepEqual(result, { changes: 0 });
   assert.equal(output.text, '');
+});
+
+test('progress UI keeps the bar within an extremely narrow terminal', async () => {
+  const { output } = terminal(2);
+  await withProgress(async () => ({ changes: 0 }), output);
+  assert.match(stripAnsi(output.text), /━/);
+  assert.doesNotMatch(stripAnsi(output.text), /━{2}/);
 });
 
 test('progress indicator clears when installation fails', async () => {
