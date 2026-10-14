@@ -141,16 +141,16 @@ test('global agent checklist excludes Antigravity', async () => {
   assert.deepEqual(await selection, ['codex']);
 });
 
-test('interactive scope defaults to project and can toggle global', async () => {
+test('interactive scope defaults to project and navigates to global', async () => {
   const project = terminal();
   const projectScope = promptInstallScope(project.input, project.output, { project: '/work/project' });
-  assert.match(project.output.text, /Project hiện tại: \/work\/project/);
+  assert.match(project.output.text, /\/work\/project/);
   project.input.emit('keypress', '', { name: 'return' });
   assert.equal(await projectScope, false);
 
   const global = terminal();
   const globalScope = promptInstallScope(global.input, global.output, { project: '/work/project' });
-  global.input.emit('keypress', ' ', { name: 'space' });
+  global.input.emit('keypress', '', { name: 'down' });
   global.input.emit('keypress', '', { name: 'return' });
   assert.equal(await globalScope, true);
 });

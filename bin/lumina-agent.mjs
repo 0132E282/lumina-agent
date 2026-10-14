@@ -391,6 +391,44 @@ function promptCheckboxes(input, output, { choices, title, description = '', min
   });
 }
 
+function promptList(input, output, { choices, title, description = '', cancelMessage }) {
+  if (!input.isTTY || !output.isTTY || typeof input.setRawMode !== 'function') {
+    const defaultChoice = choices.find(c => c.selected) ?? choices[0];
+    return Promise.resolve(defaultChoice.value);
+  }
+  let activeIndex = Math.max(0, choices.findIndex(c => c.selected));
+  const render = () => {
+    const items = choices.map((choice, index) => `${index === activeIndex ? '❯' : ' '} ${choice.label}`);
+    output.write(`\u001b[2J\u001b[H${title}\n${description ? `${description}\n` : ''}${items.join('\n')}\n`);
+  };
+  render();
+  input.setRawMode(true);
+  input.resume();
+  return new Promise((resolve, reject) => {
+    const cleanup = () => {
+      input.removeListener('keypress', onKeypress);
+      input.setRawMode(false);
+      output.write('\n');
+    };
+    const onKeypress = (character, key = {}) => {
+      if (key.ctrl && key.name === 'c' || key.name === 'escape') {
+        cleanup();
+        reject(new Error(cancelMessage));
+        return;
+      }
+      if (key.name === 'up') activeIndex = (activeIndex + choices.length - 1) % choices.length;
+      else if (key.name === 'down') activeIndex = (activeIndex + 1) % choices.length;
+      else if (key.name === 'return' || key.name === 'enter') {
+        cleanup();
+        resolve(choices[activeIndex].value);
+        return;
+      } else return;
+      render();
+    };
+    input.on('keypress', onKeypress);
+  });
+}
+
 export function promptAgents(input = process.stdin, output = process.stdout, { global = false } = {}) {
   const available = global ? runtimes.slice(0, 2) : runtimes;
   return promptCheckboxes(input, output, {
@@ -403,11 +441,14 @@ export function promptAgents(input = process.stdin, output = process.stdout, { g
 }
 
 export function promptInstallScope(input = process.stdin, output = process.stdout, { project = process.cwd() } = {}) {
-  return promptCheckboxes(input, output, {
-    choices: [{ value: 'global', label: 'Cài global (~)', selected: false }],
-    title: `Chọn phạm vi cài đặt (Space bật/tắt, Enter xác nhận)\nProject hiện tại: ${project}`,
+  return promptList(input, output, {
+    choices: [
+      { value: false, label: `Project  ${project}`, selected: true },
+      { value: true, label: 'Global   ~/' },
+    ],
+    title: 'Chọn phạm vi cài đặt (↑/↓ di chuyển, Enter xác nhận)',
     cancelMessage: 'Đã hủy chọn phạm vi cài đặt.',
-  }).then(selection => selection.includes('global'));
+  });
 }
 
 if (process.argv[1] && await fs.realpath(process.argv[1]) === fileURLToPath(import.meta.url)) {

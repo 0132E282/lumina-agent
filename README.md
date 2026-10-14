@@ -12,7 +12,7 @@ Run from the project directory:
 npx --yes --package='git+ssh://git@github.com/0132E282/lumina-agent.git' lumina-agent setup
 ```
 
-In an interactive terminal, setup asks two questions: first choose project (default) or global (`~`), then check one or more agents with **Space** and confirm with **Enter**. Use **↑/↓** to move in the agent list. Global setup offers Codex and Claude Code; Antigravity is project-only. Shared rules and skills required by selected agents are installed with them. To choose agents directly, repeat `--agent`:
+In an interactive terminal, setup runs two steps: first pick a scope with **↑/↓** and **Enter** (project is the default), then select one or more agents with **Space** and confirm with **Enter**. Global setup offers Codex and Claude Code; Antigravity is project-only. Shared rules and skills required by selected agents are installed with them. To choose agents directly, repeat `--agent`:
 
 ```bash
 npx --yes --package='git+ssh://git@github.com/0132E282/lumina-agent.git' lumina-agent setup --agent codex --agent claude
