@@ -3,6 +3,7 @@
 import { execFile } from 'node:child_process';
 import { constants } from 'node:fs';
 import * as fs from 'node:fs/promises';
+import readline from 'node:readline';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -15,6 +16,9 @@ const payloadRoots = [
   '.claude/agents', '.claude/commands', '.claude/hooks', '.claude/rules', '.claude/skills',
   '.claude/settings.json', '.codex/agents', '.codex/rules', '.codex/skills', 'CONTRACT.md',
 ];
+const runtimes = ['codex', 'claude', 'antigravity'];
+const runtimeLabels = { codex: 'Codex', claude: 'Claude Code', antigravity: 'Antigravity' };
+const sharedPayloadRoots = ['.agents/rules', '.agents/skills', 'CONTRACT.md'];
 const startMarker = '<!-- lumina-agent:start -->';
 const endMarker = '<!-- lumina-agent:end -->';
 const instructionBlock = `${startMarker}
@@ -213,30 +217,48 @@ async function preflight(target, entries) {
   return changes;
 }
 
-export async function installFromSource({ source, target, dryRun = false, global = false }) {
+export async function installFromSource({ source, target, dryRun = false, global = false, agents = global ? ['codex', 'claude'] : runtimes }) {
   source = await fs.realpath(source);
   target = path.resolve(target);
   await assertDirectories(target);
-  const entries = await collectPayload(source);
+  const allEntries = await collectPayload(source);
+  const selected = new Set(agents);
+  const roots = [...sharedPayloadRoots];
+  if (selected.has('claude')) roots.push(
+    '.agents/agents', '.agents/commands', '.agents/hooks',
+    '.claude/agents', '.claude/commands', '.claude/hooks', '.claude/rules', '.claude/skills', '.claude/settings.json',
+  );
+  if (selected.has('codex')) roots.push(
+    '.agents/agents', '.codex/agents', '.codex/rules', '.codex/skills', '.claude/agents',
+  );
+  for (const relative of allEntries.keys()) {
+    if (!roots.some(root => relative === root || relative.startsWith(`${root}/`))) allEntries.delete(relative);
+  }
+  const entries = allEntries;
   let block = instructionBlock;
   if (global) {
     block = instructionBlock.replace(/\]\(\.\/([^)]*)\)/g, (_, relative) => `](<${path.join(target, relative)}>)`)
       .replace('trong .claude/settings.json', `trong ${path.join(target, '.claude/settings.json')}`);
     const settingsEntry = entries.get('.claude/settings.json');
-    const settings = object(parseSettings(settingsEntry.content, 'Settings nguồn'), 'Settings nguồn');
-    for (const [event, groups] of Object.entries(object(settings.hooks ?? {}, 'hooks nguồn'))) {
-      for (const group of hookGroups(groups, event)) {
-        for (const hook of group.hooks) {
-          if (hook.type === 'command' && typeof hook.command === 'string' && hook.command.startsWith('bash .claude/hooks/')) {
-            const filename = path.join(target, hook.command.slice(5));
-            hook.command = `bash '${filename.replaceAll("'", "'\\''")}'`;
+    if (settingsEntry) {
+      const settings = object(parseSettings(settingsEntry.content, 'Settings nguồn'), 'Settings nguồn');
+      for (const [event, groups] of Object.entries(object(settings.hooks ?? {}, 'hooks nguồn'))) {
+        for (const group of hookGroups(groups, event)) {
+          for (const hook of group.hooks) {
+            if (hook.type === 'command' && typeof hook.command === 'string' && hook.command.startsWith('bash .claude/hooks/')) {
+              const filename = path.join(target, hook.command.slice(5));
+              hook.command = `bash '${filename.replaceAll("'", "'\\''")}'`;
+            }
           }
         }
       }
+      settingsEntry.content = Buffer.from(`${JSON.stringify(settings, null, 2)}\n`);
     }
-    settingsEntry.content = Buffer.from(`${JSON.stringify(settings, null, 2)}\n`);
   }
-  for (const relative of global ? ['.codex/AGENTS.md', '.claude/CLAUDE.md'] : ['AGENTS.md', 'CLAUDE.md']) {
+  const instructionPaths = global
+    ? [selected.has('codex') && '.codex/AGENTS.md', selected.has('claude') && '.claude/CLAUDE.md', selected.has('antigravity') && 'AGENTS.md']
+    : [selected.has('codex') && 'AGENTS.md', selected.has('antigravity') && 'AGENTS.md', selected.has('claude') && 'CLAUDE.md'];
+  for (const relative of new Set(instructionPaths.filter(Boolean))) {
     entries.set(relative, { relative, kind: 'file', instructions: true, block, mode: 0o644 });
   }
   const changes = await preflight(target, entries);
@@ -276,7 +298,7 @@ export async function installFromSource({ source, target, dryRun = false, global
   return { target, changes: changes.length, dryRun };
 }
 
-export async function initialize({ target, dryRun = false, global = false }, runGit = executeFile) {
+export async function initialize({ target, dryRun = false, global = false, agents = global ? ['codex', 'claude'] : runtimes }, runGit = executeFile) {
   const temporary = await fs.mkdtemp(path.join(os.tmpdir(), 'lumina-agent-'));
   try {
     const source = path.join(temporary, 'source');
@@ -289,7 +311,7 @@ export async function initialize({ target, dryRun = false, global = false }, run
     } catch {
       throw new Error('Không đọc được private repo. Kiểm tra quyền collaborator, Git và SSH key GitHub đã được cấp quyền; clone timeout 120 giây.');
     }
-    return await installFromSource({ source, target, dryRun, global });
+    return await installFromSource({ source, target, dryRun, global, agents });
   } finally {
     await fs.rm(temporary, { recursive: true, force: true });
   }
@@ -298,10 +320,17 @@ export async function initialize({ target, dryRun = false, global = false }, run
 export function parseArguments(argumentsList, { cwd = process.cwd(), home = os.homedir() } = {}) {
   if (argumentsList.length === 0 || argumentsList[0] === '--help' || argumentsList[0] === '-h') return null;
   if (!['setup', 'init'].includes(argumentsList[0])) throw new Error('Chỉ hỗ trợ lệnh setup hoặc init. Dùng --help để xem cú pháp.');
-  const options = { target: cwd, dryRun: false, global: false };
+  const options = { target: cwd, dryRun: false, global: false, agents: [] };
   const seen = new Set();
   for (let index = 1; index < argumentsList.length; index++) {
     const argument = argumentsList[index];
+    if (argument === '--agent' && argumentsList[index + 1] && !argumentsList[index + 1].startsWith('--')) {
+      const agent = argumentsList[++index].toLowerCase();
+      if (!runtimes.includes(agent)) throw new Error(`Agent không hợp lệ: ${agent}. Chọn codex, claude hoặc antigravity.`);
+      if (options.agents.includes(agent)) throw new Error(`Agent bị chọn trùng: ${agent}`);
+      options.agents.push(agent);
+      continue;
+    }
     if (seen.has(argument)) throw new Error(`Option trùng: ${argument}`);
     seen.add(argument);
     if (argument === '--dry-run') options.dryRun = true;
@@ -311,15 +340,93 @@ export function parseArguments(argumentsList, { cwd = process.cwd(), home = os.h
     } else throw new Error(`Option không hợp lệ: ${argument}`);
   }
   if (options.global && seen.has('--target')) throw new Error('Không kết hợp --global với --target.');
+  if (options.global && options.agents.includes('antigravity')) throw new Error('Antigravity chỉ hỗ trợ cài theo project; bỏ --global hoặc bỏ --agent antigravity.');
   if (options.global) options.target = home;
+  if (options.agents.length === 0) options.agents = options.global ? ['codex', 'claude'] : runtimes;
   return options;
+}
+
+function promptCheckboxes(input, output, { choices, title, description = '', minimum = 0, cancelMessage }) {
+  if (!input.isTTY || !output.isTTY || typeof input.setRawMode !== 'function') {
+    return Promise.resolve(choices.filter(choice => choice.selected).map(choice => choice.value));
+  }
+  let activeIndex = 0;
+  const render = () => {
+    const items = choices.map((choice, index) => `${index === activeIndex ? '❯' : ' '} [${choice.selected ? 'x' : ' '}] ${choice.label}`);
+    output.write(`\u001b[2J\u001b[H${title}\n${description ? `${description}\n` : ''}${items.join('\n')}\n`);
+  };
+  render();
+  input.setRawMode(true);
+  input.resume();
+  return new Promise((resolve, reject) => {
+    const cleanup = () => {
+      input.removeListener('keypress', onKeypress);
+      input.setRawMode(false);
+      output.write('\n');
+    };
+    const onKeypress = (character, key = {}) => {
+      if (key.ctrl && key.name === 'c' || key.name === 'escape') {
+        cleanup();
+        reject(new Error(cancelMessage));
+        return;
+      }
+      if (key.name === 'up') activeIndex = (activeIndex + choices.length - 1) % choices.length;
+      else if (key.name === 'down') activeIndex = (activeIndex + 1) % choices.length;
+      else if (key.name === 'space' || character === ' ') {
+        choices[activeIndex].selected = !choices[activeIndex].selected;
+      } else if (key.name === 'return' || key.name === 'enter') {
+        const selected = choices.filter(choice => choice.selected);
+        if (selected.length < minimum) {
+          output.write('Chọn ít nhất một agent.\n');
+          render();
+          return;
+        }
+        cleanup();
+        resolve(selected.map(choice => choice.value));
+        return;
+      } else return;
+      render();
+    };
+    input.on('keypress', onKeypress);
+  });
+}
+
+export function promptAgents(input = process.stdin, output = process.stdout, { global = false } = {}) {
+  const available = global ? runtimes.slice(0, 2) : runtimes;
+  return promptCheckboxes(input, output, {
+    choices: available.map(runtime => ({ value: runtime, label: runtimeLabels[runtime], selected: true })),
+    title: 'Chọn agent cần cài (↑/↓ di chuyển, Space bật/tắt, Enter xác nhận)',
+    description: global ? 'Antigravity chỉ hỗ trợ cài theo project.' : '',
+    minimum: 1,
+    cancelMessage: 'Đã hủy chọn agent.',
+  });
+}
+
+export function promptInstallScope(input = process.stdin, output = process.stdout, { project = process.cwd() } = {}) {
+  return promptCheckboxes(input, output, {
+    choices: [{ value: 'global', label: 'Cài global (~)', selected: false }],
+    title: `Chọn phạm vi cài đặt (Space bật/tắt, Enter xác nhận)\nProject hiện tại: ${project}`,
+    cancelMessage: 'Đã hủy chọn phạm vi cài đặt.',
+  }).then(selection => selection.includes('global'));
 }
 
 if (process.argv[1] && await fs.realpath(process.argv[1]) === fileURLToPath(import.meta.url)) {
   try {
-    const options = parseArguments(process.argv.slice(2));
-    if (!options) console.log('lumina-agent setup [--global | --target <project-directory>] [--dry-run]\nlumina-agent init: alias của setup. Mặc định cài tại project hiện tại; --global cài tại ~/.\nYêu cầu Node.js >=20, Git và quyền đọc private GitHub repo qua SSH.');
+    const argumentsList = process.argv.slice(2);
+    const options = parseArguments(argumentsList);
+    if (!options) console.log('lumina-agent setup [--agent codex|claude|antigravity ...] [--global | --target <project-directory>] [--dry-run]\nTrong terminal, chọn phạm vi trước rồi chọn agent bằng checklist. Project mặc định chọn cả ba; global chỉ có Codex và Claude Code. Dùng --agent lặp lại để chọn trực tiếp. Ngoài terminal, project mặc định cài cả ba, --global mặc định cài Codex và Claude Code. Antigravity chỉ hỗ trợ project.\nlumina-agent init: alias của setup. Mặc định cài tại project hiện tại; --global cài tại ~/.\nYêu cầu Node.js >=20, Git và quyền đọc private GitHub repo qua SSH.');
     else {
+      if (process.stdin.isTTY && process.stdout.isTTY) {
+        readline.emitKeypressEvents(process.stdin);
+        if (!argumentsList.includes('--global') && !argumentsList.includes('--target')) {
+          options.global = await promptInstallScope(process.stdin, process.stdout, { project: process.cwd() });
+          if (options.global) options.target = os.homedir();
+        }
+        if (!argumentsList.includes('--agent')) options.agents = await promptAgents(process.stdin, process.stdout, { global: options.global });
+        if (options.global && options.agents.includes('antigravity')) {
+          throw new Error('Antigravity chỉ hỗ trợ cài theo project; bỏ --global hoặc bỏ --agent antigravity.');
+        }
+      }
       const result = await initialize(options);
       console.log(`${result.dryRun ? 'Dry run' : 'Đã cài'}: ${result.changes} mục thay đổi tại ${result.target}`);
     }

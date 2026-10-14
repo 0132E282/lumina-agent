@@ -1,12 +1,13 @@
 import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
+import { EventEmitter } from 'node:events';
 import * as fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import test from 'node:test';
-import { initialize, installFromSource, parseArguments } from '../bin/lumina-agent.mjs';
+import { initialize, installFromSource, parseArguments, promptAgents, promptInstallScope } from '../bin/lumina-agent.mjs';
 
 const executeFile = promisify(execFile);
 const repository = fileURLToPath(new URL('../', import.meta.url));
@@ -25,15 +26,133 @@ async function fixture(context, copySource = false) {
   return { temporary, target, source };
 }
 
+function terminal() {
+  class Input extends EventEmitter {
+    isTTY = true;
+    rawMode = false;
+    setRawMode(enabled) { this.rawMode = enabled; }
+    resume() {}
+  }
+  const input = new Input();
+  const output = { isTTY: true, text: '', write(value) { this.text += value; } };
+  return { input, output };
+}
+
 test('setup selects project, explicit target or home; init remains compatible', () => {
   const locations = { cwd: '/example/project', home: '/example/home' };
-  assert.deepEqual(parseArguments(['setup'], locations), { target: locations.cwd, dryRun: false, global: false });
+  assert.deepEqual(parseArguments(['setup'], locations), { target: locations.cwd, dryRun: false, global: false, agents: ['codex', 'claude', 'antigravity'] });
   assert.deepEqual(parseArguments(['init'], locations), parseArguments(['setup'], locations));
-  assert.deepEqual(parseArguments(['setup', '--global', '--dry-run'], locations), { target: locations.home, dryRun: true, global: true });
+  assert.deepEqual(parseArguments(['setup', '--global', '--dry-run'], locations), { target: locations.home, dryRun: true, global: true, agents: ['codex', 'claude'] });
   assert.equal(parseArguments(['setup', '--target', '/another/project'], locations).target, '/another/project');
+  assert.deepEqual(parseArguments(['setup', '--agent', 'codex', '--agent', 'ANTIGRAVITY'], locations).agents, ['codex', 'antigravity']);
   for (const args of [['--global', '--target', '/project'], ['--target', '/project', '--global'], ['--global', '--global'], ['--target'], ['--unknown']]) {
     assert.throws(() => parseArguments(['setup', ...args], locations));
   }
+  for (const args of [['--agent'], ['--agent', 'unknown'], ['--agent', 'claude', '--agent', 'claude']]) {
+    assert.throws(() => parseArguments(['setup', ...args], locations));
+  }
+  assert.throws(() => parseArguments(['setup', '--global', '--agent', 'antigravity'], locations), /chỉ hỗ trợ cài theo project/);
+});
+
+test('selected runtimes install only their adapter and instruction files', async context => {
+  const codex = await fixture(context);
+  await fs.mkdir(codex.target, { recursive: true });
+  await fs.writeFile(path.join(codex.target, 'CLAUDE.md'), 'Keep Claude instructions');
+  await fs.mkdir(path.join(codex.target, '.claude'));
+  await fs.writeFile(path.join(codex.target, '.claude/settings.json'), '{"model":"keep"}');
+  await installFromSource({ ...codex, agents: ['codex'] });
+  assert.ok(await fs.stat(path.join(codex.target, 'AGENTS.md')));
+  assert.ok(await fs.stat(path.join(codex.target, '.codex/agents/coding-agent.toml')));
+  await assert.rejects(fs.stat(path.join(codex.target, '.claude/commands')), { code: 'ENOENT' });
+  await assert.rejects(fs.stat(path.join(codex.target, '.claude/hooks')), { code: 'ENOENT' });
+  assert.equal(await fs.readFile(path.join(codex.target, 'CLAUDE.md'), 'utf8'), 'Keep Claude instructions');
+  assert.equal(await fs.readFile(path.join(codex.target, '.claude/settings.json'), 'utf8'), '{"model":"keep"}');
+
+  const claude = await fixture(context);
+  await fs.mkdir(claude.target, { recursive: true });
+  await fs.writeFile(path.join(claude.target, 'AGENTS.md'), 'Keep Codex and Antigravity instructions');
+  await fs.mkdir(path.join(claude.target, '.codex'));
+  await fs.writeFile(path.join(claude.target, '.codex/AGENTS.md'), 'Keep Codex config');
+  await installFromSource({ ...claude, agents: ['claude'] });
+  assert.ok(await fs.stat(path.join(claude.target, 'CLAUDE.md')));
+  assert.ok(await fs.stat(path.join(claude.target, '.claude/settings.json')));
+  await assert.rejects(fs.stat(path.join(claude.target, '.codex/agents')), { code: 'ENOENT' });
+  assert.equal(await fs.readFile(path.join(claude.target, 'AGENTS.md'), 'utf8'), 'Keep Codex and Antigravity instructions');
+  assert.equal(await fs.readFile(path.join(claude.target, '.codex/AGENTS.md'), 'utf8'), 'Keep Codex config');
+
+  const antigravity = await fixture(context);
+  await fs.mkdir(antigravity.target, { recursive: true });
+  await fs.writeFile(path.join(antigravity.target, 'CLAUDE.md'), 'Keep Claude instructions');
+  await fs.mkdir(path.join(antigravity.target, '.claude'));
+  await fs.writeFile(path.join(antigravity.target, '.claude/settings.json'), '{"model":"keep"}');
+  await fs.mkdir(path.join(antigravity.target, '.codex'));
+  await fs.writeFile(path.join(antigravity.target, '.codex/AGENTS.md'), 'Keep Codex config');
+  await installFromSource({ ...antigravity, agents: ['antigravity'] });
+  assert.ok(await fs.stat(path.join(antigravity.target, 'AGENTS.md')));
+  assert.ok(await fs.stat(path.join(antigravity.target, '.agents/skills')));
+  await assert.rejects(fs.stat(path.join(antigravity.target, '.claude/agents')), { code: 'ENOENT' });
+  await assert.rejects(fs.stat(path.join(antigravity.target, '.claude/commands')), { code: 'ENOENT' });
+  await assert.rejects(fs.stat(path.join(antigravity.target, '.codex/agents')), { code: 'ENOENT' });
+  assert.equal(await fs.readFile(path.join(antigravity.target, 'CLAUDE.md'), 'utf8'), 'Keep Claude instructions');
+  assert.equal(await fs.readFile(path.join(antigravity.target, '.claude/settings.json'), 'utf8'), '{"model":"keep"}');
+  assert.equal(await fs.readFile(path.join(antigravity.target, '.codex/AGENTS.md'), 'utf8'), 'Keep Codex config');
+});
+
+test('interactive agent selection defaults all checked and supports toggling', async () => {
+  const { input, output } = terminal();
+  const selection = promptAgents(input, output);
+  assert.equal(input.rawMode, true);
+  assert.match(output.text, /\[x\] Codex/);
+  assert.match(output.text, /\[x\] Claude Code/);
+  assert.match(output.text, /\[x\] Antigravity/);
+  input.emit('keypress', ' ', { name: 'space' });
+  input.emit('keypress', '', { name: 'down' });
+  input.emit('keypress', '', { name: 'down' });
+  input.emit('keypress', '', { name: 'return' });
+  assert.deepEqual(await selection, ['claude', 'antigravity']);
+  assert.equal(input.rawMode, false);
+});
+
+test('interactive selection requires at least one agent; non-TTY keeps default selection', async () => {
+  const { input, output } = terminal();
+  const selection = promptAgents(input, output);
+  input.emit('keypress', ' ', { name: 'space' });
+  input.emit('keypress', '', { name: 'down' });
+  input.emit('keypress', ' ', { name: 'space' });
+  input.emit('keypress', '', { name: 'down' });
+  input.emit('keypress', ' ', { name: 'space' });
+  input.emit('keypress', '', { name: 'return' });
+  assert.match(output.text, /Chọn ít nhất một agent/);
+  input.emit('keypress', '', { name: 'up' });
+  input.emit('keypress', ' ', { name: 'space' });
+  input.emit('keypress', '', { name: 'return' });
+  assert.deepEqual(await selection, ['claude']);
+  assert.deepEqual(await promptAgents({ isTTY: false }, { isTTY: false }), ['codex', 'claude', 'antigravity']);
+});
+
+test('global agent checklist excludes Antigravity', async () => {
+  const { input, output } = terminal();
+  const selection = promptAgents(input, output, { global: true });
+  assert.match(output.text, /Antigravity chỉ hỗ trợ cài theo project/);
+  assert.doesNotMatch(output.text, /\[[ x]\] Antigravity/);
+  input.emit('keypress', '', { name: 'down' });
+  input.emit('keypress', ' ', { name: 'space' });
+  input.emit('keypress', '', { name: 'return' });
+  assert.deepEqual(await selection, ['codex']);
+});
+
+test('interactive scope defaults to project and can toggle global', async () => {
+  const project = terminal();
+  const projectScope = promptInstallScope(project.input, project.output, { project: '/work/project' });
+  assert.match(project.output.text, /Project hiện tại: \/work\/project/);
+  project.input.emit('keypress', '', { name: 'return' });
+  assert.equal(await projectScope, false);
+
+  const global = terminal();
+  const globalScope = promptInstallScope(global.input, global.output, { project: '/work/project' });
+  global.input.emit('keypress', ' ', { name: 'space' });
+  global.input.emit('keypress', '', { name: 'return' });
+  assert.equal(await globalScope, true);
 });
 
 test('global install preserves user configuration and resolves hooks from another cwd', async context => {
@@ -52,9 +171,8 @@ test('global install preserves user configuration and resolves hooks from anothe
     assert.ok(content.includes(`](<${path.join(options.target, 'CONTRACT.md')}>)`));
     assert.doesNotMatch(content, /\]\(\.\//);
   }
-  for (const name of ['AGENTS.md', 'CLAUDE.md']) {
-    await assert.rejects(fs.stat(path.join(options.target, name)), { code: 'ENOENT' });
-  }
+  await assert.rejects(fs.stat(path.join(options.target, 'AGENTS.md')), { code: 'ENOENT' });
+  await assert.rejects(fs.stat(path.join(options.target, 'CLAUDE.md')), { code: 'ENOENT' });
   const settings = JSON.parse(await fs.readFile(path.join(options.target, '.claude/settings.json'), 'utf8'));
   assert.equal(settings.model, 'existing-model');
   const command = settings.hooks.UserPromptSubmit[0].hooks[0].command;

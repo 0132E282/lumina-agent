@@ -12,7 +12,17 @@ Run from the project directory:
 npx --yes --package='git+ssh://git@github.com/0132E282/lumina-agent.git' lumina-agent setup
 ```
 
-Preview the changes or choose a project directory:
+In an interactive terminal, setup asks two questions: first choose project (default) or global (`~`), then check one or more agents with **Space** and confirm with **Enter**. Use **↑/↓** to move in the agent list. Global setup offers Codex and Claude Code; Antigravity is project-only. Shared rules and skills required by selected agents are installed with them. To choose agents directly, repeat `--agent`:
+
+```bash
+npx --yes --package='git+ssh://git@github.com/0132E282/lumina-agent.git' lumina-agent setup --agent codex --agent claude
+```
+
+Combine `--agent` with `--target` or `--global` to skip both prompts.
+
+Without a TTY, setup selects all three for a project, or Codex and Claude Code with `--global`. Use `--target` to skip the scope prompt and choose a project path.
+
+Preview a project install or choose a project directory explicitly:
 
 ```bash
 npx --yes --package='git+ssh://git@github.com/0132E282/lumina-agent.git' lumina-agent setup --dry-run
@@ -25,7 +35,7 @@ Install user-level instructions for Claude Code and Codex under `~/`:
 npx --yes --package='git+ssh://git@github.com/0132E282/lumina-agent.git' lumina-agent setup --global
 ```
 
-Project setup installs the shared `.agents/` rules and skills, Claude configuration, Codex adapters, and root instructions used by Antigravity. Global setup targets Claude Code and Codex; for Antigravity, run setup in the project it should use. `setup` can also be called as `init`. Re-running setup is safe; conflicting existing files stop the installer instead of being overwritten. The CLI fetches the private repository over SSH on each run, including dry runs.
+Project setup installs the shared `.agents/` rules and skills plus configuration for the selected runtimes. Global setup supports Claude Code and Codex; for Antigravity, run setup in the project it should use. `setup` can also be called as `init`. Re-running setup is safe; conflicting existing files stop the installer instead of being overwritten. The CLI fetches the private repository over SSH on each run, including dry runs.
 
 Once setup finishes, start a new agent session. Claude hooks only run in Claude Code; Codex and Antigravity use the shared rules and skills through their own discovery mechanisms.
 
