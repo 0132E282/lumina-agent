@@ -15,9 +15,9 @@
 
 The CLI uses a compact version of this banner on terminals narrower than 60 columns, including mobile terminals.
 
-```bash
+<pre>
 npx --yes --package='git+ssh://git@github.com/0132E282/lumina-agent.git' lumina-agent install
-```
+</pre>
 
 ## What gets installed
 
