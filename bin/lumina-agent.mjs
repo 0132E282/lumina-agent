@@ -352,8 +352,15 @@ function promptCheckboxes(input, output, { choices, title, description = '', min
   }
   let activeIndex = 0;
   const render = () => {
-    const items = choices.map((choice, index) => `${index === activeIndex ? '❯' : ' '} [${choice.selected ? 'x' : ' '}] ${choice.label}`);
-    output.write(`\u001b[2J\u001b[H${title}\n${description ? `${description}\n` : ''}${items.join('\n')}\n`);
+    const items = choices.map((choice, index) => {
+      const cursor = index === activeIndex ? '\u001b[32m❯\u001b[0m' : ' ';
+      const checkbox = `[${choice.selected ? 'x' : ' '}]`;
+      const label = choice.label.padEnd(12);
+      const hint = choice.hint ? `  \u001b[2m${choice.hint}\u001b[0m` : '';
+      return `${cursor} ${checkbox} ${label}${hint}`;
+    });
+    const desc = description ? `\u001b[2m${description}\u001b[0m\n` : '';
+    output.write(`\u001b[2J\u001b[H${title}\n${desc}\n${items.join('\n')}\n`);
   };
   render();
   input.setRawMode(true);
@@ -398,8 +405,14 @@ function promptList(input, output, { choices, title, description = '', cancelMes
   }
   let activeIndex = Math.max(0, choices.findIndex(c => c.selected));
   const render = () => {
-    const items = choices.map((choice, index) => `${index === activeIndex ? '❯' : ' '} ${choice.label}`);
-    output.write(`\u001b[2J\u001b[H${title}\n${description ? `${description}\n` : ''}${items.join('\n')}\n`);
+    const items = choices.map((choice, index) => {
+      const cursor = index === activeIndex ? '\u001b[32m❯\u001b[0m' : ' ';
+      const label = choice.label.padEnd(8);
+      const hint = choice.hint ? `  \u001b[2m${choice.hint}\u001b[0m` : '';
+      return `${cursor} ${label}${hint}`;
+    });
+    const desc = description ? `\u001b[2m${description}\u001b[0m\n` : '';
+    output.write(`\u001b[2J\u001b[H${title}\n${desc}\n${items.join('\n')}\n`);
   };
   render();
   input.setRawMode(true);
@@ -431,10 +444,12 @@ function promptList(input, output, { choices, title, description = '', cancelMes
 
 export function promptAgents(input = process.stdin, output = process.stdout, { global = false } = {}) {
   const available = global ? runtimes.slice(0, 2) : runtimes;
+  const hints = { codex: '$workflow-...', claude: '/review /git /cleanup', antigravity: '/workflow-...' };
+  const note = global ? '  ·  Antigravity chỉ hỗ trợ theo project' : '';
   return promptCheckboxes(input, output, {
-    choices: available.map(runtime => ({ value: runtime, label: runtimeLabels[runtime], selected: true })),
-    title: 'Chọn agent cần cài (↑/↓ di chuyển, Space bật/tắt, Enter xác nhận)',
-    description: global ? 'Antigravity chỉ hỗ trợ cài theo project.' : '',
+    choices: available.map(runtime => ({ value: runtime, label: runtimeLabels[runtime], hint: hints[runtime], selected: true })),
+    title: 'Chọn agent cần cài',
+    description: `↑/↓ di chuyển · Space bật/tắt · Enter xác nhận${note}`,
     minimum: 1,
     cancelMessage: 'Đã hủy chọn agent.',
   });
@@ -443,10 +458,12 @@ export function promptAgents(input = process.stdin, output = process.stdout, { g
 export function promptInstallScope(input = process.stdin, output = process.stdout, { project = process.cwd() } = {}) {
   return promptList(input, output, {
     choices: [
-      { value: false, label: `Project  ${project}`, selected: true },
-      { value: true, label: 'Global   ~/' },
+      { value: 'project', label: 'Project', hint: project, selected: true },
+      { value: 'global', label: 'Global', hint: '~/' },
+      { value: 'both', label: 'Cả hai', hint: 'Project + Global' },
     ],
-    title: 'Chọn phạm vi cài đặt (↑/↓ di chuyển, Enter xác nhận)',
+    title: 'Chọn phạm vi cài đặt',
+    description: '↑/↓ di chuyển · Enter xác nhận',
     cancelMessage: 'Đã hủy chọn phạm vi cài đặt.',
   });
 }
@@ -457,18 +474,32 @@ if (process.argv[1] && await fs.realpath(process.argv[1]) === fileURLToPath(impo
     const options = parseArguments(argumentsList);
     if (!options) console.log('lumina-agent setup [--agent codex|claude|antigravity ...] [--global | --target <project-directory>] [--dry-run]\nTrong terminal, chọn phạm vi trước rồi chọn agent bằng checklist. Project mặc định chọn cả ba; global chỉ có Codex và Claude Code. Dùng --agent lặp lại để chọn trực tiếp. Ngoài terminal, project mặc định cài cả ba, --global mặc định cài Codex và Claude Code. Antigravity chỉ hỗ trợ project.\nlumina-agent init: alias của setup. Mặc định cài tại project hiện tại; --global cài tại ~/.\nYêu cầu Node.js >=20, Git và quyền đọc private GitHub repo qua SSH.');
     else {
+      let scope = options.global ? 'global' : 'project';
       if (process.stdin.isTTY && process.stdout.isTTY) {
         readline.emitKeypressEvents(process.stdin);
         if (!argumentsList.includes('--global') && !argumentsList.includes('--target')) {
-          options.global = await promptInstallScope(process.stdin, process.stdout, { project: process.cwd() });
+          scope = await promptInstallScope(process.stdin, process.stdout, { project: process.cwd() });
+          options.global = scope === 'global';
           if (options.global) options.target = os.homedir();
         }
-        if (!argumentsList.includes('--agent')) options.agents = await promptAgents(process.stdin, process.stdout, { global: options.global });
-        if (options.global && options.agents.includes('antigravity')) {
+        if (!argumentsList.includes('--agent')) options.agents = await promptAgents(process.stdin, process.stdout, { global: scope === 'global' });
+        if (scope === 'global' && options.agents.includes('antigravity')) {
           throw new Error('Antigravity chỉ hỗ trợ cài theo project; bỏ --global hoặc bỏ --agent antigravity.');
         }
       }
-      const result = await initialize(options);
+      let result;
+      if (scope === 'both') {
+        const projectResult = await initialize({ ...options, global: false, target: process.cwd() });
+        const globalAgents = options.agents.filter(a => a !== 'antigravity');
+        if (globalAgents.length > 0) {
+          const globalResult = await initialize({ ...options, global: true, target: os.homedir(), agents: globalAgents });
+          result = { target: `${projectResult.target} + ${globalResult.target}`, changes: projectResult.changes + globalResult.changes, dryRun: options.dryRun };
+        } else {
+          result = projectResult;
+        }
+      } else {
+        result = await initialize(options);
+      }
       console.log(`${result.dryRun ? 'Dry run' : 'Đã cài'}: ${result.changes} mục thay đổi tại ${result.target}`);
     }
   } catch (error) {
