@@ -1,17 +1,6 @@
-
 # Lumina Agent
 
 > Shared agent rules, skills and workflows for **Claude Code**, **Codex** and **Antigravity** — install them into any project with `npx`.
-
-```
-  ╭─────────────────────────────────────────────────────╮
-  │                                                     │
-  │                  L U M I N A                        │
-  │                                                     │
-  │                    A G E N T                        │
-  │                                                     │
-  ╰─────────────────────────────────────────────────────╯
-```
 
 The CLI uses a compact version of this banner on terminals narrower than 60 columns, including mobile terminals.
 
@@ -68,10 +57,10 @@ npx --yes --package='git+ssh://git@github.com/0132E282/lumina-agent.git' \
 
 ## What gets installed
 
-| Scope | Contents |
-|---|---|
-| Project | `.agents/` rules & skills + runtime config for selected agents |
-| Global (`--global`) | Claude Code and Codex user-level instructions under `~/` |
+| Scope               | Contents                                                       |
+| ------------------- | -------------------------------------------------------------- |
+| Project             | `.agents/` rules & skills + runtime config for selected agents |
+| Global (`--global`) | Claude Code and Codex user-level instructions under `~/`       |
 
 - `setup` can also be called as `init`
 - Re-running setup is safe — conflicting files stop the installer instead of being overwritten
@@ -83,13 +72,13 @@ After setup finishes, **start a new agent session**. Claude hooks only run in Cl
 
 ## Workflows
 
-| Command | Claude Code | Codex | What it does |
-|---|---|---|---|
-| Plan | native Plan mode | native Plan mode | Adds task, acceptance-criteria and test handoffs |
-| Test | `/test` | `$workflow-test` | Tests the active plan; use `repo` or `pr` for broader scope |
-| Review | `/review` | `$workflow-review` | Reviews current changes, a repo snapshot, or a PR |
-| Commit | `/git` | `$workflow-git` | Commits eligible changes (does not push); supports merges and PRs |
-| Cleanup | `/cleanup` | `$workflow-cleanup` | Refreshes agent context (does not delete project files) |
+| Command | Claude Code      | Codex               | What it does                                                      |
+| ------- | ---------------- | ------------------- | ----------------------------------------------------------------- |
+| Plan    | native Plan mode | native Plan mode    | Adds task, acceptance-criteria and test handoffs                  |
+| Test    | `/test`          | `$workflow-test`    | Tests the active plan; use `repo` or `pr` for broader scope       |
+| Review  | `/review`        | `$workflow-review`  | Reviews current changes, a repo snapshot, or a PR                 |
+| Commit  | `/git`           | `$workflow-git`     | Commits eligible changes (does not push); supports merges and PRs |
+| Cleanup | `/cleanup`       | `$workflow-cleanup` | Refreshes agent context (does not delete project files)           |
 
 A **change report** is required when a task is complete. Implementation follows the shared implementation rule.
 
