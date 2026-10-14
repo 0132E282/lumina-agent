@@ -24,14 +24,14 @@ const endMarker = '<!-- lumina-agent:end -->';
 const instructionBlock = `${startMarker}
 ## Lumina agent framework
 
-- Giữ hướng dẫn riêng của project; nội dung Lumina bổ sung workflow và không tự đổi stack/UI/contract.
-- Đọc [CONTRACT.md](./CONTRACT.md) trước khi làm việc; trước khi code đọc toàn bộ rule trong [.agents/rules/](./.agents/rules/), chỉ áp dụng phần liên quan.
-- Skills dùng nguồn chung [.agents/skills/](./.agents/skills/). Claude dùng command trực tiếp /review, /git, /cleanup; khi lập kế hoạch dùng Plan mode có sẵn kết hợp skill workflow-plan. Codex dùng $workflow-..., Antigravity dùng /workflow-... theo runtime thực tế.
-- Khi triển khai, tuân thủ rule chung và giao vai trò coding-agent; đọc toàn bộ tài liệu vai trò tương ứng trong [.claude/agents/](./.claude/agents/) trước khi thực hiện. Codex adapters nằm trong [.codex/agents/](./.codex/agents/).
-- Hoàn thành task có kết quả cụ thể: dùng skill report; code có xử lý phụ thuộc dữ liệu dùng complexity-performance trước báo cáo. Database thật mặc định read-only.
-- Commit/push/deploy chỉ khi được yêu cầu rõ. Dùng formatter/linter/test có sẵn; không tự tải package để kiểm tra.
-- Claude hooks được cấu hình trong .claude/settings.json; Codex và Antigravity không tự chạy hooks Claude. Không báo đã chạy hook/tool khi chưa thực thi.
-- Giữ các đường dẫn .agents/, .claude/, .codex/ cùng nhau để relative symlinks và tham chiếu còn hợp lệ.
+- Keep project-specific instructions; Lumina content adds workflow and does not change stack/UI/contract.
+- Read [CONTRACT.md](./CONTRACT.md) before working; before coding read all rules in [.agents/rules/](./.agents/rules/), apply only the relevant parts.
+- Skills use the shared source [.agents/skills/](./.agents/skills/). Claude uses commands directly /review, /git, /cleanup; for planning use Plan mode combined with the workflow-plan skill. Codex uses $workflow-..., Antigravity uses /workflow-... per the actual runtime.
+- When implementing, follow common rules and delegate to the coding-agent role; read the full role docs in [.claude/agents/](./.claude/agents/) before executing. Codex adapters are in [.codex/agents/](./.codex/agents/).
+- On task completion with concrete results: use the report skill; for data-dependent code use complexity-performance before reporting. Real databases are read-only by default.
+- Commit/push/deploy only when explicitly requested. Use available formatter/linter/test; do not install packages just to check.
+- Claude hooks are configured in .claude/settings.json; Codex and Antigravity do not run Claude hooks automatically. Do not report a hook/tool as run when it has not executed.
+- Keep .agents/, .claude/, .codex/ paths together so relative symlinks and references remain valid.
 ${endMarker}`;
 
 async function lstatOptional(filename) {
@@ -62,7 +62,7 @@ async function assertDirectories(filename) {
   for (const ancestor of ancestors.reverse()) {
     const status = await lstatOptional(ancestor);
     if (status && !status.isDirectory()) {
-      throw new Error(`Đường dẫn phải là directory thật, không phải symlink: ${ancestor}`);
+      throw new Error(`Path must be a real directory, not a symlink: ${ancestor}`);
     }
   }
 }
@@ -72,10 +72,10 @@ async function collectPayload(source) {
   async function visit(relative) {
     const filename = path.join(source, relative);
     const status = await fs.lstat(filename);
-    if (!within(source, await fs.realpath(filename))) throw new Error(`Source thoát khỏi repo: ${relative}`);
+    if (!within(source, await fs.realpath(filename))) throw new Error(`Source escapes repository: ${relative}`);
     if (status.isSymbolicLink()) {
       const link = await fs.readlink(filename);
-      if (path.isAbsolute(link)) throw new Error(`Source link phải tương đối: ${relative}`);
+      if (path.isAbsolute(link)) throw new Error(`Source link must be relative: ${relative}`);
       entries.set(relative, { relative, kind: 'link', link });
     } else if (status.isDirectory()) {
       entries.set(relative, { relative, kind: 'directory' });
@@ -85,7 +85,7 @@ async function collectPayload(source) {
     } else if (status.isFile()) {
       entries.set(relative, { relative, kind: 'file', content: await fs.readFile(filename), mode: status.mode & 0o777 });
     } else {
-      throw new Error(`Source không phải file/directory/link: ${relative}`);
+      throw new Error(`Source is not a file/directory/link: ${relative}`);
     }
   }
   for (const relative of payloadRoots) {
@@ -97,14 +97,14 @@ async function collectPayload(source) {
     const destination = path.resolve(source, path.dirname(entry.relative), entry.link);
     const resolved = await fs.realpath(path.join(source, entry.relative));
     if (!entries.has(path.relative(source, destination)) || !entries.has(path.relative(source, resolved))) {
-      throw new Error(`Source link trỏ ngoài payload: ${entry.relative}`);
+      throw new Error(`Source link points outside payload: ${entry.relative}`);
     }
   }
   return entries;
 }
 
 function object(value, label) {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error(`${label} phải là JSON object`);
+  if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error(`${label} must be a JSON object`);
   return value;
 }
 
@@ -117,10 +117,10 @@ function canonical(value) {
 }
 
 function hookGroups(value, label) {
-  if (!Array.isArray(value)) throw new Error(`${label} phải là array`);
+  if (!Array.isArray(value)) throw new Error(`${label} must be an array`);
   for (const group of value) {
     object(group, label);
-    if (!Array.isArray(group.hooks)) throw new Error(`${label}.hooks phải là array`);
+    if (!Array.isArray(group.hooks)) throw new Error(`${label}.hooks must be an array`);
     for (const hook of group.hooks) object(hook, label);
   }
   return value;
@@ -130,21 +130,21 @@ function parseSettings(content, label) {
   try {
     return JSON.parse(content.toString('utf8'));
   } catch {
-    throw new Error(`${label}: JSON không hợp lệ`);
+    throw new Error(`${label}: invalid JSON`);
   }
 }
 
 function mergeSettings(existing, incoming) {
-  const merged = Object.assign(Object.create(null), object(existing, 'Settings hiện có'));
-  for (const [key, value] of Object.entries(object(incoming, 'Settings nguồn'))) {
+  const merged = Object.assign(Object.create(null), object(existing, 'Existing settings'));
+  for (const [key, value] of Object.entries(object(incoming, 'Source settings'))) {
     if (key === 'hooks') continue;
     if (Object.hasOwn(merged, key) && canonical(merged[key]) !== canonical(value)) {
       throw new Error(`Settings conflict: ${key}`);
     }
     merged[key] = value;
   }
-  const hooks = Object.assign(Object.create(null), object(existing.hooks ?? {}, 'hooks hiện có'));
-  for (const [event, additions] of Object.entries(object(incoming.hooks ?? {}, 'hooks nguồn'))) {
+  const hooks = Object.assign(Object.create(null), object(existing.hooks ?? {}, 'Existing hooks'));
+  for (const [event, additions] of Object.entries(object(incoming.hooks ?? {}, 'Source hooks'))) {
     const groups = structuredClone(hookGroups(hooks[event] ?? [], event));
     const groupIndex = new Map();
     for (const group of groups) {
@@ -178,7 +178,7 @@ function appendInstructions(existing, relative, block = instructionBlock) {
   const text = existing.toString('utf8');
   if (text.includes(startMarker) || text.includes(endMarker)) {
     if (text.split(startMarker).length !== 2 || text.split(endMarker).length !== 2 || !text.includes(block)) {
-      throw new Error(`Integration block đã khác nội dung: ${relative}`);
+      throw new Error(`Integration block content has changed: ${relative}`);
     }
     return existing;
   }
@@ -208,9 +208,9 @@ async function preflight(target, entries) {
     let content = entry.content;
     if (entry.instructions) content = appendInstructions(existing, entry.relative, entry.block);
     else if (entry.relative === '.claude/settings.json') {
-      content = mergeSettings(status ? parseSettings(existing, 'Settings hiện có') : {}, parseSettings(content, 'Settings nguồn'));
+      content = mergeSettings(status ? parseSettings(existing, 'Existing settings') : {}, parseSettings(content, 'Source settings'));
     } else if (status && !existing.equals(content)) {
-      throw new Error(`File đã tồn tại với nội dung khác: ${entry.relative}`);
+      throw new Error(`File already exists with different content: ${entry.relative}`);
     }
     if (!status || !existing.equals(content)) changes.push({ ...entry, content, existing: status ? existing : null });
   }
@@ -237,12 +237,11 @@ export async function installFromSource({ source, target, dryRun = false, global
   const entries = allEntries;
   let block = instructionBlock;
   if (global) {
-    block = instructionBlock.replace(/\]\(\.\/([^)]*)\)/g, (_, relative) => `](<${path.join(target, relative)}>)`)
-      .replace('trong .claude/settings.json', `trong ${path.join(target, '.claude/settings.json')}`);
+    block = instructionBlock.replace(/\]\(\.\/([^)]*)\)/g, (_, relative) => `](<${path.join(target, relative)}>)`);
     const settingsEntry = entries.get('.claude/settings.json');
     if (settingsEntry) {
-      const settings = object(parseSettings(settingsEntry.content, 'Settings nguồn'), 'Settings nguồn');
-      for (const [event, groups] of Object.entries(object(settings.hooks ?? {}, 'hooks nguồn'))) {
+      const settings = object(parseSettings(settingsEntry.content, 'Source settings'), 'Source settings');
+      for (const [event, groups] of Object.entries(object(settings.hooks ?? {}, 'Source hooks'))) {
         for (const group of hookGroups(groups, event)) {
           for (const hook of group.hooks) {
             if (hook.type === 'command' && typeof hook.command === 'string' && hook.command.startsWith('bash .claude/hooks/')) {
@@ -280,13 +279,13 @@ export async function installFromSource({ source, target, dryRun = false, global
         try {
           const status = await handle.stat();
           if (!status.isFile() || !(await handle.readFile()).equals(entry.existing)) {
-            throw new Error(`Target thay đổi sau preflight: ${entry.relative}`);
+            throw new Error(`Target changed after preflight: ${entry.relative}`);
           }
           await handle.truncate(0);
           let offset = 0;
           while (offset < entry.content.length) {
             const { bytesWritten } = await handle.write(entry.content, offset, entry.content.length - offset, offset);
-            if (bytesWritten === 0) throw new Error(`Không ghi được file: ${entry.relative}`);
+            if (bytesWritten === 0) throw new Error(`Could not write file: ${entry.relative}`);
             offset += bytesWritten;
           }
         } finally {
@@ -309,7 +308,7 @@ export async function initialize({ target, dryRun = false, global = false, agent
         maxBuffer: 1024 * 1024,
       });
     } catch {
-      throw new Error('Không đọc được private repo. Kiểm tra quyền collaborator, Git và SSH key GitHub đã được cấp quyền; clone timeout 120 giây.');
+      throw new Error('Could not read private repository. Check collaborator access, Git, and SSH key authorization for GitHub; clone timeout is 120 seconds.');
     }
     return await installFromSource({ source, target, dryRun, global, agents });
   } finally {
@@ -318,29 +317,29 @@ export async function initialize({ target, dryRun = false, global = false, agent
 }
 
 export function parseArguments(argumentsList, { cwd = process.cwd(), home = os.homedir() } = {}) {
-  if (argumentsList.length === 0 || argumentsList[0] === '--help' || argumentsList[0] === '-h') return null;
-  if (!['setup', 'init'].includes(argumentsList[0])) throw new Error('Chỉ hỗ trợ lệnh setup hoặc init. Dùng --help để xem cú pháp.');
+  if (argumentsList[0] === '--help' || argumentsList[0] === '-h') return null;
+  if (argumentsList.length > 0 && !['setup', 'init'].includes(argumentsList[0])) throw new Error('Only setup or init commands are supported. Use --help to see usage.');
   const options = { target: cwd, dryRun: false, global: false, agents: [] };
   const seen = new Set();
   for (let index = 1; index < argumentsList.length; index++) {
     const argument = argumentsList[index];
     if (argument === '--agent' && argumentsList[index + 1] && !argumentsList[index + 1].startsWith('--')) {
       const agent = argumentsList[++index].toLowerCase();
-      if (!runtimes.includes(agent)) throw new Error(`Agent không hợp lệ: ${agent}. Chọn codex, claude hoặc antigravity.`);
-      if (options.agents.includes(agent)) throw new Error(`Agent bị chọn trùng: ${agent}`);
+      if (!runtimes.includes(agent)) throw new Error(`Invalid agent: ${agent}. Choose codex, claude, or antigravity.`);
+      if (options.agents.includes(agent)) throw new Error(`Duplicate agent: ${agent}`);
       options.agents.push(agent);
       continue;
     }
-    if (seen.has(argument)) throw new Error(`Option trùng: ${argument}`);
+    if (seen.has(argument)) throw new Error(`Duplicate option: ${argument}`);
     seen.add(argument);
     if (argument === '--dry-run') options.dryRun = true;
     else if (argument === '--global') options.global = true;
     else if (argument === '--target' && argumentsList[index + 1] && !argumentsList[index + 1].startsWith('--')) {
       options.target = argumentsList[++index];
-    } else throw new Error(`Option không hợp lệ: ${argument}`);
+    } else throw new Error(`Invalid option: ${argument}`);
   }
-  if (options.global && seen.has('--target')) throw new Error('Không kết hợp --global với --target.');
-  if (options.global && options.agents.includes('antigravity')) throw new Error('Antigravity chỉ hỗ trợ cài theo project; bỏ --global hoặc bỏ --agent antigravity.');
+  if (options.global && seen.has('--target')) throw new Error('Cannot combine --global with --target.');
+  if (options.global && options.agents.includes('antigravity')) throw new Error('Antigravity only supports project-level install; remove --global or remove --agent antigravity.');
   if (options.global) options.target = home;
   if (options.agents.length === 0) options.agents = options.global ? ['codex', 'claude'] : runtimes;
   return options;
@@ -384,7 +383,7 @@ function promptCheckboxes(input, output, { choices, title, description = '', min
       } else if (key.name === 'return' || key.name === 'enter') {
         const selected = choices.filter(choice => choice.selected);
         if (selected.length < minimum) {
-          output.write('Chọn ít nhất một agent.\n');
+          output.write('Select at least one agent.\n');
           render();
           return;
         }
@@ -444,27 +443,25 @@ function promptList(input, output, { choices, title, description = '', cancelMes
 
 export function promptAgents(input = process.stdin, output = process.stdout, { global = false } = {}) {
   const available = global ? runtimes.slice(0, 2) : runtimes;
-  const hints = { codex: '$workflow-...', claude: '/review /git /cleanup', antigravity: '/workflow-...' };
-  const note = global ? '  ·  Antigravity chỉ hỗ trợ theo project' : '';
+  const note = global ? '  ·  Antigravity is project-only' : '';
   return promptCheckboxes(input, output, {
-    choices: available.map(runtime => ({ value: runtime, label: runtimeLabels[runtime], hint: hints[runtime], selected: true })),
-    title: 'Chọn agent cần cài',
-    description: `↑/↓ di chuyển · Space bật/tắt · Enter xác nhận${note}`,
+    choices: available.map(runtime => ({ value: runtime, label: runtimeLabels[runtime], selected: true })),
+    title: 'Select agents to install',
+    description: `↑/↓ move · Space toggle · Enter confirm${note}`,
     minimum: 1,
-    cancelMessage: 'Đã hủy chọn agent.',
+    cancelMessage: 'Agent selection cancelled.',
   });
 }
 
 export function promptInstallScope(input = process.stdin, output = process.stdout, { project = process.cwd() } = {}) {
   return promptList(input, output, {
     choices: [
-      { value: 'project', label: 'Project', hint: project, selected: true },
-      { value: 'global', label: 'Global', hint: '~/' },
-      { value: 'both', label: 'Cả hai', hint: 'Project + Global' },
+      { value: false, label: 'Project', hint: project, selected: true },
+      { value: true, label: 'Global', hint: '~/' },
     ],
-    title: 'Chọn phạm vi cài đặt',
-    description: '↑/↓ di chuyển · Enter xác nhận',
-    cancelMessage: 'Đã hủy chọn phạm vi cài đặt.',
+    title: 'Select install scope',
+    description: '↑/↓ move · Enter confirm',
+    cancelMessage: 'Install scope selection cancelled.',
   });
 }
 
@@ -472,35 +469,21 @@ if (process.argv[1] && await fs.realpath(process.argv[1]) === fileURLToPath(impo
   try {
     const argumentsList = process.argv.slice(2);
     const options = parseArguments(argumentsList);
-    if (!options) console.log('lumina-agent setup [--agent codex|claude|antigravity ...] [--global | --target <project-directory>] [--dry-run]\nTrong terminal, chọn phạm vi trước rồi chọn agent bằng checklist. Project mặc định chọn cả ba; global chỉ có Codex và Claude Code. Dùng --agent lặp lại để chọn trực tiếp. Ngoài terminal, project mặc định cài cả ba, --global mặc định cài Codex và Claude Code. Antigravity chỉ hỗ trợ project.\nlumina-agent init: alias của setup. Mặc định cài tại project hiện tại; --global cài tại ~/.\nYêu cầu Node.js >=20, Git và quyền đọc private GitHub repo qua SSH.');
+    if (!options) console.log('lumina-agent setup [--agent codex|claude|antigravity ...] [--global | --target <project-directory>] [--dry-run]\nIn a terminal, first select scope then select agents via checklist. Project defaults to all three; global has only Codex and Claude Code. Use --agent repeatedly to select directly. Outside a terminal, project defaults to all three, --global defaults to Codex and Claude Code. Antigravity is project-only.\nlumina-agent init: alias for setup. Defaults to current project directory; --global installs to ~/.\nRequires Node.js >=20, Git, and SSH read access to the private GitHub repository.');
     else {
-      let scope = options.global ? 'global' : 'project';
       if (process.stdin.isTTY && process.stdout.isTTY) {
         readline.emitKeypressEvents(process.stdin);
         if (!argumentsList.includes('--global') && !argumentsList.includes('--target')) {
-          scope = await promptInstallScope(process.stdin, process.stdout, { project: process.cwd() });
-          options.global = scope === 'global';
+          options.global = await promptInstallScope(process.stdin, process.stdout, { project: process.cwd() });
           if (options.global) options.target = os.homedir();
         }
-        if (!argumentsList.includes('--agent')) options.agents = await promptAgents(process.stdin, process.stdout, { global: scope === 'global' });
-        if (scope === 'global' && options.agents.includes('antigravity')) {
-          throw new Error('Antigravity chỉ hỗ trợ cài theo project; bỏ --global hoặc bỏ --agent antigravity.');
+        if (!argumentsList.includes('--agent')) options.agents = await promptAgents(process.stdin, process.stdout, { global: options.global });
+        if (options.global && options.agents.includes('antigravity')) {
+          throw new Error('Antigravity only supports project-level install; remove --global or remove --agent antigravity.');
         }
       }
-      let result;
-      if (scope === 'both') {
-        const projectResult = await initialize({ ...options, global: false, target: process.cwd() });
-        const globalAgents = options.agents.filter(a => a !== 'antigravity');
-        if (globalAgents.length > 0) {
-          const globalResult = await initialize({ ...options, global: true, target: os.homedir(), agents: globalAgents });
-          result = { target: `${projectResult.target} + ${globalResult.target}`, changes: projectResult.changes + globalResult.changes, dryRun: options.dryRun };
-        } else {
-          result = projectResult;
-        }
-      } else {
-        result = await initialize(options);
-      }
-      console.log(`${result.dryRun ? 'Dry run' : 'Đã cài'}: ${result.changes} mục thay đổi tại ${result.target}`);
+      const result = await initialize(options);
+      console.log(`${result.dryRun ? 'Dry run' : 'Installed'}: ${result.changes} change(s) at ${result.target}`);
     }
   } catch (error) {
     console.error(`Lumina: ${error.message}`);
