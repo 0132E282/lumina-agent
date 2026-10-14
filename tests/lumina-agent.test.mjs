@@ -111,14 +111,14 @@ test('interactive agent selection defaults all checked and supports toggling', a
   assert.match(output.text, /\[x\] Codex/);
   assert.match(output.text, /\[x\] Claude Code/);
   assert.match(output.text, /\[x\] Antigravity/);
-  assert.match(output.text, /\[x\] Antigravity[^\n]*\n(?:\u001b\[2K\r[^\n]*\n)*\u001b\[2K\rNhấn Enter để hoàn tất/);
+  assert.match(output.text, /\[x\] Antigravity[^\n]*\n(?:\u001b\[2K\r[^\n]*\n)*\u001b\[2K\rCtrl\+C để thoát/);
   input.emit('keypress', ' ', { name: 'space' });
   input.emit('keypress', '', { name: 'down' });
   input.emit('keypress', '', { name: 'down' });
   input.emit('keypress', '', { name: 'return' });
   assert.deepEqual(await selection, ['claude', 'antigravity']);
   assert.doesNotMatch(output.text, /\u001b\[8A\u001b\[2K\r(?:\n\u001b\[2K\r){7}$/);
-  assert.match(stripAnsi(output.text).replaceAll('\r', ''), /Nhấn Enter để hoàn tất\n$/);
+  assert.match(stripAnsi(output.text).replaceAll('\r', ''), /Ctrl\+C để thoát\n$/);
   await new Promise(resolve => setImmediate(resolve));
   assert.equal(input.rawMode, false);
 });
@@ -221,7 +221,7 @@ test('interactive agent selection keeps the final prompt visible after Enter', a
   input.emit('keypress', '', { name: 'return' });
 
   assert.deepEqual(await selection, ['codex', 'claude', 'antigravity']);
-  assert.match(stripAnsi(output.text).replaceAll('\r', ''), /Select agents to install[\s\S]*Nhấn Enter để hoàn tất\n$/);
+  assert.match(stripAnsi(output.text).replaceAll('\r', ''), /Select agents to install[\s\S]*Ctrl\+C để thoát\n$/);
   assert.doesNotMatch(output.text, /\u001b\[8A\u001b\[2K\r(?:\n\u001b\[2K\r){7}$/);
 });
 

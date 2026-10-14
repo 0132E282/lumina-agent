@@ -524,7 +524,7 @@ export function promptAgents(input = process.stdin, output = process.stdout, { g
     choices: available.map(runtime => ({ value: runtime, label: runtimeLabels[runtime], selected: true })),
     title: 'Select agents to install',
     description: `↑/↓ move · Space toggle · Enter confirm${note}`,
-    footer: 'Nhấn Enter để hoàn tất',
+    footer: 'Ctrl+C để thoát',
     minimum: 1,
     cancelMessage: 'Agent selection cancelled.',
     eraseOnConfirm: false,
