@@ -5,6 +5,8 @@ description: "Áp dụng khi triển khai hoặc sửa code theo yêu cầu ngư
 
 # Triển khai theo yêu cầu
 
+Với toàn plan/nhóm task được giao, tiếp tục đến khi xong toàn bộ scope; không kết thúc lượt hoặc xuất báo cáo cuối sau mỗi task/sửa plan. Giữ bàn giao nội bộ, chỉ cập nhật tiến độ ngắn; tổng hợp một lần theo [mandatory-report](./mandatory-report.md). Có blocker cần người dùng thì báo đúng blocker, không nhận hoàn thành hoặc tự hạ tiêu chí nghiệm thu.
+
 Khi người dùng giao triển khai/sửa code, giao vai trò `coding-agent` theo task và phạm vi đã được cho phép; không cần command riêng. Đọc vai trò [`coding-agent`](../agents/coding-agent.md).
 
 - Nếu người dùng yêu cầu triển khai theo plan mà không chỉ định task cụ thể, đọc `docs/plans/index.json`, tìm theo title/description/tags, mở plan JSON liên quan qua `path`, rồi đọc task `TODO`/`IN_PROGRESS`, `filesToChange` và dependency — triển khai đúng task được giao theo thứ tự dependency.

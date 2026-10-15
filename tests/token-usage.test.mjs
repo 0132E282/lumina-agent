@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -222,4 +222,57 @@ test('transcript rejects mixed sessions, malformed message IDs/counts and overfl
     assert.match(result.stderr, /Line [12]:/);
     assert.doesNotMatch(result.stderr, /PRIVATE_OTHER|PRIVATE_CONTENT/);
   }
+});
+
+const rolloutEvent = (total, last) => JSON.stringify({ type: 'event_msg', payload: { type: 'token_count', info: { total_token_usage: total, last_token_usage: last } } });
+test('rollout retains last non-null cumulative snapshot and separate last usage', () => {
+  const input = [
+    rolloutEvent({ input_tokens: 10, output_tokens: 2, total_tokens: 12 }),
+    rolloutEvent({ input_tokens: 30, output_tokens: 5, total_tokens: 35, cached_input_tokens: 20, reasoning_output_tokens: 3 }, { input_tokens: 20, output_tokens: 3 }),
+    JSON.stringify({ type: 'event_msg', payload: { type: 'token_count', info: null } }),
+    rolloutEvent(null),
+  ].join('\n');
+  const result = report(input, ['--runtime', 'codex-rollout']);
+  assert.equal(result.status, 'partial');
+  assert.equal(result.usage.total_tokens, null);
+  assert.equal(result.measured_usage.total_tokens, 35);
+  assert.equal(result.last_usage.total_tokens, 23);
+  assert.match(result.measurement_scope, /NOT task total/);
+  assert.match(run(input, ['--runtime', 'codex-rollout']).stdout, /input 30 \| output 5 \| tổng 35/);
+  assert.equal(report('', ['--runtime', 'codex-rollout']).status, 'unavailable');
+});
+
+test('rollout rejects mixed metadata sessions and invalid counts/totals', () => {
+  for (const input of [
+    [{ type: 'session_meta', payload: { id: 'a' } }, { type: 'session_meta', payload: { id: 'PRIVATE_B' } }].map(value => JSON.stringify(value)).join('\n'),
+    rolloutEvent({ input_tokens: -1, output_tokens: 2 }),
+    rolloutEvent({ input_tokens: 1, output_tokens: 2, total_tokens: 4 }),
+    rolloutEvent({ input_tokens: 1, output_tokens: 2, cached_input_tokens: -1 }),
+  ]) {
+    const result = run(input, ['--runtime', 'codex-rollout']);
+    assert.equal(result.status, 1);
+    assert.doesNotMatch(result.stderr, /PRIVATE_B/);
+  }
+});
+
+test('current-session reads only unique matching rollout; rejects absent/multiple/conflicting options', context => {
+  const directory = mkdtempSync(path.join(os.tmpdir(), 'rollout-test-'));
+  context.after(() => rmSync(directory, { recursive: true, force: true }));
+  const sessions = path.join(directory, 'sessions');
+  mkdirSync(sessions);
+  writeFileSync(path.join(sessions, 'rollout-date-thread-a.jsonl'), rolloutEvent({ input_tokens: 5, output_tokens: 2 }));
+  writeFileSync(path.join(sessions, 'rollout-date-thread-b.jsonl'), 'PRIVATE_OTHER_INVALID_JSON');
+  const execute = (extra = [], thread = 'thread-a') => spawnSync(process.execPath, [script, '--task', 'snapshot', '--runtime', 'codex-rollout', '--current-session', '--format', 'json', ...extra], {
+    encoding: 'utf8', env: { ...process.env, CODEX_HOME: directory, CODEX_THREAD_ID: thread },
+  });
+  const result = execute();
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(JSON.parse(result.stdout).measured_usage.total_tokens, 7);
+  assert.doesNotMatch(result.stdout, /PRIVATE_OTHER/);
+  assert.equal(execute([], '').status, 1);
+  assert.equal(execute([], 'absent-thread').status, 1);
+  assert.equal(execute(['--input', 'file']).status, 1);
+  assert.equal(run('', ['--current-session']).status, 1);
+  writeFileSync(path.join(sessions, 'rollout-other-thread-a.jsonl'), 'PRIVATE_DUPLICATE');
+  assert.equal(execute().status, 1);
 });

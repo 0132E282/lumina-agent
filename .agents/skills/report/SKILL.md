@@ -8,6 +8,8 @@ metadata:
 
 # Report
 
+Khi scope là toàn plan/nhóm task coding, gom bàn giao nội bộ, thay đổi plan và kiểm chứng để gửi **một báo cáo cuối sau khi tất cả task được giao hoàn thành**. Trước đó chỉ cập nhật tiến độ ngắn; không xuất report giữa các task. Báo cáo cuối gộp thay đổi theo file, trạng thái task/AC, checks thật, Big O, giới hạn và một mục token đúng phạm vi; không lặp report/token của từng agent. Chưa hoàn tất vì blocker cần người dùng thì báo blocker và phần còn lại, không dùng kết luận DONE. Yêu cầu `/report` khi chưa xong chỉ xuất trạng thái chưa hoàn thành, không giả báo cáo hoàn tất.
+
 Chỉ trình bày kết quả/diff đã có; không tự tìm lỗi, review, kiểm thử hay đánh giá code. Mặc định ngắn gọn, đúng template; không bỏ field bắt buộc. Áp dụng theo [mandatory-report](../../rules/mandatory-report.md) và [quality-assurance](../../rules/quality-assurance.md).
 
 ## Chọn template
@@ -39,6 +41,16 @@ Dấu phân cách và bố cục theo template tương ứng. Báo cáo sau khi 
 Cuối mọi báo cáo task, thêm một dòng `Token: input <số> | output <số> | tổng <số> | phạm vi <repo/task/skill/command> | nguồn <usage runtime>`. Chỉ dùng usage thực tế do runtime cung cấp; field không có ghi `N/A`. Không suy token từ số ký tự, độ dài context, output tool hoặc token budget. Tổng chỉ ghi khi runtime cung cấp hoặc cộng được input/output cùng phạm vi, cùng cách đếm; cached/reasoning token là thành phần con khi runtime quy định, không cộng trùng.
 
 Ghi đúng phạm vi đo: task hiện tại, một lượt hoặc toàn phiên; không gán usage toàn phiên cho riêng task/repo/skill/command. Nếu gồm subagent, chỉ cộng usage riêng không trùng của cùng task và nêu phần thiếu. Không có telemetry thì ghi `Token: N/A — runtime không cung cấp usage cho task này.` Không tự đọc log phiên khác/credential hoặc cài công cụ chỉ để lấy token. Xuất lại report dùng số liệu đã ghi với phạm vi cũ; không tự cộng thêm hoặc coi đó là usage của lần xuất lại.
+
+Ưu tiên số liệu có thật: nếu chưa có tổng task nhưng có snapshot phiên hoặc subtotal quan sát được, báo `Token phiên (snapshot): input ... | output ... | tổng ...` hoặc `Token quan sát (một phần): ...`, kèm nguồn/phạm vi và giới hạn. Không bỏ số liệu có sẵn rồi chỉ ghi N/A. Chỉ ghi N/A khi đã kiểm tra nguồn phù hợp mà không có usage; phân biệt chưa chạy collector, không có path/quyền, schema không hỗ trợ và telemetry chưa ghi, không mặc định kết luận runtime không cung cấp. API [Claude count_tokens](https://platform.claude.com/docs/en/build-with-claude/token-counting) chỉ ước lượng input trước request, không thay usage thực tế hoặc output token.
+
+### Phiên Codex hiện tại
+
+```bash
+node .agents/skills/report/scripts/token-usage.mjs --runtime codex-rollout --current-session --task 'current-task'
+```
+
+Chỉ khi cần báo usage phiên hiện tại: `--current-session` chọn đúng rollout theo `CODEX_THREAD_ID` trong `$CODEX_HOME/sessions` (mặc định `~/.codex/sessions`). Không có ID/file hoặc nhiều file khớp thì báo giới hạn, không chọn phiên khác. Script chỉ đọc file khớp, lấy snapshot `token_count.info.total_token_usage` cuối, không cộng nhiều snapshot hoặc cached/reasoning token. Đây là tổng phiên tại thời điểm đọc, không phải tổng riêng task hay câu trả lời đang sinh; `last_usage` chỉ là request cuối được ghi. Có thể dùng `--input` với rollout chỉ định thay vì `--current-session`; không dùng cả hai.
 
 ### Codex, Claude Code và Antigravity CLI
 

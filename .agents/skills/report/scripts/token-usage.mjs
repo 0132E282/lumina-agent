@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-import { createReadStream } from 'node:fs';
+import { createReadStream, readdirSync } from 'node:fs';
+import os from 'node:os';
 import { createInterface } from 'node:readline';
 import path from 'node:path';
 
@@ -12,8 +13,9 @@ Options:
   --skill LABEL      Optional caller-assigned skill label
   --command LABEL    Optional caller-assigned command label
   --input FILE       Read only this explicit file instead of stdin
+  --current-session  Explicitly read matching CODEX_THREAD_ID rollout only
   --format text|json Output format (default: text)
-  --runtime NAME     codex|claude|antigravity|claude-transcript (default: codex)
+  --runtime NAME     codex|claude|antigravity|claude-transcript|codex-rollout
   --help             Show this help without reading input
 
 Example:
@@ -43,6 +45,13 @@ normalize Claude cache input categories. Exclude parent_tool_use_id subagents.
 Always partial when measured: observed session subtotal, not task/test-only or
 final billed total; live output usage may be placeholders/incomplete. Mixed
 session IDs fail. Latest missing message usage removes its older subtotal.
+codex-rollout: event_msg payload.type=token_count, info.total_token_usage.
+Keep LAST non-null cumulative snapshot, never sum counters/subsets. last_usage
+is a separate last-turn observation, never task usage. Session snapshot may
+omit the in-progress turn. --current-session requires this runtime, conflicts
+with --input, and enumerates names under CODEX_HOME/sessions (default ~/.codex)
+to read exactly one rollout-*<CODEX_THREAD_ID>.jsonl. No unrelated logs/credentials
+are read. Session snapshots are NOT task totals.
 
 Output schema: attribution {repo,task,skill,command}, attribution_basis,
 runtime, measurement_scope, source, status (complete|partial|unavailable),
@@ -64,6 +73,11 @@ function parseArguments(argumentsList) {
   const supplied = new Set();
   for (let index = 0; index < argumentsList.length; index += 1) {
     const name = argumentsList[index].slice(2);
+    if (argumentsList[index] === '--current-session') {
+      if (options.currentSession) throw new Error('Duplicate --current-session.');
+      options.currentSession = true;
+      continue;
+    }
     if (!argumentsList[index].startsWith('--') || !allowed.has(name)) {
       throw new Error('Unknown option; use --help.');
     }
@@ -80,8 +94,38 @@ function parseArguments(argumentsList) {
   }
   if (!options.task) throw new Error('--task is required.');
   if (!['text', 'json'].includes(options.format)) throw new Error('--format must be text or json.');
-  if (!['codex', 'claude', 'antigravity', 'claude-transcript'].includes(options.runtime)) throw new Error('--runtime must be codex, claude, antigravity or claude-transcript.');
+  if (!['codex', 'claude', 'antigravity', 'claude-transcript', 'codex-rollout'].includes(options.runtime)) throw new Error('Unsupported --runtime.');
+  if (options.currentSession && (options.runtime !== 'codex-rollout' || options.input)) throw new Error('--current-session requires codex-rollout and no --input.');
   return options;
+}
+
+function currentSessionFile() {
+  const identifier = process.env.CODEX_THREAD_ID;
+  if (!identifier || !/^[a-zA-Z0-9-]+$/.test(identifier)) throw new Error('Valid CODEX_THREAD_ID is required.');
+  const pending = [path.join(process.env.CODEX_HOME || path.join(os.homedir(), '.codex'), 'sessions')];
+  let match;
+  while (pending.length > 0) {
+    const directory = pending.pop();
+    for (const entry of readdirSync(directory, { withFileTypes: true })) {
+      if (entry.isDirectory()) pending.push(path.join(directory, entry.name));
+      if (!entry.isFile() || !entry.name.startsWith('rollout-') || !entry.name.endsWith(`-${identifier}.jsonl`)) continue;
+      if (match) throw new Error('Multiple rollouts match current session.');
+      match = path.join(directory, entry.name);
+    }
+  }
+  if (!match) throw new Error('No rollout matches current session.');
+  return match;
+}
+
+function rolloutUsage(usage, lineNumber) {
+  const normalized = normalizeUsage(usage, 'codex', lineNumber);
+  if (usage !== null && usage !== undefined) {
+    for (const field of ['total_tokens', 'cached_input_tokens', 'cache_write_input_tokens', 'reasoning_output_tokens']) {
+      if (Object.hasOwn(usage, field) && (!Number.isSafeInteger(usage[field]) || usage[field] < 0)) throw new Error(`Line ${lineNumber}: invalid ${field}.`);
+    }
+    if (normalized && Object.hasOwn(usage, 'total_tokens') && usage.total_tokens !== normalized.total_tokens) throw new Error(`Line ${lineNumber}: inconsistent total_tokens.`);
+  }
+  return normalized;
 }
 
 function safeAdd(left, right, lineNumber) {
@@ -129,6 +173,7 @@ async function measure(input, runtime) {
   let resultEvents = 0;
   let measuredResultEvents = 0;
   let snapshot = null;
+  let lastUsage = null;
   let runtimeStatus = 'unavailable';
   const transcriptMessages = new Map();
   let excludedSubagentMessages = 0;
@@ -141,6 +186,25 @@ async function measure(input, runtime) {
         event = JSON.parse(line);
       } catch {
         throw new Error(`Line ${lineNumber}: invalid JSON.`);
+      }
+      if (runtime === 'codex-rollout') {
+        if (event?.type === 'session_meta' && event.payload?.id != null) {
+          const identifier = event.payload.id;
+          if (typeof identifier !== 'string' || !identifier) throw new Error(`Line ${lineNumber}: invalid session identifier.`);
+          if (sessionId !== undefined && sessionId !== identifier) throw new Error(`Line ${lineNumber}: mixed runtime sessions are not supported.`);
+          sessionId = identifier;
+        }
+        if (event?.type !== 'event_msg' || event.payload?.type !== 'token_count') continue;
+        resultEvents += 1;
+        const info = event.payload.info;
+        if (info == null) continue;
+        const candidate = rolloutUsage(info.total_token_usage, lineNumber);
+        if (candidate !== null) {
+          snapshot = candidate;
+          measuredResultEvents += 1;
+        }
+        if (info.last_token_usage != null) lastUsage = rolloutUsage(info.last_token_usage, lineNumber);
+        continue;
       }
       if (runtime === 'claude-transcript') {
         if (event?.type !== 'assistant') continue;
@@ -199,6 +263,12 @@ async function measure(input, runtime) {
     if (input !== process.stdin) input.destroy();
   }
   const emptyUsage = { input_tokens: null, output_tokens: null, total_tokens: null };
+  if (runtime === 'codex-rollout') return {
+    status: snapshot === null ? 'unavailable' : 'partial',
+    completed_turns: null, measured_turns: null, failed_turns: null,
+    result_events: resultEvents, measured_result_events: measuredResultEvents,
+    usage: emptyUsage, measured_usage: snapshot ?? emptyUsage, last_usage: lastUsage ?? emptyUsage,
+  };
   if (runtime === 'claude-transcript') {
     const measuredMessages = [...transcriptMessages.values()].filter(usage => usage !== null).length;
     return {
@@ -236,6 +306,11 @@ async function measure(input, runtime) {
 function formatText(report) {
   const usage = report.usage;
   const subtotal = report.measured_usage;
+  if (report.runtime === 'codex-rollout') return [
+    `Token session: input ${subtotal.input_tokens ?? 'N/A'} | output ${subtotal.output_tokens ?? 'N/A'} | tổng ${subtotal.total_tokens ?? 'N/A'} | trạng thái ${report.status}`,
+    `Phạm vi đo: ${report.measurement_scope}.`,
+    'Snapshot session gần nhất; NOT task total. Có thể chưa gồm lượt đang chạy; last_usage riêng không phải token task.',
+  ].join('\n');
   if (report.runtime === 'claude-transcript') {
     return [
       `Token quan sát: input ${subtotal.input_tokens ?? 'N/A'} | output ${subtotal.output_tokens ?? 'N/A'} | tổng ${subtotal.total_tokens ?? 'N/A'} | trạng thái ${report.status}`,
@@ -263,13 +338,14 @@ try {
     process.stdout.write(help);
   } else {
     const options = parseArguments(process.argv.slice(2));
+    if (options.currentSession) options.input = currentSessionFile();
     const result = await measure(options.input ? createReadStream(options.input, { encoding: 'utf8' }) : process.stdin, options.runtime);
     const report = {
       attribution: { repo: path.resolve(options.repo), task: options.task, skill: options.skill ?? null, command: options.command ?? null },
       attribution_basis: 'caller-supplied labels; event scope is not verified',
       runtime: options.runtime,
-      measurement_scope: options.runtime === 'codex' ? 'supplied completed turns; task attribution not verified' : options.runtime === 'claude-transcript' ? 'session transcript snapshot; NOT test-only/task total' : 'runtime-session snapshot; task attribution not verified',
-      source: options.runtime === 'codex' ? 'Codex exec JSONL turn.completed usage' : options.runtime === 'claude-transcript' ? 'explicit Claude transcript assistant message usage (observed partial subtotal)' : `${options.runtime} result usage (last session snapshot)`,
+      measurement_scope: options.runtime === 'codex' ? 'supplied completed turns; task attribution not verified' : options.runtime === 'codex-rollout' ? 'current session snapshot; NOT task total; current turn may be incomplete' : options.runtime === 'claude-transcript' ? 'session transcript snapshot; NOT test-only/task total' : 'runtime-session snapshot; task attribution not verified',
+      source: options.runtime === 'codex' ? 'Codex exec JSONL turn.completed usage' : options.runtime === 'codex-rollout' ? 'explicit Codex rollout token_count total_token_usage snapshot' : options.runtime === 'claude-transcript' ? 'explicit Claude transcript assistant message usage (observed partial subtotal)' : `${options.runtime} result usage (last session snapshot)`,
       ...result,
     };
     process.stdout.write(`${options.format === 'json' ? JSON.stringify(report, null, 2) : formatText(report)}\n`);

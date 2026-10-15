@@ -65,6 +65,16 @@
         "hooks": [
           {
             "type": "command",
+            "command": "node .claude/hooks/scripts/ensure-final-newline.mjs",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
             "command": "bash .claude/hooks/scripts/format-on-edit.sh"
           },
           {

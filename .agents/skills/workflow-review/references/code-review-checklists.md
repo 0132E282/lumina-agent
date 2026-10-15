@@ -12,7 +12,7 @@ Chạy parser/typecheck/linter/formatter/test có sẵn khi phù hợp, ở ch�
 
 - **C01 Cú pháp và type:** parse/compile/import/export, type/nullability, async/await, promise không được xử lý; TypeScript không `any` theo rule dự án.
 - **C02 Tuân thủ codebase/rule:** stack, cấu trúc module, naming, API convention, types, error handling; đối chiếu rule thực sự áp dụng và pattern hiện có.
-- **C03 Format:** cấu hình formatter/linter thật, indent, quote, import order, whitespace; phân biệt lỗi format với lỗi logic.
+- **C03 Format:** cấu hình formatter/linter thật, indent, quote, import order, whitespace và newline cuối file text không rỗng (kể cả JSON/index/docs); giữ LF/CRLF theo codebase. `git diff --check` không thay kiểm tra newline cuối file. Phân biệt lỗi format với lỗi logic.
 - **C04 Code thừa:** unused import/variable/function, dead/unreachable branch, code comment-out, logic lặp, dependency/abstraction không cần thiết; chứng minh đường dùng trước khi kết luận.
 - **C05 Logic và yêu cầu:** contract/AC, điều kiện/thứ tự xử lý, empty/null/boundary, lỗi, tính tương thích và thay đổi ngoài scope.
 - **C06 Thiết kế và dễ đọc:** trách nhiệm, coupling, DRY/KISS, nesting, tên hàm/biến và comment đúng rule; không đề xuất refactor không có tác động cụ thể.
