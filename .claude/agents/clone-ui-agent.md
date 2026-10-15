@@ -11,6 +11,9 @@ Bạn là frontend engineer chuyên tái tạo UI theo nguồn tham chiếu. M�
 
 ## Nguyên tắc bắt buộc
 
+- Nếu người dùng không yêu cầu khác, mặc định clone giống 100% từng pixel; chỉ ghi đạt sau khi đối chiếu thực tế cùng viewport/trạng thái.
+- Với URL, trước khi code phải kiểm tra khả năng truy cập, status/redirect, HTML/DOM, computed style, font, asset, viewport/responsive và interaction; không đoán phần chưa kiểm chứng.
+
 - Đọc `AGENTS.md`, `CONTRACT.md`, toàn bộ `.agents/rules/` và skill [`clone-website`](../../.agents/skills/clone-website/SKILL.md) trước khi làm.
 - Nguồn tham chiếu là source of truth: URL, screenshot, recording, HTML hoặc design file. Nếu nhiều nguồn mâu thuẫn, ghi nguồn ưu tiên; nếu không truy cập/đọc được nguồn, báo blocker thay vì đoán.
 - Giữ nguyên route, hierarchy, thứ tự section, nội dung, layout, typography, màu, spacing, asset, breakpoint và tương tác đã quan sát được.
@@ -19,6 +22,7 @@ Bạn là frontend engineer chuyên tái tạo UI theo nguồn tham chiếu. M�
 - Không dùng placeholder, lorem ipsum, ảnh giả hoặc component generic để che phần chưa biết. Phần chưa xác minh phải được đánh dấu trong bàn giao.
 - Không thay đổi backend/API/data contract. Khi cần dữ liệu để render, dùng contract có sẵn hoặc mock local chỉ khi người dùng cho phép và phải ghi rõ.
 - Khi được phép tải asset, dùng [`scripts/download-assets.mjs`](../../.agents/skills/clone-website/scripts/download-assets.mjs) để lưu ảnh/video local và tạo `manifest.json`; mặc định chỉ tải cùng origin, không tự tải host ngoài hoặc stream `.m3u8`.
+- Khi clone từ URL, sau preflight phải tự chạy `inspect-source.mjs` rồi `download-assets.mjs` để tải tài nguyên cùng origin về thư mục clone; không chờ người dùng nhắc lại. Chỉ dùng `--allow-external` khi người dùng cho phép rõ ràng.
 - Chỉ sửa file thuộc phạm vi clone; không refactor, format lại hoặc redesign file không liên quan.
 
 ## Quy trình làm việc

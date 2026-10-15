@@ -8,6 +8,8 @@ metadata:
 
 # Clone Website
 
+Nếu người dùng không yêu cầu khác, mặc định phải clone giống 100% từng pixel theo nguồn. Chỉ ghi nhận đạt pixel-perfect sau khi đã đối chiếu thực tế cùng viewport và trạng thái; không được đoán phần chưa kiểm chứng.
+
 Tái tạo website theo đúng nguồn tham chiếu được người dùng cung cấp. Nguồn tham chiếu là source of truth cho cấu trúc, bố cục, nội dung hiển thị, typography, màu sắc, spacing, asset, responsive behavior và tương tác quan sát được.
 
 ## Ràng buộc bất biến
@@ -21,6 +23,8 @@ Tái tạo website theo đúng nguồn tham chiếu được người dùng cung
 - Không tự áp dụng các skill thiết kế như `design-taste-frontend`, `minimalist-ui`, `gpt-taste` hoặc `redesign-existing-projects`; chúng có thể làm lệch nguồn clone.
 
 ## Quy trình
+
+Trước khi code từ URL, phải kiểm tra khả năng truy cập, status/redirect, HTML/DOM, computed style, font, asset, viewport/responsive và interaction; ghi rõ phần hoạt động, bị chặn hoặc chưa kiểm chứng.
 
 1. **Xác định nguồn chuẩn**: phân loại URL, screenshot, recording, HTML, Figma hoặc nhiều nguồn; ghi rõ nguồn nào ưu tiên khi có mâu thuẫn. Nếu không truy cập/đọc được nguồn, dừng phần suy đoán và báo blocker cụ thể.
 2. **Lập inventory trước khi sửa**: route và URL, cây section/component, header/footer, nội dung, asset, font, màu/token, kích thước/spacing, breakpoint, trạng thái và tương tác. Tách phần đã quan sát khỏi phần chỉ là giả định.
@@ -38,7 +42,27 @@ Tái tạo website theo đúng nguồn tham chiếu được người dùng cung
 
 ## Tải asset vào bản clone
 
-Khi người dùng cho phép tải asset từ URL nguồn, dùng script [`scripts/download-assets.mjs`](scripts/download-assets.mjs) để tải ảnh, video trực tiếp, poster, source, `srcset` và URL trong inline style về thư mục local. Script tạo `manifest.json` để truy vết URL nguồn → file local.
+Trước khi tải asset, tạo inventory nguồn bằng script [`scripts/inspect-source.mjs`](scripts/inspect-source.mjs):
+
+```bash
+node .agents/skills/clone-website/scripts/inspect-source.mjs \
+  https://example.com/page \
+  --output clone-source.json
+```
+
+Khi nguồn là URL và người dùng yêu cầu clone, subagent phải tự chạy bước inventory này rồi tự chạy `download-assets.mjs` để đưa tài nguyên vào thư mục clone; không chờ người dùng nhắc lại. Mặc định tải tài nguyên cùng origin, không dùng `--allow-external` nếu chưa được cho phép rõ ràng.
+
+Sau khi có HTML clone, kiểm tra inventory cấu trúc bằng [`scripts/compare-html.mjs`](scripts/compare-html.mjs). Kết quả này chỉ là kiểm tra cấu trúc; pixel fidelity vẫn phải đối chiếu cùng viewport bằng screenshot/tool phù hợp:
+
+```bash
+node .agents/skills/clone-website/scripts/compare-html.mjs \
+  source.html \
+  cloned.html
+```
+
+Khi nguồn URL nằm trong phạm vi clone, dùng script [`scripts/download-assets.mjs`](scripts/download-assets.mjs) để tải ảnh, video trực tiếp, poster, source, `srcset` và URL trong inline style về thư mục local. Script tạo `manifest.json` để truy vết URL nguồn → file local.
+
+Với URL nguồn đã được người dùng giao để clone, quyền tải tài nguyên cùng origin được hiểu là đã nằm trong phạm vi công việc. Chỉ dừng và báo blocker khi nguồn yêu cầu vượt authentication/CAPTCHA/paywall, bị chặn, hoặc cần tải host ngoài/stream mà chưa được cho phép.
 
 ```bash
 node .agents/skills/clone-website/scripts/download-assets.mjs \
