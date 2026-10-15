@@ -18,6 +18,8 @@ Không tự mặc định câu trả lời là “có” hoặc “không”, kh
 
 Tái tạo website theo đúng nguồn tham chiếu được người dùng cung cấp. Nguồn tham chiếu là source of truth cho cấu trúc, bố cục, nội dung hiển thị, typography, màu sắc, spacing, asset, responsive behavior và tương tác quan sát được.
 
+Clone website là tái tạo UI và hành vi quan sát được 100%, không phải chỉ tải tài nguyên về máy. Asset download chỉ là bước hỗ trợ; kết quả nghiệm thu là website clone phải khớp source.
+
 ## Ràng buộc bất biến
 
 - Giữ nguyên hierarchy của trang: route, thứ tự section, vùng header/navigation/main/footer, nhóm component, vị trí và quan hệ giữa các phần.
@@ -28,6 +30,7 @@ Tái tạo website theo đúng nguồn tham chiếu được người dùng cung
 - Bảo toàn URL, tên route, link, query, form action và contract dữ liệu hiện có khi chúng thuộc phạm vi clone. Không đổi backend/API chỉ để thuận tiện cho frontend.
 - Responsive phải suy ra từ các viewport hoặc breakpoint có bằng chứng. Không tự thêm breakpoint làm thay đổi UI ngoài nguồn.
 - Không tự áp dụng các skill thiết kế như `design-taste-frontend`, `minimalist-ui`, `gpt-taste` hoặc `redesign-existing-projects`; chúng có thể làm lệch nguồn clone.
+- Không tự thêm, bớt, đổi bố cục, đổi copy, đổi component, đổi interaction hoặc “cải thiện” UI để hợp gu agent. Mọi khác biệt phải được người dùng xác nhận trước.
 
 ## Quy trình
 
@@ -36,9 +39,11 @@ Trước khi code từ URL, phải kiểm tra khả năng truy cập, status/red
 1. **Xác định nguồn chuẩn**: phân loại ảnh/screenshot, URL website, URL sitemap, recording, HTML, Figma hoặc nhiều nguồn; ghi rõ nguồn nào ưu tiên khi có mâu thuẫn. Với sitemap, chỉ dùng nó để inventory và phải chốt URL route hoặc nhóm route cần clone trước khi code, không tự clone toàn bộ sitemap. Nếu không truy cập/đọc được nguồn, dừng phần suy đoán và báo blocker cụ thể.
 2. **Lập inventory trước khi sửa**: route và URL, cây section/component, header/footer, nội dung, asset, font, màu/token, kích thước/spacing, breakpoint, trạng thái và tương tác. Tách phần đã quan sát khỏi phần chỉ là giả định.
 3. **Khảo sát codebase**: đọc hướng dẫn project, stack, route, component, asset và contract liên quan; tái sử dụng cơ chế render, token và component hiện có khi chúng khớp nguồn. Chỉ thay đổi file/page nằm trong phạm vi clone.
-4. **Triển khai theo cấu trúc nguồn**: dựng skeleton và thứ tự section trước, sau đó khớp visual detail, nội dung, asset và tương tác. Giữ semantic HTML, accessibility và an toàn render theo rule frontend nhưng không dùng các cải thiện đó làm lý do đổi UI quan sát được.
-5. **Đối chiếu fidelity**: kiểm tra cùng viewport và trạng thái với nguồn; so sánh macro-layout trước rồi tới typography, spacing, asset, màu và interaction. Phải kiểm tra cả bounding box và computed style thực tế của container, section, slider track/thumb và phần tử liên quan, tối thiểu gồm `width`, `max-width`, `min-width`, `height`, `padding`, `margin`, `gap`, `overflow`, `flex-basis`/grid track. Không kết luận đúng chỉ vì CSS source có khai báo tương tự: nếu source dùng `max-width` nhưng clone hiển thị full width, hoặc ngược lại, phải sửa hoặc báo sai khác cụ thể. Nếu có sai khác không thể xác minh, ghi lại và dừng phần suy đoán thay vì tự chọn một thiết kế mới.
-6. **Bàn giao**: tự rà diff để xác nhận không có redesign hoặc thay đổi ngoài phạm vi; nêu nguồn đã dùng, phần khớp, phần chưa thể kiểm chứng và check đã chạy. Không tuyên bố pixel-perfect khi chưa có đối chiếu tương ứng.
+4. **Đối chiếu với code/design hiện tại**: nếu clone hiện tại khác source website hoặc khác design file, phải dừng và hỏi người dùng chọn source of truth. Không tự quyết định dùng website hay design file.
+5. **Chốt và đồng bộ tài liệu**: nếu người dùng chọn website, xác nhận cập nhật design/plan/docs để khớp 100% website; nếu chọn design file, dùng design file làm source of truth và cập nhật plan/docs theo design đã chốt. Cập nhật đúng format tài liệu hiện có của repo, gồm plan/index khi bị ảnh hưởng; không ghi kế hoạch mâu thuẫn với source đã chọn.
+6. **Giao coding-agent triển khai**: sau khi source of truth, inventory, phạm vi và plan/docs đã được người dùng chốt, bàn giao task cụ thể cho `coding-agent` để viết code. Agent clone không tự viết product code trong bước điều phối này.
+7. **Đối chiếu fidelity**: coding-agent phải kiểm tra cùng viewport và trạng thái với source; so sánh macro-layout trước rồi tới typography, spacing, asset, màu và interaction. Phải kiểm tra cả bounding box và computed style thực tế của container, section, slider track/thumb và phần tử liên quan, tối thiểu gồm `width`, `max-width`, `min-width`, `height`, `padding`, `margin`, `gap`, `overflow`, `flex-basis`/grid track. Không kết luận đúng chỉ vì CSS source có khai báo tương tự: nếu source dùng `max-width` nhưng clone hiển thị full width, hoặc ngược lại, phải sửa hoặc báo sai khác cụ thể. Nếu có sai khác không thể xác minh, ghi lại và dừng phần suy đoán.
+8. **Bàn giao**: rà diff để xác nhận không có UI thêm/bớt hoặc thay đổi ngoài source of truth đã chọn; nêu nguồn, plan/docs đã đồng bộ, phần khớp, phần chưa xác minh và check đã chạy. Không tuyên bố pixel-perfect khi chưa có đối chiếu tương ứng.
 
 ## Quy tắc khi nguồn là screenshot hoặc ảnh
 
