@@ -3,7 +3,7 @@ name: clone-website
 description: Clone an existing website or supplied website reference with structural and visual fidelity. Use when the user provides an image, live website URL, sitemap URL, recording, HTML, or design reference and asks to reproduce the site; do not use for redesigning, restyling, or inventing a new UI.
 license: MIT
 metadata:
-  version: "1.1"
+  version: "1.2"
 ---
 
 # Clone Website
@@ -45,6 +45,60 @@ Trước khi code từ URL, phải kiểm tra khả năng truy cập, status/red
 7. **Đối chiếu fidelity**: coding-agent phải kiểm tra cùng viewport và trạng thái với source; so sánh macro-layout trước rồi tới typography, spacing, asset, màu và interaction. Phải kiểm tra cả bounding box và computed style thực tế của container, section, slider track/thumb và phần tử liên quan, tối thiểu gồm `width`, `max-width`, `min-width`, `height`, `padding`, `margin`, `gap`, `overflow`, `flex-basis`/grid track. Không kết luận đúng chỉ vì CSS source có khai báo tương tự: nếu source dùng `max-width` nhưng clone hiển thị full width, hoặc ngược lại, phải sửa hoặc báo sai khác cụ thể. Nếu có sai khác không thể xác minh, ghi lại và dừng phần suy đoán.
 8. **Bàn giao**: rà diff để xác nhận không có UI thêm/bớt hoặc thay đổi ngoài source of truth đã chọn; nêu nguồn, plan/docs đã đồng bộ, phần khớp, phần chưa xác minh và check đã chạy. Không tuyên bố pixel-perfect khi chưa có đối chiếu tương ứng.
 
+## Pipeline tự động hóa tài nguyên, CSS và media
+
+Khi người dùng yêu cầu clone từ URL và cần tài nguyên local, dùng pipeline 3 giai đoạn dưới đây. Đây là cơ chế hỗ trợ tạo clone; nghiệm thu cuối vẫn là đối chiếu UI thực tế. Áp dụng rule [`clone-fidelity`](../../rules/clone-fidelity.md).
+
+### Giai đoạn 1 — Extract và download asset
+
+Chạy [`scripts/extract-assets.py`](scripts/extract-assets.py) với output riêng của clone:
+
+```bash
+python3 .agents/skills/clone-website/scripts/extract-assets.py \
+  https://example.com/page \
+  --output storage/assets
+```
+
+Script tạo `storage/assets/temp/images`, `videos`, `fonts`, `other` và `storage/assets/mapping.json`. Mapping giữ `originUrl`, `localPath`, `kind`, `status`, kích thước, content type và lý do skip/fail. Script quét HTML, inline `url()`, linked stylesheet và `url()` trong CSS đã tải; giới hạn cùng-origin mặc định, timeout 30 giây và 50 MiB/file. Dùng `--allow-external` chỉ khi host ngoài đã được người dùng cho phép. Stream `.m3u8` được ghi trạng thái `skipped`, không tự tải.
+
+### Giai đoạn 2 — Process CSS
+
+Với từng stylesheet đã được inventory, chạy [`scripts/process-css.py`](scripts/process-css.py):
+
+```bash
+python3 .agents/skills/clone-website/scripts/process-css.py \
+  --input storage/assets/temp/other/site.css \
+  --mapping storage/assets/mapping.json \
+  --output src/layout/site.processed.css
+```
+
+Script chỉ thay URL đã có trạng thái `downloaded`, giữ nguyên selector/thứ tự CSS và thêm newline cuối file. Không dùng mapping để giả lập asset failed/skipped. Giữ file CSS processed trong layout/asset structure của clone, không ghi đè CSS nguồn.
+
+### Giai đoạn 3 — Inject layout và media
+
+Sau khi CSS đã được xử lý, chạy [`scripts/inject-layout.py`](scripts/inject-layout.py) với layout output riêng:
+
+```bash
+python3 .agents/skills/clone-website/scripts/inject-layout.py \
+  --input public/clone-layout.source.html \
+  --css src/layout/site.processed.css \
+  --mapping storage/assets/mapping.json \
+  --output public/clone-layout.html
+```
+
+Script inject một stylesheet duy nhất vào `<head>` (idempotent), rewrite `src`/`poster` của `img`, `video`, `audio`, `source`, `track` khi mapping đã xác minh và không thay đổi layout nguồn. `iframe`, stream, media cross-origin hoặc thuộc tính DOM không được script nhận diện phải được kiểm tra thủ công và ghi trong bàn giao.
+
+### Cấu trúc storage mặc định
+
+```text
+storage/assets/
+├── temp/{images,videos,fonts,other}/
+├── mapping.json
+└── processed/
+```
+
+Không commit `storage/assets/temp` hoặc log/scratch nếu chúng không thuộc deliverable của project clone. Khi cần tài liệu thiết kế, copy template [`assets/pixel-perfect-spec.md`](assets/pixel-perfect-spec.md) thành `docs/design/pixel-perfect-spec.md`, thay `TBD` bằng giá trị đo được và cập nhật registry docs theo rule của repo.
+
 ## Quy tắc khi nguồn là screenshot hoặc ảnh
 
 - Đọc ảnh như đặc tả thị giác: xác định bounding region, alignment, khoảng cách, tỷ lệ, thứ bậc chữ và trạng thái đang hiển thị trước khi code.
@@ -54,30 +108,30 @@ Trước khi code từ URL, phải kiểm tra khả năng truy cập, status/red
 
 ## Tải asset vào bản clone
 
-Trước khi tải asset, tạo inventory nguồn bằng script [`scripts/inspect-source.mjs`](scripts/inspect-source.mjs):
+Trước khi tải asset, tạo inventory nguồn bằng script [`scripts/inspect-source.py`](scripts/inspect-source.py):
 
 ```bash
-node .agents/skills/clone-website/scripts/inspect-source.mjs \
+python3 .agents/skills/clone-website/scripts/inspect-source.py \
   https://example.com/page \
   --output clone-source.json
 ```
 
-Khi nguồn là URL và người dùng yêu cầu clone, subagent phải tự chạy bước inventory này rồi tự chạy `download-assets.mjs` để đưa tài nguyên vào thư mục clone; không chờ người dùng nhắc lại. Mặc định tải tài nguyên cùng origin, không dùng `--allow-external` nếu chưa được cho phép rõ ràng.
+Khi nguồn là URL và người dùng yêu cầu clone, subagent phải tự chạy bước inventory này rồi tự chạy `download-assets.py` để đưa tài nguyên vào thư mục clone; không chờ người dùng nhắc lại. Mặc định tải tài nguyên cùng origin, không dùng `--allow-external` nếu chưa được cho phép rõ ràng.
 
-Sau khi có HTML clone, kiểm tra inventory cấu trúc bằng [`scripts/compare-html.mjs`](scripts/compare-html.mjs). Kết quả này chỉ là kiểm tra cấu trúc; pixel fidelity vẫn phải đối chiếu cùng viewport bằng screenshot/tool phù hợp:
+Sau khi có HTML clone, kiểm tra inventory cấu trúc bằng [`scripts/compare-html.py`](scripts/compare-html.py). Kết quả này chỉ là kiểm tra cấu trúc; pixel fidelity vẫn phải đối chiếu cùng viewport bằng screenshot/tool phù hợp:
 
 ```bash
-node .agents/skills/clone-website/scripts/compare-html.mjs \
+python3 .agents/skills/clone-website/scripts/compare-html.py \
   source.html \
   cloned.html
 ```
 
-Khi nguồn URL nằm trong phạm vi clone, dùng script [`scripts/download-assets.mjs`](scripts/download-assets.mjs) để tải ảnh, video trực tiếp, poster, source, `srcset` và URL trong inline style về thư mục local. Script tạo `manifest.json` để truy vết URL nguồn → file local.
+Khi nguồn URL nằm trong phạm vi clone, dùng script [`scripts/download-assets.py`](scripts/download-assets.py) để tải ảnh, video trực tiếp, poster, source, `srcset` và URL trong inline style về thư mục local. Script tạo `manifest.json` để truy vết URL nguồn → file local.
 
 Với URL nguồn đã được người dùng giao để clone, quyền tải tài nguyên cùng origin được hiểu là đã nằm trong phạm vi công việc. Chỉ dừng và báo blocker khi nguồn yêu cầu vượt authentication/CAPTCHA/paywall, bị chặn, hoặc cần tải host ngoài/stream mà chưa được cho phép.
 
 ```bash
-node .agents/skills/clone-website/scripts/download-assets.mjs \
+python3 .agents/skills/clone-website/scripts/download-assets.py \
   https://example.com/page \
   --output public/clone-assets \
   --rewrite-html public/cloned-page.html

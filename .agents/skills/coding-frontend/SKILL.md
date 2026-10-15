@@ -28,6 +28,13 @@ Triển khai giao diện đúng đặc tả, hiển thị nội dung đáng tin 
 4. **Kiểm chứng**: kiểm tra luồng chính, dữ liệu thiếu, lỗi API, route trực tiếp và responsive; chạy test/lint/type check/build phù hợp. Rà vòng lặp render/state/effect trên framework đang dùng và kiểm tra network/API call không tăng theo từng item (N+1). Với luồng backend đi kèm, phối hợp đếm query theo request/job trong skill backend; không giới hạn vào React/Next.js hay một framework cụ thể. Fix bug cần regression test tái hiện trước theo [quality-assurance](../../rules/quality-assurance.md); dùng [testing-strategy](../testing-strategy/SKILL.md) khi cần viết test kỹ thuật. Rà diff để xác nhận không đổi hành vi ngoài yêu cầu; nếu có thay đổi cần thêm quyền, dừng và xin chấp thuận.
 5. **Bàn giao**: tự review diff, cập nhật docs bị ảnh hưởng. Báo file/hành vi đã đổi, check và kết quả thật, phần chưa kiểm chứng; không coi preview local là bằng chứng Google đã index.
 
+### Khi nhận handoff từ `agent-clone`
+
+- Đọc source of truth, inventory, mapping JSON và pixel spec trước khi sửa UI; áp dụng rule [`clone-fidelity`](../../rules/clone-fidelity.md).
+- Dùng asset có `status: downloaded`; giữ nguyên asset `failed`/`skipped` và báo phần cần xử lý thủ công. Không thay bằng placeholder nếu clone đã cam kết fidelity.
+- Giữ cấu trúc section, thứ tự, CSS gốc/processed và đường dẫn media theo mapping. Nếu width, container, breakpoint hoặc interaction thực tế lệch source, ghi sai khác cụ thể và sửa trong phạm vi được giao; không tự redesign.
+- Đối chiếu cùng route, viewport và trạng thái: macro layout trước, sau đó computed style/bounding box, typography, spacing, màu, asset và interaction. Chỉ gọi pixel-perfect khi có bằng chứng tương ứng.
+
 ## Yêu cầu triển khai
 
 | Nhóm | Cách áp dụng |
